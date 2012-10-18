@@ -1,5 +1,5 @@
 $stdout.sync = true
 
-require './lib/rubygems_api'
+require './lib/bundler_api'
 
-run RubygemsApi.new
+run BundlerApi.new

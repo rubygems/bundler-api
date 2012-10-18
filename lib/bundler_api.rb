@@ -1,8 +1,7 @@
 require 'sinatra/base'
-require_relative 'rubygems_api/dep_calc'
+require_relative 'bundler_api/dep_calc'
 
-
-class RubygemsApi < Sinatra::Base
+class BundlerApi < Sinatra::Base
   RUBYGEMS_URL = "http://production.cf.rubygems.org"
   @@dep_calc = DepCalc.new('Marshal.4.8.Z')
 
