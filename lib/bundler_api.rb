@@ -4,17 +4,20 @@ require 'json'
 require_relative 'bundler_api/dep_calc'
 
 class BundlerApi < Sinatra::Base
-  DB           = Sequel.connect(ENV["DATABASE_URL"])
-  RUBYGEMS_URL = "http://production.cf.rubygems.org"
+  RUBYGEMS_URL          = "http://production.cf.rubygems.org"
+
+  def initialize
+    @conn = Sequel.connect(ENV["DATABASE_URL"])
+  end
 
   get "/api/v1/dependencies" do
     gems = params[:gems].split(',')
-    Marshal.dump(DepCalc.deps_for(DB, gems))
+    Marshal.dump(DepCalc.deps_for(@conn, gems))
   end
 
   get "/api/v1/dependencies.json" do
     gems = params[:gems].split(',')
-    DepCalc.deps_for(DB, gems).to_json
+    DepCalc.deps_for(@conn, gems).to_json
   end
 
   get "/quick/Marshal.4.8/:id" do
