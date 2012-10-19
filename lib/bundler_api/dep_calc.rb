@@ -13,9 +13,11 @@ class DepCalc
         FROM rubygems AS r, versions AS v
         WHERE v.rubygem_id = r.id
           AND r.name IN ?) AS rv
-      LEFT JOIN dependencies AS d ON d.version_id = rv.version_id
-      LEFT JOIN rubygems AS for_dep_name ON d.rubygem_id = for_dep_name.id
-      WHERE d.scope = 'runtime' OR d.scope IS NULL;
+      LEFT JOIN dependencies AS d ON
+        d.version_id = rv.version_id
+      LEFT JOIN rubygems AS for_dep_name ON
+        d.rubygem_id = for_dep_name.id
+        AND d.scope = 'runtime';
 SQL
 
 
