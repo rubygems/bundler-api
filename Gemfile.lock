@@ -7,6 +7,7 @@ GEM
     rack (1.4.1)
     rack-protection (1.2.0)
       rack
+    rake (0.9.2.2)
     sequel (3.40.0)
     sequel_pg (1.6.0)
       pg (>= 0.8.0)
@@ -23,6 +24,7 @@ PLATFORMS
 DEPENDENCIES
   pg
   puma
+  rake
   sequel
   sequel_pg
   sinatra
