@@ -4,7 +4,7 @@ require 'json'
 require_relative 'bundler_api/dep_calc'
 
 class BundlerApi < Sinatra::Base
-  RUBYGEMS_URL          = "http://production.cf.rubygems.org"
+  RUBYGEMS_URL          = "https://www.rubygems.org"
 
   def initialize
     @conn = Sequel.connect(ENV["DATABASE_URL"])
