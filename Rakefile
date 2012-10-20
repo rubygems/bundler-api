@@ -7,7 +7,6 @@ require 'thread'
 
 Thread.abort_on_exception = true
 Payload = Struct.new(:name, :version, :platform)
-THREAD_SIZE = 5
 
 def gem_exists?(db, name, version)
   dataset = db[<<-SQL, name, version.version]
@@ -128,10 +127,11 @@ class ConsumerPool
 end
 
 desc "update database"
-task :update do
+task :update, :thread_count do |t, args|
+  thread_count   = args[:thread_count].to_i
   specs          = Zlib::GzipReader.open(open('http://rubygems.org/specs.4.8.gz')) {|gz| Marshal.load(gz) }
-  Sequel.connect(ENV["DATABASE_URL"], max_connections: THREAD_SIZE) do |db|
-    pool = ConsumerPool.new(THREAD_SIZE, db)
+  Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
+    pool = ConsumerPool.new(thread_count, db)
     pool.start
 
     Dir.mktmpdir do |dir|
