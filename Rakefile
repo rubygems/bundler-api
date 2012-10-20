@@ -130,6 +130,7 @@ desc "update database"
 task :update, :thread_count do |t, args|
   thread_count   = args[:thread_count].to_i
   specs          = Zlib::GzipReader.open(open('http://rubygems.org/specs.4.8.gz')) {|gz| Marshal.load(gz) }
+  puts "# of Specs: #{specs.size}"
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     pool = ConsumerPool.new(thread_count, db)
     pool.start
