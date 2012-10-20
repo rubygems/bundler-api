@@ -3,8 +3,23 @@ require 'open-uri'
 require 'zlib'
 require 'tmpdir'
 require 'yaml'
+require 'thread'
 
 Thread.abort_on_exception = true
+Payload = Struct.new(:name, :version, :platform)
+THREAD_SIZE = 5
+
+def gem_exists?(db, name, version)
+  dataset = db[<<-SQL, name, version.version]
+    SELECT versions.id
+    FROM rubygems, versions
+    WHERE rubygems.id = versions.rubygem_id
+      AND rubygems.name = ?
+      AND versions.number = ?
+SQL
+
+  dataset.count > 0
+end
 
 def download_spec(name, version, platform)
   puts "Processing: #{name}-#{version.version}"
@@ -25,7 +40,7 @@ def insert_spec(db, spec)
   raise "Failed to load spec" unless spec
 
   db.transaction do
-    rubygem    = db[:rubygems].filter(name: spec.name).select(:id).first
+    rubygem    = db[:rubygems].filter(name: spec.name.to_s).select(:id).first
     rubygem_id = nil
     if rubygem
       rubygem_id = rubygem[:id]
@@ -67,42 +82,70 @@ def insert_spec(db, spec)
   end
 end
 
-THREAD_SIZE = 10
+class ConsumerPool
+  POISON = :poison
+
+  def initialize(size, db)
+    @size    = size
+    @queue   = Queue.new
+    @db      = db
+    @threads = []
+    @mutex   = Mutex.new
+  end
+
+  def enq(payload)
+    @queue.enq(payload)
+  end
+
+  def start
+    @size.times { @threads << create_thread }
+  end
+
+  def join
+    @threads.each {|t| t.join }
+  end
+
+  def poison
+    @size.times { @queue.enq(POISON) }
+  end
+
+  private
+  def create_thread
+    Thread.new {
+      loop do
+        payload = @queue.deq
+        break if payload == POISON
+
+        unless gem_exists?(@db, payload.name, payload.version)
+          spec = download_spec(payload.name, payload.version, payload.platform)
+          @mutex.synchronize do
+            insert_spec(@db, spec)
+          end
+        end
+      end
+    }
+  end
+end
 
 desc "update database"
 task :update do
   specs          = Zlib::GzipReader.open(open('http://rubygems.org/specs.4.8.gz')) {|gz| Marshal.load(gz) }
-  mutex          = Mutex.new
-  threads        = []
+  Sequel.connect(ENV["DATABASE_URL"], max_connections: THREAD_SIZE) do |db|
+    pool = ConsumerPool.new(THREAD_SIZE, db)
+    pool.start
 
-  Sequel.connect(ENV["DATABASE_URL"]) do |db|
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do
         specs.each do |spec|
           name, version, platform = spec
-          threads.select {|t| !t.status }.each {|t| threads.delete(t) }
-          if threads.size >= THREAD_SIZE
-            thread = threads.pop
-            thread.join
-          end
-
-          threads << Thread.new {
-            dataset = db[<<-SQL, name, version.version]
-              SELECT versions.id
-              FROM rubygems, versions
-              WHERE rubygems.id = versions.rubygem_id
-                AND rubygems.name = ?
-                AND versions.number = ?
-            SQL
-
-            if dataset.count == 0
-              spec = download_spec(name, version, platform)
-              mutex.synchronize do
-                insert_spec(db, spec)
-              end
-            end
-          }
+          payload = Payload.new(name, version, platform)
+          pool.enq(payload)
         end
+
+        puts "Finished Enqueuing Jobs!"
+
+        pool.poison
+        pool.join
       end
     end
   end
