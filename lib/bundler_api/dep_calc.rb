@@ -12,6 +12,7 @@ class DepCalc
         (SELECT r.name, v.number, v.platform, v.id AS version_id
         FROM rubygems AS r, versions AS v
         WHERE v.rubygem_id = r.id
+          AND v.indexed is true
           AND r.name IN ?) AS rv
       LEFT JOIN dependencies AS d ON
         d.version_id = rv.version_id
