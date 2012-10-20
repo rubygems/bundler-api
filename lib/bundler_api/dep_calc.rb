@@ -31,9 +31,9 @@ SQL
 
     deps.map do |dep_key, gem_deps|
       {
-        name:     dep_key.name,
-        number:   dep_key.number,
-        platform: dep_key.platform,
+        name:         dep_key.name,
+        number:       dep_key.number,
+        platform:     dep_key.platform,
         dependencies: gem_deps
       }
     end
