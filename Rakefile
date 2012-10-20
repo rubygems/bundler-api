@@ -80,29 +80,28 @@ task :update do
       Dir.chdir(dir) do
         specs.each do |spec|
           name, version, platform = spec
-          dataset = db[<<-SQL, name, version.version]
-            SELECT versions.id
-            FROM rubygems, versions
-            WHERE rubygems.id = versions.rubygem_id
-              AND rubygems.name = ?
-              AND versions.number = ?
-SQL
+          threads.select {|t| !t.status }.each {|t| threads.delete(t) }
+          if threads.size >= THREAD_SIZE
+            thread = threads.pop
+            thread.join
+          end
 
-          if dataset.count == 0
-            threads.select {|t| !t.status }.each {|t| threads.delete(t) }
+          threads << Thread.new {
+            dataset = db[<<-SQL, name, version.version]
+              SELECT versions.id
+              FROM rubygems, versions
+              WHERE rubygems.id = versions.rubygem_id
+                AND rubygems.name = ?
+                AND versions.number = ?
+            SQL
 
-            if threads.size >= THREAD_SIZE
-              thread = threads.pop
-              thread.join
-            end
-
-            threads << Thread.new {
+            if dataset.count == 0
               spec = download_spec(name, version, platform)
               mutex.synchronize do
                 insert_spec(db, spec)
               end
-            }
-          end
+            end
+          }
         end
       end
     end
