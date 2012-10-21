@@ -74,6 +74,7 @@ class Job
         rubygem_id:  rubygem_id,
         updated_at:  Time.now,
         summary:     spec.summary,
+        platform:    spec.platform.to_s,
         created_at:  Time.now,
         indexed:     true,
         prerelease:  false,
