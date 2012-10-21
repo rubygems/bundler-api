@@ -3,10 +3,10 @@ require_relative 'payload'
 class Job
   attr_reader :payload
 
-  def initialize(db, payload)
+  def initialize(db, payload, mutex)
     @db      = db
     @payload = payload
-    @mutex   = Mutex.new
+    @mutex   = mutex
   end
 
   def run

@@ -14,6 +14,7 @@ end
 desc "update database"
 task :update, :thread_count do |t, args|
   thread_count  = args[:thread_count].to_i
+  mutex         = Mutex.new
   specs_threads = []
   specs_threads << Thread.new { read_index('http://rubygems.org/specs.4.8.gz') }
   specs_threads << Thread.new { read_index('http://rubygems.org/prerelease_specs.4.8.gz') }
@@ -29,7 +30,7 @@ task :update, :thread_count do |t, args|
         specs.each do |spec|
           name, version, platform = spec
           payload = Payload.new(name, version, platform)
-          job     = Job.new(db, payload)
+          job     = Job.new(db, payload, mutex)
           pool.enq(job)
         end
 
