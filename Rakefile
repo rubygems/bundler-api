@@ -13,9 +13,13 @@ end
 
 desc "update database"
 task :update, :thread_count do |t, args|
-  thread_count   = args[:thread_count].to_i
-  specs          = read_index('http://rubygems.org/specs.4.8.gz') + read_index('http://rubygems.org/prerelease_specs.4.8.gz')
+  thread_count  = args[:thread_count].to_i
+  specs_threads = []
+  specs_threads << Thread.new { read_index('http://rubygems.org/specs.4.8.gz') }
+  specs_threads << Thread.new { read_index('http://rubygems.org/prerelease_specs.4.8.gz') }
+  specs         = specs_threads.inject([]) {|sum, t| sum + t.value }
   puts "# of Specs: #{specs.size}"
+
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     pool = ConsumerPool.new(thread_count)
     pool.start
