@@ -3,9 +3,9 @@ require 'open-uri'
 require 'zlib'
 require 'tmpdir'
 require_relative 'lib/bundler_api/update/consumer_pool'
+require_relative 'lib/bundler_api/update/job'
 
 Thread.abort_on_exception = true
-Payload = Struct.new(:name, :version, :platform)
 
 def read_index(uri)
   Zlib::GzipReader.open(open(uri)) {|gz| Marshal.load(gz) }
@@ -17,7 +17,7 @@ task :update, :thread_count do |t, args|
   specs          = read_index('http://rubygems.org/specs.4.8.gz') + read_index('http://rubygems.org/prerelease_specs.4.8.gz')
   puts "# of Specs: #{specs.size}"
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
-    pool = ConsumerPool.new(thread_count, db)
+    pool = ConsumerPool.new(thread_count)
     pool.start
 
     Dir.mktmpdir do |dir|
@@ -25,7 +25,8 @@ task :update, :thread_count do |t, args|
         specs.each do |spec|
           name, version, platform = spec
           payload = Payload.new(name, version, platform)
-          pool.enq(payload)
+          job     = Job.new(db, payload)
+          pool.enq(job)
         end
 
         puts "Finished Enqueuing Jobs!"
