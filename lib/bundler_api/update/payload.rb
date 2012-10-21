@@ -1,1 +1,1 @@
-Payload = Struct.new(:name, :version, :platform)
+Payload = Struct.new(:name, :version, :platform, :prerelease)

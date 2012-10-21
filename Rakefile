@@ -26,6 +26,7 @@ task :update, :thread_count do |t, args|
   mutex         = Mutex.new
   specs_threads = []
   specs_threads << Thread.new { read_index('http://rubygems.org/specs.4.8.gz') }
+  specs_threads << Thread.new { [:prerelease] }
   specs_threads << Thread.new { read_index('http://rubygems.org/prerelease_specs.4.8.gz') }
   specs         = specs_threads.inject([]) {|sum, t| sum + t.value }
   puts "# of specs from indexes: #{specs.size}"
@@ -45,7 +46,14 @@ SQL
     dataset.all.each {|h| local_gems[create_hash_key(h[:name], h[:number], h[:platform])] = h[:id] }
     puts "# of non yanked local gem versions: #{local_gems.size}"
 
+    prerelease = false
+
     specs.each do |spec|
+      if spec == :prerelease
+        prerelease = true
+        next
+      end
+
       name, version, platform = spec
       key                     = create_hash_key(name, version.version, platform)
       mutex.synchronize do
@@ -53,7 +61,7 @@ SQL
       end
 
       # add new gems
-      payload = Payload.new(name, version, platform)
+      payload = Payload.new(name, version, platform, prerelease)
       job     = Job.new(db, payload, mutex, add_gem_count)
       pool.enq(job)
     end

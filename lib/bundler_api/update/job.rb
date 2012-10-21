@@ -81,7 +81,7 @@ class Job
         platform:    spec.platform.to_s,
         created_at:  Time.now,
         indexed:     true,
-        prerelease:  false,
+        prerelease:  @payload.prerelease,
         latest:      true,
         full_name:   spec.full_name,
       )
