@@ -32,18 +32,22 @@ class Job
   end
 
   def download_spec(name, version, platform)
-    puts "Processing: #{name}-#{version.version}"
     full_name = "#{name}-#{version}"
     full_name << "-#{platform}" if platform != 'ruby'
-    spec = nil
+    url       = "http://rubygems.org/quick/Marshal.4.8/#{full_name}.gemspec.rz"
+    count     = 0
+    puts "Processing: #{full_name}"
 
-    Dir.mktmpdir do |dir|
-      `cd #{dir} && curl https://rubygems.org/downloads/#{full_name}.gem -s -L -o - | tar vxf - 2>&1 > /dev/null`
-      `cd #{dir} && gunzip metadata.gz`
-      spec = YAML.load_file("#{dir}/metadata")
+    begin
+      Marshal.load(Gem.inflate(open(url).string))
+    rescue
+      if count < 5
+        retry
+        count += 1
+      else
+        puts "Could not download #{url}"
+      end
     end
-
-    spec
   end
 
   def insert_spec(spec)
