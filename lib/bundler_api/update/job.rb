@@ -3,14 +3,18 @@ require_relative 'payload'
 class Job
   attr_reader :payload
 
-  def initialize(db, payload, mutex)
-    @db      = db
-    @payload = payload
-    @mutex   = mutex
+  def initialize(db, payload, mutex, gem_count)
+    @db        = db
+    @payload   = payload
+    @mutex     = mutex
+    @gem_count = gem_count
   end
 
   def run
     unless gem_exists?(@payload.name, @payload.version)
+      @mutex.synchronize do
+        @gem_count.increment
+      end
       spec = download_spec(@payload.name, @payload.version, @payload.platform)
       @mutex.synchronize do
         insert_spec(spec)
