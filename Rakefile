@@ -87,47 +87,50 @@ def get_local_gems(db)
   local_gems
 end
 
-desc "update database"
-task :update, :thread_count do |t, args|
-  thread_count  = args[:thread_count].to_i
+def update(db, thread_count)
   add_gem_count = Counter.new
   mutex         = Mutex.new
   specs         = get_specs
+  local_gems    = get_local_gems(db)
+  prerelease    = false
+  pool          = ConsumerPool.new(thread_count)
+  pool.start
 
-  Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
-    local_gems = get_local_gems(db)
-    prerelease = false
-    pool       = ConsumerPool.new(thread_count)
-    pool.start
-
-    specs.each do |spec|
-      if spec == :prerelease
-        prerelease = true
-        next
-      end
-
-      name, version, platform = spec
-      key                     = create_hash_key(name, version.version, platform)
-      mutex.synchronize do
-        local_gems.delete(key)
-      end
-
-      # add new gems
-      payload = Payload.new(name, version, platform, prerelease)
-      job     = Job.new(db, payload, mutex, add_gem_count)
-      pool.enq(job)
+  specs.each do |spec|
+    if spec == :prerelease
+      prerelease = true
+      next
     end
 
-    puts "Finished Enqueuing Jobs!"
+    name, version, platform = spec
+    key                     = create_hash_key(name, version.version, platform)
+    mutex.synchronize do
+      local_gems.delete(key)
+    end
 
-    pool.poison
-    pool.join
+    # add new gems
+    payload = Payload.new(name, version, platform, prerelease)
+    job     = Job.new(db, payload, mutex, add_gem_count)
+    pool.enq(job)
+  end
 
-    local_gems.keys.each {|gem| puts "Yanking: #{gem}" }
+  puts "Finished Enqueuing Jobs!"
 
-    db[:versions].where(id: local_gems.values).update(indexed: false) unless local_gems.empty?
-    puts "# of gem versions added: #{add_gem_count.count}"
-    puts "# of gem versions yanked: #{local_gems.size}"
+  pool.poison
+  pool.join
+
+  local_gems.keys.each {|gem| puts "Yanking: #{gem}" }
+
+  db[:versions].where(id: local_gems.values).update(indexed: false) unless local_gems.empty?
+  puts "# of gem versions added: #{add_gem_count.count}"
+  puts "# of gem versions yanked: #{local_gems.size}"
+end
+
+desc "update database"
+task :update, :thread_count do |t, args|
+  thread_count  = args[:thread_count].to_i
+  Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
+    update(db, thread_count)
   end
 end
 
@@ -135,13 +138,16 @@ desc "continual update"
 task :continual_update, :thread_count, :times do |t, args|
   count = 0
   times = args[:times].to_i
+  thread_count = args[:thread_count].to_i
 
-  loop do
-    if count < times
-      Rake::Task[:update].execute(thread_count: args[:thread_count])
-      count += 1
-    else
-      break
+  Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
+    loop do
+      if count < times
+        update(db, thread_count)
+        count += 1
+      else
+        break
+      end
     end
   end
 end
