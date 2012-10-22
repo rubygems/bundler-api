@@ -45,15 +45,11 @@ def modified?(uri, cache_file)
   end
 end
 
-desc "update database"
-task :update, :thread_count do |t, args|
+def get_specs
   specs_uri              = "http://rubygems.org/specs.4.8.gz"
   prerelease_specs_uri   = "http://rubygems.org/prerelease_specs.4.8.gz"
   specs_cache            = "./tmp/specs.4.8.gz"
   prerelease_specs_cache = "./tmp/prerelease_specs.4.8.gz"
-  thread_count           = args[:thread_count].to_i
-  add_gem_count          = Counter.new
-  mutex                  = Mutex.new
   specs_threads          = []
 
   FileUtils.mkdir_p("tmp")
@@ -62,7 +58,7 @@ task :update, :thread_count do |t, args|
   if !specs_threads[0].value && !specs_threads[1].value
     puts "HTTP 304: Specs not modified. Sleeping for 60s."
     sleep(60) # don't rape the server
-    next
+    exit(0)
   end
 
   specs_threads.clear
@@ -72,6 +68,16 @@ task :update, :thread_count do |t, args|
   specs_threads << Thread.new { read_index(prerelease_specs_cache) }
   specs = specs_threads.inject([]) {|sum, t| sum + t.value }
   puts "# of specs from indexes: #{specs.size - 1}"
+
+  specs
+end
+
+desc "update database"
+task :update, :thread_count do |t, args|
+  thread_count  = args[:thread_count].to_i
+  add_gem_count = Counter.new
+  mutex         = Mutex.new
+  specs         = get_specs
 
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     pool = ConsumerPool.new(thread_count)
