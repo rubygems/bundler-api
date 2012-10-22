@@ -29,7 +29,7 @@ task :update, :thread_count do |t, args|
   specs_threads << Thread.new { [:prerelease] }
   specs_threads << Thread.new { read_index('http://rubygems.org/prerelease_specs.4.8.gz') }
   specs         = specs_threads.inject([]) {|sum, t| sum + t.value }
-  puts "# of specs from indexes: #{specs.size}"
+  puts "# of specs from indexes: #{specs.size - 1}"
 
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     pool = ConsumerPool.new(thread_count)
