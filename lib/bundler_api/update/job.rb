@@ -2,6 +2,7 @@ require_relative 'payload'
 
 class Job
   attr_reader :payload
+  @@gem_cache = {}
 
   def initialize(db, payload, mutex, gem_count)
     @db        = db
@@ -24,6 +25,12 @@ class Job
 
   private
   def gem_exists?(name, version)
+    key = "#{name}-#{version}"
+
+    @mutex.synchronize do
+      return true if @@gem_cache[key]
+    end
+
     dataset = @db[<<-SQL, name, version.version]
     SELECT versions.id
     FROM rubygems, versions
@@ -32,7 +39,13 @@ class Job
       AND versions.number = ?
     SQL
 
-    dataset.count > 0
+    result = dataset.count > 0
+
+    @mutex.synchronize do
+      @@gem_cache[key] = true if result
+    end
+
+    result
   end
 
   def download_spec(name, version, platform)
