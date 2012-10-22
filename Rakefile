@@ -6,6 +6,7 @@ require_relative 'lib/bundler_api/update/consumer_pool'
 require_relative 'lib/bundler_api/update/job'
 require_relative 'lib/bundler_api/update/counter'
 
+$stdout.sync = true
 Thread.abort_on_exception = true
 
 def read_index(uri)
