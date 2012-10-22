@@ -123,6 +123,8 @@ task :update, :thread_count do |t, args|
     pool.poison
     pool.join
 
+    local_gems.keys.each {|gem| puts "Yanking: #{gem}" }
+
     db[:versions].where(id: local_gems.values).update(indexed: false) unless local_gems.empty?
     puts "# of gem versions added: #{add_gem_count.count}"
     puts "# of gem versions yanked: #{local_gems.size}"
