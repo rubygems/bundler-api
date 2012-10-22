@@ -2,6 +2,8 @@ require 'sequel'
 require 'open-uri'
 require 'zlib'
 require 'tmpdir'
+require 'net/http'
+require 'time'
 require_relative 'lib/bundler_api/update/consumer_pool'
 require_relative 'lib/bundler_api/update/job'
 require_relative 'lib/bundler_api/update/counter'
@@ -20,16 +22,50 @@ def create_hash_key(name, version, platform)
   full_name
 end
 
+def modified?(uri, cache_file)
+  uri             = URI(uri)
+  file            = nil
+
+  file = File.stat(cache_file) if File.exists?(cache_file)
+
+  req = Net::HTTP::Get.new(uri.request_uri)
+  req['If-Modified-Since'] = file.mtime.rfc2822 if file
+
+  res = Net::HTTP.start(uri.hostname, uri.port) {|http|
+    http.request(req)
+  }
+
+  if res.response['Location']
+    modified?(res.response['Location'], cache_file)
+  elsif res.is_a?(Net::HTTPSuccess)
+    File.open(cache_file, 'w') {|file| file.write res.body }
+    true
+  else
+    false
+  end
+end
+
 desc "update database"
 task :update, :thread_count do |t, args|
-  thread_count  = args[:thread_count].to_i
-  add_gem_count = Counter.new
-  mutex         = Mutex.new
-  specs_threads = []
-  specs_threads << Thread.new { read_index('http://rubygems.org/specs.4.8.gz') }
+  specs_uri              = "http://rubygems.org/specs.4.8.gz"
+  prerelease_specs_uri   = "http://rubygems.org/prerelease_specs.4.8.gz"
+  specs_cache            = "./tmp/specs.4.8.gz"
+  prerelease_specs_cache = "./tmp/prerelease_specs.4.8.gz"
+  thread_count           = args[:thread_count].to_i
+  add_gem_count          = Counter.new
+  mutex                  = Mutex.new
+  specs_threads          = []
+
+  FileUtils.mkdir_p("tmp")
+  if !modified?(specs_uri, specs_cache) && !modified?(prerelease_specs_uri, prerelease_specs_cache)
+    puts "HTTP 304: Specs not modified"
+    next
+  end
+
+  specs_threads << Thread.new { read_index(specs_cache) }
   specs_threads << Thread.new { [:prerelease] }
-  specs_threads << Thread.new { read_index('http://rubygems.org/prerelease_specs.4.8.gz') }
-  specs         = specs_threads.inject([]) {|sum, t| sum + t.value }
+  specs_threads << Thread.new { read_index(prerelease_specs_cache) }
+  specs = specs_threads.inject([]) {|sum, t| sum + t.value }
   puts "# of specs from indexes: #{specs.size - 1}"
 
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
