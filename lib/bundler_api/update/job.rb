@@ -53,7 +53,7 @@ class Job
     full_name << "-#{platform}" if platform != 'ruby'
     url       = "http://rubygems.org/quick/Marshal.4.8/#{full_name}.gemspec.rz"
     count     = 0
-    puts "Processing: #{full_name}"
+    puts "Adding: #{full_name}"
 
     begin
       Marshal.load(Gem.inflate(open(url).string))
