@@ -2,7 +2,7 @@ class Counter
   attr_reader :count
 
   def initialize
-    @count = 1
+    @count = 0
   end
 
   def increment
