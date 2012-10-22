@@ -72,6 +72,21 @@ def get_specs
   specs
 end
 
+def get_local_gems(db)
+  dataset = db[<<-SQL]
+    SELECT rubygems.name, versions.number, versions.platform, versions.id
+    FROM rubygems, versions
+    WHERE rubygems.id = versions.rubygem_id
+      AND indexed = true
+  SQL
+
+  local_gems = {}
+  dataset.all.each {|h| local_gems[create_hash_key(h[:name], h[:number], h[:platform])] = h[:id] }
+  puts "# of non yanked local gem versions: #{local_gems.size}"
+
+  local_gems
+end
+
 desc "update database"
 task :update, :thread_count do |t, args|
   thread_count  = args[:thread_count].to_i
@@ -80,21 +95,10 @@ task :update, :thread_count do |t, args|
   specs         = get_specs
 
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
-    pool = ConsumerPool.new(thread_count)
-    pool.start
-
-    dataset = db[<<-SQL]
-    SELECT rubygems.name, versions.number, versions.platform, versions.id
-    FROM rubygems, versions
-    WHERE rubygems.id = versions.rubygem_id
-      AND indexed = true
-SQL
-
-    local_gems = {}
-    dataset.all.each {|h| local_gems[create_hash_key(h[:name], h[:number], h[:platform])] = h[:id] }
-    puts "# of non yanked local gem versions: #{local_gems.size}"
-
+    local_gems = get_local_gems(db)
     prerelease = false
+    pool       = ConsumerPool.new(thread_count)
+    pool.start
 
     specs.each do |spec|
       if spec == :prerelease
