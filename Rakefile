@@ -57,10 +57,14 @@ task :update, :thread_count do |t, args|
   specs_threads          = []
 
   FileUtils.mkdir_p("tmp")
-  if !modified?(specs_uri, specs_cache) && !modified?(prerelease_specs_uri, prerelease_specs_cache)
+  specs_threads << Thread.new { modified?(specs_uri, specs_cache) }
+  specs_threads << Thread.new { modified?(prerelease_specs_uri, prerelease_specs_cache) }
+  if !specs_threads[0].value && !specs_threads[1].value
     puts "HTTP 304: Specs not modified"
     next
   end
+
+  specs_threads.clear
 
   specs_threads << Thread.new { read_index(specs_cache) }
   specs_threads << Thread.new { [:prerelease] }
