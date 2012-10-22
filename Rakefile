@@ -76,3 +76,18 @@ SQL
     puts "# of gem versions yanked: #{local_gems.size}"
   end
 end
+
+desc "continual update"
+task :continual_update, :thread_count, :times do |t, args|
+  count = 0
+  times = args[:times].to_i
+
+  loop do
+    if count < times
+      Rake::Task[:update].execute(thread_count: args[:thread_count])
+      count += 1
+    else
+      break
+    end
+  end
+end
