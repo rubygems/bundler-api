@@ -60,7 +60,8 @@ task :update, :thread_count do |t, args|
   specs_threads << Thread.new { modified?(specs_uri, specs_cache) }
   specs_threads << Thread.new { modified?(prerelease_specs_uri, prerelease_specs_cache) }
   if !specs_threads[0].value && !specs_threads[1].value
-    puts "HTTP 304: Specs not modified"
+    puts "HTTP 304: Specs not modified. Sleeping for 60s."
+    sleep(60) # don't rape the server
     next
   end
 
