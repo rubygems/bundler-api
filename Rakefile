@@ -72,7 +72,7 @@ SQL
     pool.poison
     pool.join
 
-    db[:versions].where(id: local_gems.values).update(indexed: false)
+    db[:versions].where(id: local_gems.values).update(indexed: false) unless local_gems.empty?
     puts "# of gem versions added: #{add_gem_count.count}"
     puts "# of gem versions yanked: #{local_gems.size}"
   end
