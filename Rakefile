@@ -4,6 +4,7 @@ require 'zlib'
 require 'tmpdir'
 require 'net/http'
 require 'time'
+require 'lock-smith/pg'
 require_relative 'lib/bundler_api/update/consumer_pool'
 require_relative 'lib/bundler_api/update/job'
 require_relative 'lib/bundler_api/update/counter'
@@ -147,13 +148,15 @@ task :continual_update, :thread_count, :times do |t, args|
   thread_count = args[:thread_count].to_i
 
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
-    loop do
-      if count < times
-        sleep_time = update(db, thread_count)
-        count += 1
-        sleep(sleep_time) if sleep_time # be nice to the server
-      else
-        break
+    Locksmith::Pg.lock("continual_update") do
+      loop do
+        if count < times
+          sleep_time = update(db, thread_count)
+          count += 1
+          sleep(sleep_time) if sleep_time # be nice to the server
+        else
+          break
+        end
       end
     end
   end
