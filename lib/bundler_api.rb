@@ -22,10 +22,8 @@ class BundlerApi < Sinatra::Base
   end
 
   get "/api/v1/dependencies.json" do
-    Metriks.timer('dependencies.json').time do
-      gems = params[:gems].split(',')
-      DepCalc.deps_for(@conn, gems).to_json
-    end
+    gems = params[:gems].split(',')
+    DepCalc.deps_for(@conn, gems).to_json
   end
 
   get "/quick/Marshal.4.8/:id" do
