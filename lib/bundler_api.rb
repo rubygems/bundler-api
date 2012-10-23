@@ -14,7 +14,10 @@ class BundlerApi < Sinatra::Base
   get "/api/v1/dependencies" do
     Metriks.timer('dependencies').time do
       gems = params[:gems].split(',')
-      Marshal.dump(DepCalc.deps_for(@conn, gems))
+      deps = DepCalc.deps_for(@conn, gems)
+      Metriks.timer('dependencies.marshal').time do
+        Marshal.dump(deps)
+      end
     end
   end
 
