@@ -150,7 +150,7 @@ task :continual_update, :thread_count, :times do |t, args|
       if count < times
         sleep_time = update(db, thread_count)
         count += 1
-        sleep(sleep_time) if sleep_time # don't rape the server
+        sleep(sleep_time) if sleep_time # be nice to the server
       else
         break
       end
