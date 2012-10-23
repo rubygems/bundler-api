@@ -45,6 +45,10 @@ def modified?(uri, cache_file)
   end
 end
 
+def specs_havent_changed(specs_threads)
+  !specs_threads[0].value && !specs_threads[1].value
+end
+
 def get_specs
   specs_uri              = "http://rubygems.org/specs.4.8.gz"
   prerelease_specs_uri   = "http://rubygems.org/prerelease_specs.4.8.gz"
@@ -55,7 +59,7 @@ def get_specs
   FileUtils.mkdir_p("tmp")
   specs_threads << Thread.new { modified?(specs_uri, specs_cache) }
   specs_threads << Thread.new { modified?(prerelease_specs_uri, prerelease_specs_cache) }
-  if !specs_threads[0].value && !specs_threads[1].value
+  if specs_havent_changed(specs_threads)
     puts "HTTP 304: Specs not modified. Sleeping for 60s."
     return
   end
