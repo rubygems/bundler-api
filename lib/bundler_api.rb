@@ -2,6 +2,7 @@ require 'sinatra/base'
 require 'sequel'
 require 'json'
 require_relative 'bundler_api/dep_calc'
+require_relative 'bundler_api/metriks'
 
 class BundlerApi < Sinatra::Base
   RUBYGEMS_URL          = "https://www.rubygems.org"
@@ -11,13 +12,17 @@ class BundlerApi < Sinatra::Base
   end
 
   get "/api/v1/dependencies" do
-    gems = params[:gems].split(',')
-    Marshal.dump(DepCalc.deps_for(@conn, gems))
+    Metriks.timer('dependencies').time do
+      gems = params[:gems].split(',')
+      Marshal.dump(DepCalc.deps_for(@conn, gems))
+    end
   end
 
   get "/api/v1/dependencies.json" do
-    gems = params[:gems].split(',')
-    DepCalc.deps_for(@conn, gems).to_json
+    Metriks.timer('dependencies.json').time do
+      gems = params[:gems].split(',')
+      DepCalc.deps_for(@conn, gems).to_json
+    end
   end
 
   get "/quick/Marshal.4.8/:id" do
