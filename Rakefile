@@ -165,8 +165,9 @@ end
 desc "collect database statistics every 15 seconds"
 task :collect_db_stats do
   Sequel.connect(ENV["DATABASE_URL"]) do |db|
+    stats = PGStats.new(db)
     loop do
-      PGStats.collect_from_db(db)
+      stats.submit
       sleep(15)  # Collect stats every 15 seconds.
     end
   end

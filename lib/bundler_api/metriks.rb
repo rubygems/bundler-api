@@ -11,6 +11,9 @@ if user && token
   Metriks::Reporter::LibratoMetrics.new(user, token,
                                         on_error: on_error,
                                         source:   source).start
+
+  require 'librato/metrics'
+  Librato::Metrics.authenticate user, token
 else
   require 'metriks/reporter/logger'
   Metriks::Reporter::Logger.new(logger:   Logger.new(STDOUT),
