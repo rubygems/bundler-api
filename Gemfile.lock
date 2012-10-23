@@ -4,6 +4,7 @@ GEM
     atomic (1.0.1)
     avl_tree (1.1.3)
     hitimes (1.1.1)
+    lock-smith (0.0.9)
     metriks (0.9.9.1)
       atomic (~> 1.0)
       avl_tree (~> 1.1.2)
@@ -29,6 +30,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  lock-smith
   metriks
   pg
   puma
