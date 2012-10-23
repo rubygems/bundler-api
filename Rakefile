@@ -7,6 +7,7 @@ require 'time'
 require_relative 'lib/bundler_api/update/consumer_pool'
 require_relative 'lib/bundler_api/update/job'
 require_relative 'lib/bundler_api/update/counter'
+require_relative 'lib/bundler_api/pgstats'
 
 $stdout.sync = true
 Thread.abort_on_exception = true
@@ -154,6 +155,16 @@ task :continual_update, :thread_count, :times do |t, args|
       else
         break
       end
+    end
+  end
+end
+
+desc "collect database statistics every 15 seconds"
+task :collect_db_stats do
+  Sequel.connect(ENV["DATABASE_URL"]) do |db|
+    loop do
+      PGStats.collect_from_db(db)
+      sleep(15)  # Collect stats every 15 seconds.
     end
   end
 end
