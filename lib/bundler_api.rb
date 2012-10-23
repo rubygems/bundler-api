@@ -12,6 +12,7 @@ class BundlerApi < Sinatra::Base
   end
 
   get "/api/v1/dependencies" do
+    return "" unless params[:gems]
     Metriks.timer('dependencies').time do
       gems = params[:gems].split(',')
       deps = DepCalc.deps_for(@conn, gems)
