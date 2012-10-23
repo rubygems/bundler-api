@@ -1,4 +1,5 @@
 require 'sinatra/base'
+require 'jdbc/postgres'
 require 'sequel'
 require 'json'
 require_relative 'bundler_api/dep_calc'
