@@ -1,4 +1,5 @@
 require_relative 'payload'
+require_relative '../metriks'
 
 class Job
   attr_reader :payload
@@ -31,6 +32,7 @@ class Job
       return true if @@gem_cache[key]
     end
 
+    timer   = Metriks.timer('job.gem_exists').time
     dataset = @db[<<-SQL, name, version.version]
     SELECT versions.id
     FROM rubygems, versions
@@ -46,9 +48,12 @@ class Job
     end
 
     result
+  ensure
+    timer.stop if timer
   end
 
   def download_spec(name, version, platform)
+    timer     = Metriks.timer('job.download_spec').time
     full_name = "#{name}-#{version}"
     full_name << "-#{platform}" if platform != 'ruby'
     url       = "http://rubygems.org/quick/Marshal.4.8/#{full_name}.gemspec.rz"
@@ -65,11 +70,14 @@ class Job
         puts "Could not download #{url}"
       end
     end
+  ensure
+    timer.stop
   end
 
   def insert_spec(spec)
     raise "Failed to load spec" unless spec
 
+    timer = Metriks.timer('job.insert_spec').time
     @db.transaction do
       rubygem    = @db[:rubygems].filter(name: spec.name.to_s).select(:id).first
       rubygem_id = nil
@@ -112,5 +120,7 @@ class Job
         end
       end
     end
+  ensure
+    timer.stop if timer
   end
 end
