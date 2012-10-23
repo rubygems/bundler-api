@@ -25,7 +25,7 @@ SQL
 
     Metriks.timer('depcalc.deps_for.hash').time do
       deps = {}
-      dataset.all.each do |row|
+      dataset.each do |row|
         key = DepKey.new(row[:name], row[:number], row[:platform])
         deps[key] = [] unless deps[key]
         deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
