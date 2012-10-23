@@ -57,8 +57,7 @@ def get_specs
   specs_threads << Thread.new { modified?(prerelease_specs_uri, prerelease_specs_cache) }
   if !specs_threads[0].value && !specs_threads[1].value
     puts "HTTP 304: Specs not modified. Sleeping for 60s."
-    sleep(60) # don't rape the server
-    exit(0)
+    return
   end
 
   specs_threads.clear
@@ -88,14 +87,16 @@ def get_local_gems(db)
 end
 
 def update(db, thread_count)
+  specs         = get_specs
+  return 60 unless specs
+
   add_gem_count = Counter.new
   mutex         = Mutex.new
-  specs         = get_specs
   local_gems    = get_local_gems(db)
   prerelease    = false
   pool          = ConsumerPool.new(thread_count)
-  pool.start
 
+  pool.start
   specs.each do |spec|
     if spec == :prerelease
       prerelease = true
@@ -136,15 +137,16 @@ end
 
 desc "continual update"
 task :continual_update, :thread_count, :times do |t, args|
-  count = 0
-  times = args[:times].to_i
+  count        = 0
+  times        = args[:times].to_i
   thread_count = args[:thread_count].to_i
 
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     loop do
       if count < times
-        update(db, thread_count)
+        sleep_time = update(db, thread_count)
         count += 1
+        sleep(sleep_time) if sleep_time # don't rape the server
       else
         break
       end
