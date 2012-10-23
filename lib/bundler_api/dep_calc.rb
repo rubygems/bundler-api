@@ -8,7 +8,7 @@ class DepCalc
 
   # @param [String] array of strings with the gem names
   def self.deps_for(connection, gems)
-    connection[<<-SQL, Sequel.value_list(gems)]
+    dataset = connection[<<-SQL, Sequel.value_list(gems)]
       SELECT rv.name, rv.number, rv.platform, d.requirements, for_dep_name.name dep_name
       FROM
         (SELECT r.name, v.number, v.platform, v.id AS version_id
