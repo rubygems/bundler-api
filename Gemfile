@@ -3,7 +3,7 @@ source "https://bundler-api.herokuapp.com"
 ruby '1.9.3', engine: "jruby", engine_version: "1.7.0"
 
 gem 'sinatra'
-gem 'puma'
+gem 'trinidad'
 gem 'sequel'
 gem 'jdbc-postgres'
 gem 'rake'
