@@ -11,7 +11,7 @@ class BundlerApi < Sinatra::Base
   use Metriks::Middleware
 
   def initialize
-    @conn = Sequel.connect(ENV["DATABASE_URL"])
+    @conn = Sequel.connect(ENV["FOLLOWER_DATABASE_URL"])
   end
 
   get "/api/v1/dependencies" do
