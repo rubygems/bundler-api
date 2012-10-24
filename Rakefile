@@ -176,13 +176,36 @@ task :continual_update, :thread_count, :times do |t, args|
   end
 end
 
-desc "collect database statistics every 15 seconds"
+require 'librato/metrics'
+
+def new_librato_client
+  user  = ENV['LIBRATO_METRICS_USER']
+  token = ENV['LIBRATO_METRICS_TOKEN']
+  raise 'Need Librato credentials' unless user && token
+
+  client = Librato::Metrics::Client.new
+  client.authenticate user, token
+  client
+end
+
+desc "collect database statistics every 60 seconds"
 task :collect_db_stats do
-  Sequel.connect(ENV["DATABASE_URL"]) do |db|
-    stats = PGStats.new(db)
-    loop do
-      stats.submit
-      sleep(15)  # Collect stats every 15 seconds.
+  interval = 60  # Collect stats every 60 seconds.
+  threads  = { 'pg.master'   => ENV['DATABASE_URL'],
+               'pg.follower' => ENV['FOLLOWER_DATABASE_URL'] }.
+    map do |label, url|
+      Thread.new do
+        Sequel.connect(url) do |db|
+          stats = PGStats.new(db, label:    label,
+                                  interval: interval,
+                                  client:   new_librato_client)
+          loop do
+            stats.submit
+            sleep(interval)
+          end
+        end
+      end
     end
-  end
+
+  threads.each(&:join)
 end
