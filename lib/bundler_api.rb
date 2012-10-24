@@ -5,7 +5,10 @@ require_relative 'bundler_api/dep_calc'
 require_relative 'bundler_api/metriks'
 
 class BundlerApi < Sinatra::Base
-  RUBYGEMS_URL          = "https://www.rubygems.org"
+  RUBYGEMS_URL = "https://www.rubygems.org"
+
+  require 'metriks/middleware'
+  use Metriks::Middleware
 
   def initialize
     @conn = Sequel.connect(ENV["DATABASE_URL"])
