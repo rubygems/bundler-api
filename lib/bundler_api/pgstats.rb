@@ -27,7 +27,6 @@ class PGStats
       last_counter    = @counters[name]
       if last_counter && current_counter >= last_counter
         value = current_counter - last_counter
-        p("postgres.#{name}" => value)
         queue.add("postgres.#{name}" => value)
       end
 
