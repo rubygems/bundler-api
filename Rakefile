@@ -4,7 +4,7 @@ require 'zlib'
 require 'tmpdir'
 require 'net/http'
 require 'time'
-require 'lock-smith/pg'
+require 'locksmith/pg'
 require_relative 'lib/bundler_api/update/consumer_pool'
 require_relative 'lib/bundler_api/update/job'
 require_relative 'lib/bundler_api/update/counter'
@@ -165,8 +165,9 @@ end
 desc "collect database statistics every 15 seconds"
 task :collect_db_stats do
   Sequel.connect(ENV["DATABASE_URL"]) do |db|
+    stats = PGStats.new(db)
     loop do
-      PGStats.collect_from_db(db)
+      stats.submit
       sleep(15)  # Collect stats every 15 seconds.
     end
   end
