@@ -26,6 +26,7 @@ GEM
     rack (1.4.1)
     rack-protection (1.2.0)
       rack
+    rack-timeout (0.0.3)
     rake (0.9.2.2)
     sequel (3.40.0)
     sequel_pg (1.6.0)
@@ -47,6 +48,7 @@ DEPENDENCIES
   metriks-middleware
   pg
   puma
+  rack-timeout
   rake
   sequel
   sequel_pg
