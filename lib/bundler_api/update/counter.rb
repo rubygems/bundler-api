@@ -1,11 +1,13 @@
-class Counter
-  attr_reader :count
+module BundlerApi
+  class Counter
+    attr_reader :count
 
-  def initialize
-    @count = 0
-  end
+    def initialize
+      @count = 0
+    end
 
-  def increment
-    @count += 1
+    def increment
+      @count += 1
+    end
   end
 end
