@@ -13,3 +13,9 @@ gem 'metriks'
 gem 'metriks-middleware'
 gem 'lock-smith'
 gem 'rack-timeout'
+
+group :test do
+  gem 'rspec-core'
+  gem 'rspec-expectations'
+  gem 'artifice'
+end
