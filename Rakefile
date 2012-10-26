@@ -13,6 +13,17 @@ require_relative 'lib/bundler_api/pgstats'
 $stdout.sync = true
 Thread.abort_on_exception = true
 
+begin
+  require 'rspec/core/rake_task'
+
+  desc "Run specs"
+  RSpec::Core::RakeTask.new(:spec) do |t|
+    t.rspec_opts = %w(-fs --color)
+    t.ruby_opts  = %w(-w)
+  end
+rescue LoadError => e
+end
+
 def read_index(uri)
   Metriks.timer('rake.read_index').time do
     Zlib::GzipReader.open(open(uri)) {|gz| Marshal.load(gz) }
