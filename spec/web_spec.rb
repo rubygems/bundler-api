@@ -48,4 +48,36 @@ describe BundlerApi::Web do
       end
     end
   end
+
+  context "GET /quick/Marshal.4.8/:id" do
+    it "redirects" do
+      get "/quick/Marshal.4.8/rack"
+
+      expect(last_response).to be_redirect
+    end
+  end
+
+  context "GET /fetch/actual/gem/:id" do
+    it "redirects" do
+      get "/fetch/actual/gem/rack"
+
+      expect(last_response).to be_redirect
+    end
+  end
+
+  context "GET /gems/:id" do
+    it "redirects" do
+      get "/gems/rack"
+
+      expect(last_response).to be_redirect
+    end
+  end
+
+  context "/specs.4.8.gz" do
+    it "redirects" do
+      get "/specs.4.8.gz"
+
+      expect(last_response).to be_redirect
+    end
+  end
 end
