@@ -18,4 +18,5 @@ group :test do
   gem 'rspec-core'
   gem 'rspec-expectations'
   gem 'artifice'
+  gem 'rack-test'
 end

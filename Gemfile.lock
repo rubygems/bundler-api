@@ -57,6 +57,7 @@ DEPENDENCIES
   metriks-middleware
   pg
   puma
+  rack-test
   rack-timeout
   rake
   rspec-core
