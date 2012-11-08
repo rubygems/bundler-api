@@ -1,13 +1,21 @@
 module BundlerApi
   class Counter
-    attr_reader :count
 
     def initialize
       @count = 0
+      @mutex = Mutex.new
+    end
+
+    def count
+      @mutex.synchronize do
+        @count
+      end
     end
 
     def increment
-      @count += 1
+      @mutex.synchronize do
+        @count += 1
+      end
     end
   end
 end
