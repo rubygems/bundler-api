@@ -16,6 +16,10 @@ class BundlerApi::Web < Sinatra::Base
     @conn = conn
   end
 
+  error do |e|
+    STDERR.puts e.message
+  end
+
   get "/api/v1/dependencies" do
     return "" unless params[:gems]
     Metriks.timer('dependencies').time do
