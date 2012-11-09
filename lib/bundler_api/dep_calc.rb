@@ -1,9 +1,10 @@
 require 'zlib'
 
+require_relative '../bundler_api'
 require_relative 'metriks'
 
 
-class DepCalc
+class BundlerApi::DepCalc
   DepKey = Struct.new(:name, :number, :platform)
 
   # @param [String] array of strings with the gem names

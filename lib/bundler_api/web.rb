@@ -21,7 +21,7 @@ class BundlerApi::Web < Sinatra::Base
     Metriks.timer('dependencies').time do
       gems = params[:gems].split(',')
       Metriks.histogram('gems.count').update(gems.size)
-      deps = DepCalc.deps_for(@conn, gems)
+      deps = BundlerApi::DepCalc.deps_for(@conn, gems)
       Metriks.histogram('dependencies.count').update(deps.size)
       Metriks.timer('dependencies.marshal').time do
         Marshal.dump(deps)
