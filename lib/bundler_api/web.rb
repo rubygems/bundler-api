@@ -20,7 +20,7 @@ class BundlerApi::Web < Sinatra::Base
     return "" unless params[:gems]
     Metriks.timer('dependencies').time do
       gems = params[:gems].split(',')
-      deps = DepCalc.deps_for(@conn, gems)
+      deps = BundlerApi::DepCalc.deps_for(@conn, gems)
       Metriks.timer('dependencies.marshal').time do
         Marshal.dump(deps)
       end
