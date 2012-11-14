@@ -42,19 +42,24 @@ describe BundlerApi::Job do
       Artifice.deactivate
     end
 
+    def gem_exists?(db, name, version = '1.0', platform = 'ruby')
+      expect(db[<<-SQL, 'foo', version, platform].count).to eq(1)
+SELECT *
+FROM rubygems, versions
+WHERE rubygems.id = versions.rubygem_id
+  AND rubygems.name = ?
+  AND versions.number = ?
+  AND versions.platform = ?
+SQL
+    end
+
     it "creates a rubygem if it doesn't exist" do
       payload = BundlerApi::Payload.new("foo", Gem::Version.new("1.0"), "ruby")
       job     = BundlerApi::Job.new(db, payload, mutex, counter)
 
       job.run
 
-      expect(db[<<-SQL, 'foo', '1.0', 'ruby'].count).to eq(1)
-SELECT *
-FROM rubygems, versions
-WHERE rubygems.id = versions.rubygem_id
-  AND rubygems.name = ?
-  AND versions.number = ?
-SQL
+      gem_exists?(db, 'foo')
     end
   end
 end
