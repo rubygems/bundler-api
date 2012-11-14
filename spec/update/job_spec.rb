@@ -6,10 +6,18 @@ require_relative '../../lib/bundler_api/update/counter'
 
 class GemspecGenerator < Sinatra::Base
   get "/quick/Marshal.4.8/*" do
-    Gem.deflate(Marshal.dump(eval(<<GEMSPEC)))
+    name, version, platform = params[:splat].first.sub('.gemspec.rz', '').split('-')
+    platform ||= 'ruby'
+    Gem.deflate(Marshal.dump(generate_gemspec(name, version, platform)))
+  end
+
+  private
+  def generate_gemspec(name, version, platform = 'ruby')
+eval(<<GEMSPEC)
 Gem::Specification.new do |s|
-  s.name = "foo"
-  s.version = "1.0"
+  s.name = "#{name}"
+  s.version = "#{version}"
+  s.platform = "#{platform}"
 
   s.authors = ["Terence Lee"]
   s.date = "2010-10-24"
@@ -18,7 +26,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://www.foo.com"
   s.require_paths = ["lib"]
   s.rubyforge_project = "foo"
-  s.summary = "Use a Rack application for mock HTTP requests"
+  s.summary = "Foo"
 end
 GEMSPEC
   end
