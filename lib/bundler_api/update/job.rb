@@ -5,6 +5,8 @@ require_relative '../../bundler_api'
 require_relative '../metriks'
 
 class BundlerApi::Job
+  REDIRECT_LIMIT = 5
+
   attr_reader :payload
   @@gem_cache = {}
 
@@ -61,22 +63,27 @@ class BundlerApi::Job
     full_name = "#{name}-#{version}"
     full_name << "-#{platform}" if platform != 'ruby'
     url       = "http://rubygems.org/quick/Marshal.4.8/#{full_name}.gemspec.rz"
-    count     = 0
-    uri       = URI.parse(url)
-    response  = nil
 
     puts "Adding: #{full_name}"
-    while !response.is_a?(Net::HTTPSuccess) && count < 5 do
-      count += 1
-      response = Net::HTTP.get_response(uri)
-    end
-    if count < 5
-      Marshal.load(Gem.inflate(response.body))
-    else
-      puts "Could not download #{url}" if count >= 5
-    end
+    Marshal.load(Gem.inflate(fetch(url)))
   ensure
     timer.stop
+  end
+
+  def fetch(uri, tries = 0)
+    raise HTTPError, "Too many redirects" if tries >= REDIRECT_LIMIT
+
+    uri      = URI.parse(uri)
+    response = Net::HTTP.get_response(uri)
+
+    case response
+    when Net::HTTPRedirection
+      fetch(response["location"], tries + 1)
+    when Net::HTTPSuccess
+      response.body
+    else
+      raise HTTPError, "Could not download #{url}"
+    end
   end
 
   def insert_spec(spec)
