@@ -2,7 +2,7 @@ require 'sinatra/base'
 require 'artifice'
 require_relative '../spec_helper'
 require_relative '../../lib/bundler_api/update/job'
-require_relative '../../lib/bundler_api/update/counter'
+require_relative '../../lib/bundler_api/update/atomic_counter'
 
 class GemspecGenerator < Sinatra::Base
   get "/quick/Marshal.4.8/*" do

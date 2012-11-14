@@ -7,7 +7,7 @@ require 'time'
 require 'locksmith/pg'
 require_relative 'lib/bundler_api/update/consumer_pool'
 require_relative 'lib/bundler_api/update/job'
-require_relative 'lib/bundler_api/update/counter'
+require_relative 'lib/bundler_api/update/atomic_counter'
 require_relative 'lib/bundler_api/pgstats'
 
 $stdout.sync = true
@@ -119,7 +119,7 @@ def update(db, thread_count)
   return 60 unless specs
 
   timer         = Metriks.timer('rake.update').time
-  add_gem_count = Counter.new
+  add_gem_count = AtomicCounter.new
   mutex         = Mutex.new
   local_gems    = get_local_gems(db)
   prerelease    = false
