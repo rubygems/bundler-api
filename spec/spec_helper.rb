@@ -1,3 +1,4 @@
+require 'rspec/core'
 require_relative 'support/latch'
 
 RSpec.configure do |config|
