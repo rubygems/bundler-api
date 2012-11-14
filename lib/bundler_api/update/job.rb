@@ -16,7 +16,7 @@ class BundlerApi::Job
   end
 
   def run
-    unless gem_exists?(@payload.name, @payload.version)
+    unless gem_exists?(@payload.name, @payload.version, @payload.platform)
       @mutex.synchronize do
         @gem_count.increment
       end
@@ -28,20 +28,21 @@ class BundlerApi::Job
   end
 
   private
-  def gem_exists?(name, version)
-    key = "#{name}-#{version}"
+  def gem_exists?(name, version, platform)
+    key = "#{name}-#{version}-#{platform}"
 
     @mutex.synchronize do
       return true if @@gem_cache[key]
     end
 
     timer   = Metriks.timer('job.gem_exists').time
-    dataset = @db[<<-SQL, name, version.version]
+    dataset = @db[<<-SQL, name, version.version, platform]
     SELECT versions.id
     FROM rubygems, versions
     WHERE rubygems.id = versions.rubygem_id
       AND rubygems.name = ?
       AND versions.number = ?
+      AND versions.platform = ?
     SQL
 
     result = dataset.count > 0

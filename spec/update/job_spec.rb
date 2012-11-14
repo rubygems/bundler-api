@@ -69,5 +69,16 @@ SQL
 
       gem_exists?(db, 'foo')
     end
+
+    it "creates different platform rubygems" do
+      %w(ruby java).each do |platform|
+        payload = BundlerApi::Payload.new("foo", Gem::Version.new("1.0"), platform)
+        job     = BundlerApi::Job.new(db, payload, mutex, counter)
+        job.run
+      end
+
+      gem_exists?(db, 'foo')
+      gem_exists?(db, 'foo', '1.0', 'java')
+    end
   end
 end
