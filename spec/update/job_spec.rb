@@ -35,7 +35,7 @@ end
 describe BundlerApi::Job do
   let(:db)      { Sequel.connect(ENV['TEST_DATABASE_URL']) }
   let(:builder) { GemBuilder.new(db) }
-  let(:counter) { BundlerApi::Counter.new }
+  let(:counter) { BundlerApi::AtomicCounter.new }
   let(:mutex)   { Mutex.new }
   around(:each) do |example|
     db.transaction(:rollback => :always) { example.run }
