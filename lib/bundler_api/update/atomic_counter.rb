@@ -1,5 +1,5 @@
 module BundlerApi
-  class Counter
+  class AtomicCounter
 
     def initialize
       @count = 0
