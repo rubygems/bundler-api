@@ -119,11 +119,11 @@ def update(db, thread_count)
   return 60 unless specs
 
   timer         = Metriks.timer('rake.update').time
-  add_gem_count = AtomicCounter.new
+  add_gem_count = BundlerApi::AtomicCounter.new
   mutex         = Mutex.new
   local_gems    = get_local_gems(db)
   prerelease    = false
-  pool          = ConsumerPool.new(thread_count)
+  pool          = BundlerApi::ConsumerPool.new(thread_count)
 
   pool.start
   specs.each do |spec|
@@ -139,8 +139,8 @@ def update(db, thread_count)
     end
 
     # add new gems
-    payload = Payload.new(name, version, platform, prerelease)
-    job     = Job.new(db, payload, mutex, add_gem_count)
+    payload = BundlerApi::Payload.new(name, version, platform, prerelease)
+    job     = BundlerApi::Job.new(db, payload, mutex, add_gem_count)
     pool.enq(job)
   end
 
