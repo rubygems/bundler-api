@@ -1,8 +1,8 @@
 require_relative '../spec_helper'
-require_relative '../../lib/bundler_api/update/counter'
+require_relative '../../lib/bundler_api/update/atomic_counter'
 
-describe BundlerApi::Counter do
-  let(:counter) { BundlerApi::Counter.new }
+describe BundlerApi::AtomicCounter do
+  let(:counter) { BundlerApi::AtomicCounter.new }
 
   it "starts at 0" do
     expect(counter.count).to eq(0)
@@ -25,7 +25,7 @@ describe BundlerApi::Counter do
   it "is atomic" do
     max     = 10
     # need to create a new counter for JRuby
-    counter = BundlerApi::Counter.new
+    counter = BundlerApi::AtomicCounter.new
 
     (1..max).map do
       Thread.new { counter.increment }
