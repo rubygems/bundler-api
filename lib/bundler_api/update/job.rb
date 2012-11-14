@@ -1,7 +1,10 @@
+require 'uri'
+require 'net/http'
 require_relative 'payload'
+require_relative '../../bundler_api'
 require_relative '../metriks'
 
-class Job
+class BundlerApi::Job
   attr_reader :payload
   @@gem_cache = {}
 
@@ -58,17 +61,18 @@ class Job
     full_name << "-#{platform}" if platform != 'ruby'
     url       = "http://rubygems.org/quick/Marshal.4.8/#{full_name}.gemspec.rz"
     count     = 0
-    puts "Adding: #{full_name}"
+    uri       = URI.parse(url)
+    response  = nil
 
-    begin
-      Marshal.load(Gem.inflate(open(url).string))
-    rescue
-      if count < 5
-        retry
-        count += 1
-      else
-        puts "Could not download #{url}"
-      end
+    puts "Adding: #{full_name}"
+    while !response.is_a?(Net::HTTPSuccess) && count < 5 do
+      count += 1
+      response = Net::HTTP.get_response(uri)
+    end
+    if count < 5
+      Marshal.load(Gem.inflate(response.body))
+    else
+      puts "Could not download #{url}" if count >= 5
     end
   ensure
     timer.stop
