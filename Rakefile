@@ -220,3 +220,13 @@ task :collect_db_stats do
 
   threads.each(&:join)
 end
+
+desc "test a specific gem"
+task :insert, :name, :version, :platform do |t, args|
+  counter = BundlerApi::AtomicCounter.new
+  mutex   = Mutex.new
+  payload = BundlerApi::Payload.new(args[:name], Gem::Version.new(args[:version]), args[:platform], false)
+  Sequel.connect(ENV["DATABASE_URL"], max_connections: 1) do |db|
+    BundlerApi::Job.new(db, payload, mutex, counter).run
+  end
+end
