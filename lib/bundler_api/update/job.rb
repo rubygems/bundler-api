@@ -89,6 +89,8 @@ class BundlerApi::Job
 
     timer = Metriks.timer('job.insert_spec').time
     @db.transaction do
+      version    = spec.version.version
+      platform   = spec.platform.to_s
       rubygem    = @db[:rubygems].filter(name: spec.name.to_s).select(:id).first
       rubygem_id = nil
       if rubygem
@@ -102,20 +104,33 @@ class BundlerApi::Job
         )
       end
 
-      version_id = @db[:versions].insert(
-        authors:     spec.authors,
-        description: spec.description,
-        number:      spec.version.version,
-        rubygem_id:  rubygem_id,
-        updated_at:  Time.now,
-        summary:     spec.summary,
-        platform:    spec.platform.to_s,
-        created_at:  Time.now,
-        indexed:     true,
-        prerelease:  @payload.prerelease,
-        latest:      true,
-        full_name:   spec.full_name,
-      )
+      version    = @db[:versions].filter(
+        rubygem_id: rubygem_id,
+        number:     version,
+        platform:   platform
+      ).select(:id, :indexed).first
+      version_id = nil
+
+      if version
+        version_id = version[:id]
+        @db[:versions].where(id: version_id).update(indexed: true) unless version[:indexed]
+      else
+        @db[:versions].insert(
+          authors:     spec.authors,
+          description: spec.description,
+          number:      spec.version.version,
+          rubygem_id:  rubygem_id,
+          updated_at:  Time.now,
+          summary:     spec.summary,
+          platform:    spec.platform.to_s,
+          created_at:  Time.now,
+          indexed:     true,
+          prerelease:  @payload.prerelease,
+          latest:      true,
+          full_name:   spec.full_name,
+        )
+      end
+
       spec.dependencies.each do |dep|
         dep_rubygem = @db[:rubygems].filter(name: dep.name).select(:id).first
         if dep_rubygem

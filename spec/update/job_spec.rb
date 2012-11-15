@@ -32,6 +32,34 @@ GEMSPEC
   end
 end
 
+class GemspecJrubyGenerator < Sinatra::Base
+  get "/quick/Marshal.4.8/*" do
+    name, version, platform = params[:splat].first.sub('.gemspec.rz', '').split('-')
+    platform = 'java'
+    Gem.deflate(Marshal.dump(generate_gemspec(name, version, platform)))
+  end
+
+  private
+  def generate_gemspec(name, version, platform = 'ruby')
+eval(<<GEMSPEC)
+Gem::Specification.new do |s|
+  s.name = "#{name}"
+  s.version = "#{version}"
+  s.platform = "#{platform}"
+
+  s.authors = ["Terence Lee"]
+  s.date = "2010-10-24"
+  s.description = "Foo"
+  s.email = "foo@example.com"
+  s.homepage = "http://www.foo.com"
+  s.require_paths = ["lib"]
+  s.rubyforge_project = "foo"
+  s.summary = "Foo"
+end
+GEMSPEC
+  end
+end
+
 describe BundlerApi::Job do
   let(:db)      { Sequel.connect(ENV['TEST_DATABASE_URL']) }
   let(:builder) { GemBuilder.new(db) }
@@ -90,6 +118,49 @@ SQL
 
       gem_exists?(db, 'foo')
       gem_exists?(db, 'foo', '1.0', 'java')
+    end
+
+    context "when the index platform is jruby" do
+      before do
+        Artifice.activate_with(GemspecJrubyGenerator)
+      end
+
+      after do
+        Artifice.deactivate
+      end
+
+      it "handles when platform in spec is different" do
+        jobs = 2.times.map do
+          payload = BundlerApi::Payload.new("foo", Gem::Version.new("1.0"), 'jruby')
+          BundlerApi::Job.new(db, payload, mutex, counter)
+        end
+
+        jobs.first.run
+        expect { jobs[1].run }.not_to raise_error(Sequel::DatabaseError)
+
+        gem_exists?(db, 'foo', '1.0', 'java')
+      end
+
+      it "sets the indexed attribute to true" do
+        jobs = 2.times.map do
+          payload = BundlerApi::Payload.new("foo", Gem::Version.new("1.0"), 'jruby')
+          BundlerApi::Job.new(db, payload, mutex, counter)
+        end
+        jobs.first.run
+        version_id = db[<<-SQL, 'foo', '1.0', 'java'].first[:id]
+          SELECT versions.id
+          FROM rubygems, versions
+          WHERE rubygems.id = versions.rubygem_id
+            AND rubygems.name = ?
+            AND versions.number = ?
+            AND versions.platform = ?
+SQL
+        db[:versions].where(id: version_id).update(indexed: false)
+        jobs[1].run
+
+        gem_exists?(db, 'foo', '1.0', 'java')
+        expect(db[:versions].filter(id: version_id).select(:indexed).first[:indexed]).to be_true
+      end
     end
   end
 end
