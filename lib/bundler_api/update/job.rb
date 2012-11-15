@@ -19,9 +19,7 @@ class BundlerApi::Job
 
   def run
     unless gem_exists?(@payload.name, @payload.version, @payload.platform)
-      @mutex.synchronize do
-        @gem_count.increment
-      end
+      @gem_count.increment
       spec = download_spec(@payload.name, @payload.version, @payload.platform)
       @mutex.synchronize do
         insert_spec(spec)
