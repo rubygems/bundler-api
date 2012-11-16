@@ -1,3 +1,5 @@
+require 'sinatra/base'
+
 module GemspecHelper
   private
   def generate_gemspec(name, version, platform = 'ruby')
