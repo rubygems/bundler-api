@@ -128,12 +128,9 @@ def update(db, thread_count)
       next
     end
 
-    pool.enq(BundlerApi::YankJob.new(local_gems, spec, yank_mutex))
-
-    # add new gems
     payload = BundlerApi::GemHelper.new(name, version, platform, prerelease)
-    job     = BundlerApi::Job.new(db, payload, mutex, add_gem_count)
-    pool.enq(job)
+    pool.enq(BundlerApi::YankJob.new(local_gems, payload, yank_mutex))
+    pool.enq(BundlerApi::Job.new(db, payload, mutex, add_gem_count))
   end
 
   puts "Finished Enqueuing Jobs!"
