@@ -66,14 +66,6 @@ SQL
     end
 
     context "when the index platform is jruby" do
-      before do
-        Artifice.activate_with(GemspecJrubyGenerator)
-      end
-
-      after do
-        Artifice.deactivate
-      end
-
       it "handles when platform in spec is different" do
         jobs = 2.times.map do
           payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), 'jruby')
