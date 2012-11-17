@@ -31,17 +31,11 @@ class GemspecGenerator < Sinatra::Base
 
   get "/quick/Marshal.4.8/*" do
     name, version, platform = parse_splat(params[:splat].first)
-    platform ||= 'ruby'
-    Gem.deflate(Marshal.dump(generate_gemspec(name, version, platform)))
-  end
-end
-
-class GemspecJrubyGenerator < Sinatra::Base
-  include GemspecHelper
-
-  get "/quick/Marshal.4.8/*" do
-    name, version, platform = parse_splat(params[:splat].first)
-    platform = 'java'
+    if platform.nil?
+      platform == "ruby"
+    elsif platform == "jruby"
+      platform == "java"
+    end
     Gem.deflate(Marshal.dump(generate_gemspec(name, version, platform)))
   end
 end
