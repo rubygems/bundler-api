@@ -35,7 +35,7 @@ SQL
     end
 
     it "creates a rubygem if it doesn't exist" do
-      payload = BundlerApi::Payload.new("foo", Gem::Version.new("1.0"), "ruby")
+      payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), "ruby")
       job     = BundlerApi::Job.new(db, payload, mutex, counter)
 
       job.run
@@ -45,7 +45,7 @@ SQL
 
     it "creates different platform rubygems" do
       %w(ruby java).each do |platform|
-        payload = BundlerApi::Payload.new("foo", Gem::Version.new("1.0"), platform)
+        payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), platform)
         job     = BundlerApi::Job.new(db, payload, mutex, counter)
         job.run
       end
@@ -56,7 +56,7 @@ SQL
 
     it "doesn't dupe rubygems" do
       %w(ruby java ruby).each do |platform|
-        payload = BundlerApi::Payload.new("foo", Gem::Version.new("1.0"), platform)
+        payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), platform)
         job     = BundlerApi::Job.new(db, payload, mutex, counter)
         job.run
       end
@@ -76,7 +76,7 @@ SQL
 
       it "handles when platform in spec is different" do
         jobs = 2.times.map do
-          payload = BundlerApi::Payload.new("foo", Gem::Version.new("1.0"), 'jruby')
+          payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), 'jruby')
           BundlerApi::Job.new(db, payload, mutex, counter)
         end
 
@@ -88,7 +88,7 @@ SQL
 
       it "sets the indexed attribute to true" do
         jobs = 2.times.map do
-          payload = BundlerApi::Payload.new("foo", Gem::Version.new("1.0"), 'jruby')
+          payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), 'jruby')
           BundlerApi::Job.new(db, payload, mutex, counter)
         end
         jobs.first.run

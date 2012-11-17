@@ -8,6 +8,7 @@ require 'locksmith/pg'
 require_relative 'lib/bundler_api/update/consumer_pool'
 require_relative 'lib/bundler_api/update/job'
 require_relative 'lib/bundler_api/update/atomic_counter'
+require_relative 'lib/bundler_api/gem_helper'
 require_relative 'lib/bundler_api/pgstats'
 
 $stdout.sync = true
@@ -139,7 +140,7 @@ def update(db, thread_count)
     end
 
     # add new gems
-    payload = BundlerApi::Payload.new(name, version, platform, prerelease)
+    payload = BundlerApi::GemHelper.new(name, version, platform, prerelease)
     job     = BundlerApi::Job.new(db, payload, mutex, add_gem_count)
     pool.enq(job)
   end
@@ -225,7 +226,7 @@ desc "test a specific gem"
 task :insert, :name, :version, :platform do |t, args|
   counter = BundlerApi::AtomicCounter.new
   mutex   = Mutex.new
-  payload = BundlerApi::Payload.new(args[:name], Gem::Version.new(args[:version]), args[:platform], false)
+  payload = BundlerApi::GemHelper.new(args[:name], Gem::Version.new(args[:version]), args[:platform], false)
   Sequel.connect(ENV["DATABASE_URL"], max_connections: 1) do |db|
     BundlerApi::Job.new(db, payload, mutex, counter).run
   end

@@ -47,4 +47,21 @@ class GemspecJrubyGenerator < Sinatra::Base
 end
 
 class GemspecRedirect < Sinatra::Base
+  include GemspecHelper
+
+  get "/quick/Marshal.4.8/*" do
+    redirect "/real/#{params[:splat].first}"
+  end
+
+  get "/real/*" do
+    name, version, platform = parse_splat(params[:splat].first)
+    platform ||= 'ruby'
+    Gem.deflate(Marshal.dump(generate_gemspec(name, version, platform)))
+  end
+end
+
+class ForeverRedirect < Sinatra::Base
+  get "/quick/Marshal.4.8/*" do
+    redirect "/quick/Marshal.4.8/#{params[:splat].first}"
+  end
 end
