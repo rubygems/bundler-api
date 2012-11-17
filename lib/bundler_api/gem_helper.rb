@@ -20,7 +20,6 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     timer = Metriks.timer('job.download_spec').time
     url   = "http://rubygems.org/quick/Marshal.4.8/#{full_name}.gemspec.rz"
 
-    puts "Adding: #{full_name}"
     Marshal.load(Gem.inflate(fetch(url)))
   ensure
     timer.stop

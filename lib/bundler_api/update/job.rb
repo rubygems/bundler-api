@@ -16,6 +16,7 @@ class BundlerApi::Job
     unless gem_exists?
       @gem_count.increment
       spec = @payload.download_spec
+      puts "Adding: #{@payload.full_name}"
       @mutex.synchronize do
         insert_spec(spec)
       end
