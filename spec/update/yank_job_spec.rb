@@ -3,7 +3,7 @@ require_relative '../../lib/bundler_api/update/yank_job'
 
 describe BundlerApi::YankJob do
   let(:mutex) { Mutex.new }
-  let(:job)   { BundlerApi::YankJob.new(gem_cache, spec, mutex) }
+  let(:job)   { BundlerApi::YankJob.new(gem_cache, payload, mutex) }
 
   describe "#run" do
     before do
@@ -15,13 +15,12 @@ describe BundlerApi::YankJob do
     end
 
     context "when the platform is ruby" do
+      let(:payload)   { BundlerApi::GemHelper.new('foo', '1.0', 'ruby') }
       let(:gem_cache) {
-        gem_helper = BundlerApi::GemHelper.new('foo', '1.0', 'ruby')
         {
-          gem_helper.full_name => 1
+          payload.full_name => 1
         }
       }
-      let(:spec)      { ["foo", Gem::Version.new("1.0"), "ruby"] }
 
       it "should remove the gem from the cache" do
         job.run
@@ -31,13 +30,13 @@ describe BundlerApi::YankJob do
     end
 
     context "when the platform is jruby" do
+      let(:payload)   { BundlerApi::GemHelper.new('foo', '1.0', 'jruby') }
       let(:gem_cache) {
         gem_helper = BundlerApi::GemHelper.new('foo', '1.0', 'java')
         {
           gem_helper.full_name => 1
         }
       }
-      let(:spec)      { ["foo", Gem::Version.new("1.0"), "jruby"] }
 
       it "should remove the gem from the cache" do
         job.run
