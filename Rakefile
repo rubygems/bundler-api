@@ -31,13 +31,6 @@ def read_index(uri)
   end
 end
 
-def create_hash_key(name, version, platform)
-  full_name = "#{name}-#{version}"
-  full_name << "-#{platform}" if platform != 'ruby'
-
-  full_name
-end
-
 def modified?(uri, cache_file)
   timer = Metriks.timer('rake.modified').time
   uri   = URI(uri)
@@ -107,7 +100,8 @@ def get_local_gems(db)
   SQL
 
   local_gems = {}
-  dataset.all.each {|h| local_gems[create_hash_key(h[:name], h[:number], h[:platform])] = h[:id] }
+  gem_helper = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform])
+  dataset.all.each {|h| local_gems[gem_helper.full_name] = h[:id] }
   puts "# of non yanked local gem versions: #{local_gems.size}"
 
   local_gems
@@ -122,6 +116,7 @@ def update(db, thread_count)
   timer         = Metriks.timer('rake.update').time
   add_gem_count = BundlerApi::AtomicCounter.new
   mutex         = Mutex.new
+  yank_mutex    = Mutex.new
   local_gems    = get_local_gems(db)
   prerelease    = false
   pool          = BundlerApi::ConsumerPool.new(thread_count)
@@ -133,11 +128,7 @@ def update(db, thread_count)
       next
     end
 
-    name, version, platform = spec
-    key                     = create_hash_key(name, version.version, platform)
-    mutex.synchronize do
-      local_gems.delete(key)
-    end
+    pool.enq(BundlerApi::YankJob.new(local_gems, spec, yank_mutex))
 
     # add new gems
     payload = BundlerApi::GemHelper.new(name, version, platform, prerelease)
