@@ -1,12 +1,7 @@
-require 'uri'
-require 'net/http'
-require_relative 'payload'
 require_relative '../../bundler_api'
 require_relative '../metriks'
 
 class BundlerApi::Job
-  REDIRECT_LIMIT = 5
-
   attr_reader :payload
   @@gem_cache = {}
 
@@ -18,9 +13,9 @@ class BundlerApi::Job
   end
 
   def run
-    unless gem_exists?(@payload.name, @payload.version, @payload.platform)
+    unless gem_exists?
       @gem_count.increment
-      spec = download_spec(@payload.name, @payload.version, @payload.platform)
+      spec = @payload.download_spec
       @mutex.synchronize do
         insert_spec(spec)
       end
@@ -28,15 +23,15 @@ class BundlerApi::Job
   end
 
   private
-  def gem_exists?(name, version, platform)
-    key = "#{name}-#{version}-#{platform}"
+  def gem_exists?
+    key = @payload.full_name
 
     @mutex.synchronize do
       return true if @@gem_cache[key]
     end
 
     timer   = Metriks.timer('job.gem_exists').time
-    dataset = @db[<<-SQL, name, version.version, platform]
+    dataset = @db[<<-SQL, @payload.name, @payload.version.version, @payload.platform]
     SELECT versions.id
     FROM rubygems, versions
     WHERE rubygems.id = versions.rubygem_id
@@ -54,34 +49,6 @@ class BundlerApi::Job
     result
   ensure
     timer.stop if timer
-  end
-
-  def download_spec(name, version, platform)
-    timer     = Metriks.timer('job.download_spec').time
-    full_name = "#{name}-#{version}"
-    full_name << "-#{platform}" if platform != 'ruby'
-    url       = "http://rubygems.org/quick/Marshal.4.8/#{full_name}.gemspec.rz"
-
-    puts "Adding: #{full_name}"
-    Marshal.load(Gem.inflate(fetch(url)))
-  ensure
-    timer.stop
-  end
-
-  def fetch(uri, tries = 0)
-    raise HTTPError, "Too many redirects" if tries >= REDIRECT_LIMIT
-
-    uri      = URI.parse(uri)
-    response = Net::HTTP.get_response(uri)
-
-    case response
-    when Net::HTTPRedirection
-      fetch(response["location"], tries + 1)
-    when Net::HTTPSuccess
-      response.body
-    else
-      raise HTTPError, "Could not download #{url}"
-    end
   end
 
   def insert_spec(spec)
