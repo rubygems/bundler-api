@@ -25,6 +25,25 @@ describe BundlerApi::GemHelper do
   end
 
   describe "#download_spec" do
+    let(:gemspec) {
+      eval(<<-GEMSPEC)
+        Gem::Specification.new do |s|
+          s.name = "#{name}"
+          s.version = "#{version}"
+          s.platform = "#{platform}"
+
+          s.authors = ["Terence Lee"]
+          s.date = "2010-10-24"
+          s.description = "Foo"
+          s.email = "foo@example.com"
+          s.homepage = "http://www.foo.com"
+          s.require_paths = ["lib"]
+          s.rubyforge_project = "foo"
+          s.summary = "Foo"
+        end
+GEMSPEC
+    }
+
     context "when no redirect" do
       before do
         Artifice.activate_with(GemspecGenerator)
@@ -35,23 +54,6 @@ describe BundlerApi::GemHelper do
       end
 
       it "returns the gemspec" do
-        gemspec = eval(<<-GEMSPEC)
-          Gem::Specification.new do |s|
-            s.name = "#{name}"
-            s.version = "#{version}"
-            s.platform = "#{platform}"
-
-            s.authors = ["Terence Lee"]
-            s.date = "2010-10-24"
-            s.description = "Foo"
-            s.email = "foo@example.com"
-            s.homepage = "http://www.foo.com"
-            s.require_paths = ["lib"]
-            s.rubyforge_project = "foo"
-            s.summary = "Foo"
-          end
-GEMSPEC
-
         expect(helper.download_spec).to eq(gemspec)
       end
     end
@@ -66,28 +68,11 @@ GEMSPEC
       end
 
       it "returns the gemspec" do
-        gemspec = eval(<<-GEMSPEC)
-          Gem::Specification.new do |s|
-            s.name = "#{name}"
-            s.version = "#{version}"
-            s.platform = "#{platform}"
-
-            s.authors = ["Terence Lee"]
-            s.date = "2010-10-24"
-            s.description = "Foo"
-            s.email = "foo@example.com"
-            s.homepage = "http://www.foo.com"
-            s.require_paths = ["lib"]
-            s.rubyforge_project = "foo"
-            s.summary = "Foo"
-          end
-GEMSPEC
-
         expect(helper.download_spec).to eq(gemspec)
       end
     end
 
-    context "when we keep redirect" do
+    context "when we keep redirecting" do
       before do
         Artifice.activate_with(ForeverRedirect)
       end
