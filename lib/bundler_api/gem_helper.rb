@@ -9,6 +9,12 @@ end
 class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease)
   REDIRECT_LIMIT = 5
 
+  def initialize(*)
+    super
+    @mutex   = Mutex.new
+    @gemspec = nil
+  end
+
   def full_name
     full_name = "#{name}-#{version}"
     full_name << "-#{platform}" if platform != 'ruby'
@@ -16,13 +22,16 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     full_name
   end
 
-  def download_spec
+  def download_spec(base = "http://rubygems.org")
+    @mutex.synchronize { return @gemspec if @gemspec }
     timer = Metriks.timer('job.download_spec').time
-    url   = "http://rubygems.org/quick/Marshal.4.8/#{full_name}.gemspec.rz"
+    url   = "#{base}/quick/Marshal.4.8/#{full_name}.gemspec.rz"
 
-    Marshal.load(Gem.inflate(fetch(url)))
+    @mutex.synchronize do
+      @gemspec = Marshal.load(Gem.inflate(fetch(url)))
+    end
   ensure
-    timer.stop
+    timer.stop if timer
   end
 
   private

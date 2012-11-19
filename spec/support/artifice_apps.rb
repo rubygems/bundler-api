@@ -59,3 +59,26 @@ class ForeverRedirect < Sinatra::Base
     redirect "/quick/Marshal.4.8/#{params[:splat].first}"
   end
 end
+
+class NonThreadSafeGenerator < Sinatra::Base
+  include GemspecHelper
+
+  def initialize(*)
+    super
+
+    @@counter = 0
+    @@mutex = Mutex.new
+  end
+
+  get "/quick/Marshal.4.8/*" do
+    @@counter += 1
+
+    name, version, platform = parse_splat(params[:splat].first)
+    if platform.nil?
+      platform == "ruby"
+    elsif platform == "jruby"
+      platform == "java"
+    end
+    Gem.deflate(Marshal.dump(generate_gemspec(name, @@counter, platform)))
+  end
+end
