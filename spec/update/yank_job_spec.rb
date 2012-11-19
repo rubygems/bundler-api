@@ -16,16 +16,18 @@ describe BundlerApi::YankJob do
 
     context "when the platform is ruby" do
       let(:payload)   { BundlerApi::GemHelper.new('foo', '1.0', 'ruby') }
+      let(:payload2)  { BundlerApi::GemHelper.new('foo', '1.1', 'ruby') }
       let(:gem_cache) {
         {
-          payload.full_name => 1
+          payload.full_name  => 1,
+          payload2.full_name => 2
         }
       }
 
       it "should remove the gem from the cache" do
         job.run
 
-        expect(gem_cache).to eq({})
+        expect(gem_cache).to eq({payload2.full_name => 2})
       end
     end
 
