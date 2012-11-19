@@ -85,5 +85,41 @@ GEMSPEC
         expect { helper.download_spec }.to raise_error(BundlerApi::HTTPError)
       end
     end
+
+    context "when using multiple threads" do
+      let(:version) { "1" }
+      let(:port)    { 2000 }
+
+      Thread.abort_on_exception = true
+
+      before do
+        @rackup_thread = Thread.new {
+          server = Rack::Server.new(:app       => NonThreadSafeGenerator,
+                                    :Host      => '0.0.0.0',
+                                    :Port      => port,
+                                    :server    => 'webrick',
+                                    :AccessLog => [])
+          server.start
+        }
+        @rackup_thread.run
+
+        # ensure server is started
+        require 'timeout'
+        Timeout.timeout(15) { sleep(0.1) until @rackup_thread.status == "sleep" }
+        sleep(1)
+      end
+
+      after do
+        @rackup_thread.kill
+      end
+
+      it "is threadsafe" do
+        5.times.map do
+          Thread.new { helper.download_spec("http://localhost:#{port}") }
+        end.each do |t|
+          expect(t.value).to eq(gemspec)
+        end
+      end
+    end
   end
 end
