@@ -8,6 +8,7 @@ end
 
 class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease)
   REDIRECT_LIMIT = 5
+  TRY_LIMIT      = 3
 
   def initialize(*)
     super
@@ -35,19 +36,27 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
   end
 
   private
-  def fetch(uri, tries = 0)
-    raise BundlerApi::HTTPError, "Too many redirects" if tries >= REDIRECT_LIMIT
+  def fetch(url, redirects = 0, tries = 0)
+    raise BundlerApi::HTTPError, "Too many redirects #{url}" if redirects >= REDIRECT_LIMIT
+    raise BundlerApi::HTTPError, "Could not download #{url}" if tries >= TRY_LIMIT
 
-    uri      = URI.parse(uri)
-    response = Net::HTTP.get_response(uri)
+    uri      = URI.parse(url)
+    response = nil
+    begin
+      response = Net::HTTP.get_response(uri)
+    rescue StandardError => e
+      puts "#{e} #{url}"
+    end
 
     case response
     when Net::HTTPRedirection
-      fetch(response["location"], tries + 1)
+      fetch(response["location"], redirects + 1)
     when Net::HTTPSuccess
       response.body
     else
-      raise BundlerApi::HTTPError, "Could not download #{uri}, #{response.class}"
+      exp = tries - 1
+      sleep(2 ** exp) if exp > 0
+      fetch(url, redirects, tries + 1)
     end
   end
 end

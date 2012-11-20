@@ -60,6 +60,34 @@ class ForeverRedirect < Sinatra::Base
   end
 end
 
+class GemspecHTTPError < Sinatra::Base
+  include GemspecHelper
+
+  def initialize(*)
+    super
+    @@run = false
+  end
+
+  get "/quick/Marshal.4.8/*" do
+    if @@run
+      name, version, platform = parse_splat(params[:splat].first)
+      platform ||= 'ruby'
+      Gem.deflate(Marshal.dump(generate_gemspec(name, version, platform)))
+    else
+      status 500
+      @@run = true
+      "OMG ERROR"
+    end
+  end
+end
+
+class ForeverHTTPError < Sinatra::Base
+  get "/quick/Marshal.4.8/*" do
+    status 500
+    "OMG ERROR"
+  end
+end
+
 class NonThreadSafeGenerator < Sinatra::Base
   include GemspecHelper
 
