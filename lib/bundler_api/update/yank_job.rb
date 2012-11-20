@@ -11,10 +11,12 @@ class BundlerApi::YankJob
   def run
     # sometimes the platform in the index is wrong,
     # so need to check the gemspec
-    spec       = @payload.download_spec
-    gem_helper = BundlerApi::GemHelper.new(spec.name, spec.version, spec.platform)
+    if @payload.platform != 'ruby'
+      spec     = @payload.download_spec
+      @payload = BundlerApi::GemHelper.new(spec.name, spec.version, spec.platform)
+    end
     @mutex.synchronize do
-      @gem_cache.delete(gem_helper.full_name)
+      @gem_cache.delete(@payload.full_name)
     end
   end
 end
