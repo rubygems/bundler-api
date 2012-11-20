@@ -101,8 +101,10 @@ def get_local_gems(db)
   SQL
 
   local_gems = {}
-  gem_helper = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform])
-  dataset.all.each {|h| local_gems[gem_helper.full_name] = h[:id] }
+  dataset.all.each do |h|
+    gem_helper                       = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform])
+    local_gems[gem_helper.full_name] = h[:id]
+  end
   puts "# of non yanked local gem versions: #{local_gems.size}"
 
   local_gems
@@ -129,7 +131,8 @@ def update(db, thread_count)
       next
     end
 
-    payload = BundlerApi::GemHelper.new(name, version, platform, prerelease)
+    name, version, platform = spec
+    payload                 = BundlerApi::GemHelper.new(name, version, platform, prerelease)
     pool.enq(BundlerApi::YankJob.new(local_gems, payload, yank_mutex))
     pool.enq(BundlerApi::Job.new(db, payload, mutex, add_gem_count))
   end
