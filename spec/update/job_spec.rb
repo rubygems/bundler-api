@@ -14,6 +14,10 @@ describe BundlerApi::Job do
     db.transaction(:rollback => :always) { example.run }
   end
 
+  before do
+    BundlerApi::Job.clear_cache
+  end
+
   describe "#run" do
     before do
       Artifice.activate_with(GemspecGenerator)
@@ -75,7 +79,7 @@ SQL
         jobs.first.run
         expect { jobs[1].run }.not_to raise_error(Sequel::DatabaseError)
 
-        gem_exists?(db, 'foo', '1.0', 'java')
+        gem_exists?(db, 'foo', '1.0', 'jruby')
       end
 
       it "sets the indexed attribute to true" do
@@ -84,7 +88,7 @@ SQL
           BundlerApi::Job.new(db, payload, mutex, counter)
         end
         jobs.first.run
-        version_id = db[<<-SQL, 'foo', '1.0', 'java'].first[:id]
+        version_id = db[<<-SQL, 'foo', '1.0', 'jruby'].first[:id]
           SELECT versions.id
           FROM rubygems, versions
           WHERE rubygems.id = versions.rubygem_id
@@ -95,7 +99,7 @@ SQL
         db[:versions].where(id: version_id).update(indexed: false)
         jobs[1].run
 
-        gem_exists?(db, 'foo', '1.0', 'java')
+        gem_exists?(db, 'foo', '1.0', 'jruby')
         expect(db[:versions].filter(id: version_id).select(:indexed).first[:indexed]).to be_true
       end
     end
