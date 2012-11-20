@@ -23,6 +23,10 @@ class BundlerApi::Job
     end
   end
 
+  def self.clear_cache
+    @@gem_cache.clear
+  end
+
   private
   def gem_exists?
     key = @payload.full_name
@@ -39,6 +43,7 @@ class BundlerApi::Job
       AND rubygems.name = ?
       AND versions.number = ?
       AND versions.platform = ?
+      AND versions.indexed = true
     SQL
 
     result = dataset.count > 0
@@ -58,7 +63,7 @@ class BundlerApi::Job
     timer = Metriks.timer('job.insert_spec').time
     @db.transaction do
       version    = spec.version.version
-      platform   = spec.platform.to_s
+      platform   = @payload.platform
       rubygem    = @db[:rubygems].filter(name: spec.name.to_s).select(:id).first
       rubygem_id = nil
       if rubygem
@@ -90,7 +95,8 @@ class BundlerApi::Job
           rubygem_id:  rubygem_id,
           updated_at:  Time.now,
           summary:     spec.summary,
-          platform:    spec.platform.to_s,
+          # rubygems.org actually uses the platform from the index and not from the spec
+          platform:    platform,
           created_at:  Time.now,
           indexed:     true,
           prerelease:  @payload.prerelease,
