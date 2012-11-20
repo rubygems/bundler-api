@@ -86,6 +86,35 @@ GEMSPEC
       end
     end
 
+    context "when there's a http error" do
+      before do
+        Artifice.activate_with(GemspecHTTPError)
+      end
+
+      after do
+        Artifice.deactivate
+      end
+
+      it "retries in case it's a hiccup" do
+        expect(helper.download_spec).to eq(gemspec)
+      end
+    end
+
+    context "when it's always throwing an error" do
+      before do
+        BundlerApi::GemHelper::TRY_LIMIT = 1
+        Artifice.activate_with(ForeverHTTPError)
+      end
+
+      after do
+        Artifice.deactivate
+      end
+
+      it "raises an error" do
+        expect { helper.download_spec }.to raise_error(BundlerApi::HTTPError)
+      end
+    end
+
     context "when using multiple threads" do
       let(:version) { "1" }
       let(:port)    { 2000 }
