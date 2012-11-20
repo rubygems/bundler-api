@@ -34,7 +34,7 @@ describe BundlerApi::YankJob do
     context "when the platform is jruby" do
       let(:payload)   { BundlerApi::GemHelper.new('foo', '1.0', 'jruby') }
       let(:gem_cache) {
-        gem_helper = BundlerApi::GemHelper.new('foo', '1.0', 'java')
+        gem_helper = BundlerApi::GemHelper.new('foo', '1.0', 'jruby')
         {
           gem_helper.full_name => 1
         }
