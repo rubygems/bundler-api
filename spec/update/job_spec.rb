@@ -38,6 +38,16 @@ WHERE rubygems.id = versions.rubygem_id
 SQL
     end
 
+    def dependencies(name, version = "1.0", platform = "ruby")
+      db[:dependencies].
+        join(:versions, id: :version_id).
+        join(:rubygems, id: :rubygem_id).
+        filter(rubygems__name: name,
+               versions__number: version,
+               versions__platform: platform).
+        all
+    end
+
     it "creates a rubygem if it doesn't exist" do
       payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), "ruby")
       job     = BundlerApi::Job.new(db, payload, mutex, counter)
@@ -67,6 +77,35 @@ SQL
 
       gem_exists?(db, 'foo')
       gem_exists?(db, 'foo', '1.0', 'java')
+    end
+
+    context "with gem dependencies" do
+      let(:gem_payload) { BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), "ruby") }
+      let(:dep_payload) { BundlerApi::GemHelper.new("bar", Gem::Version.new("1.0"), "ruby") }
+      let(:gem_job) { BundlerApi::Job.new(db, gem_payload, mutex, counter) }
+      let(:dep_job) { BundlerApi::Job.new(db, dep_payload, mutex, counter) }
+
+      context "when gem is added before the dependency" do
+        before do
+          gem_job.run
+          dep_job.run
+        end
+
+        it "doesn't create any dependencies" do
+          expect(dependencies("foo")).to be_empty
+        end
+      end
+
+      context "when the dependency is added before the gem" do
+        before do
+          dep_job.run
+          gem_job.run
+        end
+
+        it "creates the correct dependencies" do
+          expect(dependencies("foo").length).to eq(1)
+        end
+      end
     end
 
     context "when the index platform is jruby" do
