@@ -28,7 +28,7 @@ describe BundlerApi::Job do
     end
 
     def gem_exists?(db, name, version = '1.0', platform = 'ruby')
-      expect(db[<<-SQL, 'foo', version, platform].count).to eq(1)
+      expect(db[<<-SQL, name, version, platform].count).to eq(1)
 SELECT *
 FROM rubygems, versions
 WHERE rubygems.id = versions.rubygem_id
