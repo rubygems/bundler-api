@@ -88,7 +88,7 @@ class BundlerApi::Job
         version_id = version[:id]
         @db[:versions].where(id: version_id).update(indexed: true) unless version[:indexed]
       else
-        @db[:versions].insert(
+        version_id = @db[:versions].insert(
           authors:     spec.authors,
           description: spec.description,
           number:      spec.version.version,
@@ -102,6 +102,8 @@ class BundlerApi::Job
           prerelease:  @payload.prerelease,
           latest:      true,
           full_name:   spec.full_name,
+          # same setting as rubygems.org
+          built_at:    spec.date
         )
       end
 
