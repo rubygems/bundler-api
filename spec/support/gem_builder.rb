@@ -32,7 +32,8 @@ Also see http://rack.rubyforge.org.
       indexed:    indexed,
       prerelease: false,
       latest:     false,
-      full_name:  "#{name}-#{version}"
+      full_name:  "#{name}-#{version}",
+      built_at:   Time.now
     )
   end
 
