@@ -96,6 +96,18 @@ SQL
         end
       end
 
+      context "when forced and run again" do
+        before do
+          gem_job.run
+          dep_job.run
+        end
+
+        it "creates the correct dependencies" do
+          BundlerApi::Job.new(db, gem_payload, mutex, counter, true).run
+          expect(dependencies("foo").length).to eq(1)
+        end
+      end
+
       context "when the dependency is added before the gem" do
         before do
           dep_job.run
