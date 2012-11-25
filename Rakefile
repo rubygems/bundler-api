@@ -151,11 +151,49 @@ ensure
   timer.stop if timer
 end
 
+def fix_deps(db, thread_count)
+  specs         = get_specs
+  return 60 unless specs
+  add_gem_count = BundlerApi::AtomicCounter.new
+  mutex         = Mutex.new
+  prerelease    = false
+  pool          = BundlerApi::ConsumerPool.new(thread_count)
+
+  pool.start
+
+  prerelease    = false
+  specs.each do |spec|
+    if spec == :prerelease
+      prerelease = true
+      next
+    end
+
+    name, version, platform = spec
+    payload                 = BundlerApi::GemHelper.new(name, version, platform, prerelease)
+    pool.enq(BundlerApi::Job.new(db, payload, mutex, add_gem_count, true))
+  end
+
+  puts "Finished Enqueuing Jobs!"
+
+  pool.poison
+  pool.join
+
+  puts "# of gem versions added: #{add_gem_count.count}"
+end
+
 desc "update database"
 task :update, :thread_count do |t, args|
   thread_count  = args[:thread_count].to_i
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     update(db, thread_count)
+  end
+end
+
+desc "fixing existing dependencies"
+task :fix_deps, :thread_count do |t, args|
+  thread_count  = args[:thread_count].to_i
+  Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
+    fix_deps(db, thread_count)
   end
 end
 
