@@ -5,16 +5,15 @@ class BundlerApi::Job
   attr_reader :payload
   @@gem_cache = {}
 
-  def initialize(db, payload, mutex, gem_count, force = false)
+  def initialize(db, payload, mutex, gem_count)
     @db        = db
     @payload   = payload
     @mutex     = mutex
     @gem_count = gem_count
-    @force     = force
   end
 
   def run
-    if !gem_exists? || @force
+    unless gem_exists?
       @gem_count.increment
       spec = @payload.download_spec
       puts "Adding: #{@payload.full_name}"
