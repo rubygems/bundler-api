@@ -1,4 +1,5 @@
 require_relative '../spec_helper'
+require_relative '../support/gemspec_helper'
 require_relative '../../lib/bundler_api/update/gem_db_helper'
 require_relative '../../lib/bundler_api/gem_helper'
 
