@@ -1,5 +1,6 @@
 require_relative '../../bundler_api'
 require_relative '../metriks'
+require_relative 'gem_db_helper'
 
 class BundlerApi::Job
   attr_reader :payload
@@ -10,10 +11,11 @@ class BundlerApi::Job
     @payload   = payload
     @mutex     = mutex
     @gem_count = gem_count
+    @db_helper = BundlerApi::GemDBHelper.new(@db, @@gem_cache, @mutex)
   end
 
   def run
-    unless gem_exists?
+    unless @db_helper.exists?(@payload)
       @gem_count.increment
       spec = @payload.download_spec
       puts "Adding: #{@payload.full_name}"
@@ -28,35 +30,6 @@ class BundlerApi::Job
   end
 
   private
-  def gem_exists?
-    key = @payload.full_name
-
-    @mutex.synchronize do
-      return true if @@gem_cache[key]
-    end
-
-    timer   = Metriks.timer('job.gem_exists').time
-    dataset = @db[<<-SQL, @payload.name, @payload.version.version, @payload.platform]
-    SELECT versions.id
-    FROM rubygems, versions
-    WHERE rubygems.id = versions.rubygem_id
-      AND rubygems.name = ?
-      AND versions.number = ?
-      AND versions.platform = ?
-      AND versions.indexed = true
-    SQL
-
-    result = dataset.count > 0
-
-    @mutex.synchronize do
-      @@gem_cache[key] = true if result
-    end
-
-    result
-  ensure
-    timer.stop if timer
-  end
-
   def insert_spec(spec)
     raise "Failed to load spec" unless spec
 
