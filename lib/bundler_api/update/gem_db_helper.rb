@@ -110,7 +110,7 @@ class BundlerApi::GemDBHelper
 
       if dep.is_a?(Gem::Dependency)
         rubygem_name = dep.name.to_s
-        requirement   = dep.requirement.to_s
+        requirement  = dep.requirement.to_s
         scope        = dep.type.to_s
       else
         rubygem_name, requirement = dep
