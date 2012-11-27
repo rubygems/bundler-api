@@ -4,11 +4,13 @@ require 'json'
 require_relative '../bundler_api'
 require_relative '../bundler_api/dep_calc'
 require_relative '../bundler_api/metriks'
+require_relative '../bundler_api/honeybadger'
 
 class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
 
   use Metriks::Middleware
+  use Honeybadger::Rack
 
   def initialize(conn = Sequel.connect(ENV["FOLLOWER_DATABASE_URL"], :max_connections => ENV['MAX_THREADS']))
     super()
