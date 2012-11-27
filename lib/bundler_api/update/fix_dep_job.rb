@@ -13,8 +13,14 @@ class BundlerApi::FixDepJob
 
   def run
     if @db_helper.exists?(@payload)
-      spec = @payload.download_spec
-      fix_deps(spec)
+      spec = nil
+      begin
+        spec = @payload.download_spec
+      rescue BundlerApi::HTTPError => e
+        puts e
+      end
+
+      fix_deps(spec) if spec
     end
   end
 
