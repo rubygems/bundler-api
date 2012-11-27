@@ -118,14 +118,19 @@ class BundlerApi::GemDBHelper
 
       dep_rubygem = @db[:rubygems].filter(name: rubygem_name).select(:id).first
       if dep_rubygem
-        @db[:dependencies].insert(
-          requirements: requirement,
-          created_at:   Time.now,
-          updated_at:   Time.now,
-          rubygem_id:   dep_rubygem[:id],
-          version_id:   version_id,
-          scope:        scope
-        )
+        dep = @db[:dependencies].filter(requirements: requirement,
+                                        rubygem_id:   dep_rubygem[:id],
+                                        version_id:   version_id).first
+        unless dep
+          @db[:dependencies].insert(
+            requirements: requirement,
+            created_at:   Time.now,
+            updated_at:   Time.now,
+            rubygem_id:   dep_rubygem[:id],
+            version_id:   version_id,
+            scope:        scope
+          )
+        end
       end
     end
   end

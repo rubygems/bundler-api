@@ -159,7 +159,7 @@ describe BundlerApi::GemDBHelper do
   describe "#insert_dependencies" do
     include GemspecHelper
 
-    context "when the dep already exists" do
+    context "when the dep gem already exists" do
       let(:requirement) { "~> 1.0" }
       let(:foo_spec)    { generate_gemspec('foo', '1.0') }
       let(:bar_spec)    { generate_gemspec('bar', '1.0') }
@@ -192,6 +192,26 @@ describe BundlerApi::GemDBHelper do
         end
 
         it "should insert the dependencies" do
+          helper.insert_dependencies(foo_spec, @foo_version_id)
+
+          expect(db[:dependencies].filter(requirements: requirement,
+                                          scope:        'runtime',
+                                          rubygem_id:   @bar_rubygem_id,
+                                          version_id:   @foo_version_id).count).to eq(1)
+        end
+      end
+
+      context "when the dep db record exists" do
+        before do
+          db[:dependencies].insert(
+            requirements: requirement,
+            rubygem_id:   @bar_rubygem_id,
+            version_id:   @foo_version_id,
+            scope:        'runtime'
+          )
+        end
+
+        it "should just skip adding it" do
           helper.insert_dependencies(foo_spec, @foo_version_id)
 
           expect(db[:dependencies].filter(requirements: requirement,
