@@ -40,4 +40,79 @@ class BundlerApi::GemDBHelper
   ensure
     timer.stop if timer
   end
+
+  def find_or_insert_rubygem(spec)
+    insert     = nil
+    rubygem_id = nil
+    rubygem    = @db[:rubygems].filter(name: spec.name.to_s).select(:id).first
+
+    if rubygem
+      insert     = false
+      rubygem_id = rubygem[:id]
+    else
+      insert     = true
+      rubygem_id = @db[:rubygems].insert(
+        name:       spec.name,
+        created_at: Time.now,
+        updated_at: Time.now,
+        downloads:  0
+      )
+    end
+
+    [insert, rubygem_id]
+  end
+
+  def find_or_insert_version(spec, rubygem_id, platform = 'ruby', indexed = nil)
+    insert     = nil
+    version_id = nil
+    version    = @db[:versions].filter(
+      rubygem_id: rubygem_id,
+      number:     spec.version.version,
+      platform:   platform
+    ).select(:id, :indexed).first
+
+    if version
+      insert     = false
+      version_id = version[:id]
+      @db[:versions].where(id: version_id).update(indexed: indexed) if !indexed.nil? && version[:indexed] != indexed
+    else
+      insert     = true
+      indexed    = true if indexed.nil?
+      version_id = @db[:versions].insert(
+        authors:     spec.authors,
+        description: spec.description,
+        number:      spec.version.version,
+        rubygem_id:  rubygem_id,
+        updated_at:  Time.now,
+        summary:     spec.summary,
+        # rubygems.org actually uses the platform from the index and not from the spec
+        platform:    platform,
+        created_at:  Time.now,
+        indexed:     indexed,
+        prerelease:  spec.version.prerelease?,
+        latest:      true,
+        full_name:   spec.full_name,
+        # same setting as rubygems.org
+        built_at:    spec.date
+      )
+    end
+
+    [insert, version_id]
+  end
+
+  def insert_dependencies(spec, version_id)
+    spec.dependencies.each do |dep|
+      dep_rubygem = @db[:rubygems].filter(name: dep.name).select(:id).first
+      if dep_rubygem
+        @db[:dependencies].insert(
+          requirements: dep.requirement.to_s,
+          created_at:   Time.now,
+          updated_at:   Time.now,
+          rubygem_id:   dep_rubygem[:id],
+          version_id:   version_id,
+          scope:        dep.type.to_s,
+        )
+      end
+    end
+  end
 end
