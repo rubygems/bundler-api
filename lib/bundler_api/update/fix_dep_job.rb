@@ -42,7 +42,7 @@ class BundlerApi::FixDepJob
     end
 
     if deps_added.any?
-      deps_added.each {|dep| puts "Adding Missing Dep to #{spec.name}: #{dep}" }
+      puts "Adding Missing Dep to #{spec.full_name}: #{deps_added.join(", ")}"
     end
   end
 end
