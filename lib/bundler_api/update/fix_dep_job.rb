@@ -4,10 +4,11 @@ require_relative 'gem_db_helper'
 class BundlerApi::FixDepJob
   @@gem_cache = {}
 
-  def initialize(db, payload, mutex = nil)
+  def initialize(db, payload, counter = nil, mutex = nil)
     @db        = db
     @payload   = payload
     @mutex     = @mutex
+    @counter   = counter
     @db_helper = BundlerApi::GemDBHelper.new(@db, @@gem_cache, @mutex)
   end
 
@@ -21,7 +22,7 @@ class BundlerApi::FixDepJob
       end
 
       begin
-        fix_deps(spec) if spec
+        deps = fix_deps(spec) if spec
       rescue StandardError => e
         puts "Error processing: #{spec.full_name}"
         puts e
@@ -43,6 +44,7 @@ class BundlerApi::FixDepJob
 
     if deps_added.any?
       puts "Adding Missing Dep to #{spec.full_name}: #{deps_added.join(", ")}"
+      @counter.increment if @counter
     end
   end
 end

@@ -155,6 +155,7 @@ end
 def fix_deps(db, thread_count)
   specs         = get_specs
   return 60 unless specs
+  counter       = BundlerApi::AtomicCounter.new
   mutex         = nil
   prerelease    = false
   pool          = BundlerApi::ConsumerPool.new(thread_count)
@@ -170,13 +171,15 @@ def fix_deps(db, thread_count)
 
     name, version, platform = spec
     payload                 = BundlerApi::GemHelper.new(name, version, platform, prerelease)
-    pool.enq(BundlerApi::FixDepJob.new(db, payload, mutex))
+    pool.enq(BundlerApi::FixDepJob.new(db, payload, counter, mutex))
   end
 
   puts "Finished Enqueuing Jobs!"
 
   pool.poison
   pool.join
+
+  puts "# of gem deps fixed: #{counter.count}"
 end
 
 desc "update database"
