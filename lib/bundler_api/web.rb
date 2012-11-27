@@ -11,7 +11,7 @@ class BundlerApi::Web < Sinatra::Base
   require 'metriks/middleware'
   use Metriks::Middleware
 
-  def initialize(conn = Sequel.connect(ENV["FOLLOWER_DATABASE_URL"]))
+  def initialize(conn = Sequel.connect(ENV["FOLLOWER_DATABASE_URL"], :max_connections => 100))
     super()
     @conn = conn
   end
