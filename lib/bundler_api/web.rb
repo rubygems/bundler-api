@@ -8,7 +8,6 @@ require_relative '../bundler_api/metriks'
 class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
 
-  require 'metriks/middleware'
   use Metriks::Middleware
 
   def initialize(conn = Sequel.connect(ENV["FOLLOWER_DATABASE_URL"], :max_connections => ENV['MAX_THREADS']))

@@ -16,3 +16,5 @@ else
   Metriks::Reporter::Logger.new(logger:   Logger.new("/dev/null"),
                                 interval: 10).start
 end
+
+require 'metriks/middleware'
