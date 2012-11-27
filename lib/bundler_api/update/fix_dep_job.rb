@@ -20,7 +20,12 @@ class BundlerApi::FixDepJob
         puts e
       end
 
-      fix_deps(spec) if spec
+      begin
+        fix_deps(spec) if spec
+      rescue StandardError => e
+        puts "Error processing: #{spec.full_name}"
+        puts e
+      end
     end
   end
 
