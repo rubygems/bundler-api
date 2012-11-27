@@ -171,8 +171,9 @@ describe BundlerApi::GemDBHelper do
       end
 
       it "should insert the dependencies" do
-        helper.insert_dependencies(foo_spec, @foo_version_id)
+        deps_added = helper.insert_dependencies(foo_spec, @foo_version_id)
 
+        expect(deps_added).to eq(["~> 1.0 bar"])
         expect(db[:dependencies].filter(requirements: requirement,
                                         scope:        'runtime',
                                         rubygem_id:   @bar_rubygem_id,
@@ -192,8 +193,9 @@ describe BundlerApi::GemDBHelper do
         end
 
         it "should insert the dependencies" do
-          helper.insert_dependencies(foo_spec, @foo_version_id)
+          deps_added = helper.insert_dependencies(foo_spec, @foo_version_id)
 
+          expect(deps_added).to eq(["~> 1.0 bar"])
           expect(db[:dependencies].filter(requirements: requirement,
                                           scope:        'runtime',
                                           rubygem_id:   @bar_rubygem_id,
@@ -212,8 +214,9 @@ describe BundlerApi::GemDBHelper do
         end
 
         it "should just skip adding it" do
-          helper.insert_dependencies(foo_spec, @foo_version_id)
+          deps_added = helper.insert_dependencies(foo_spec, @foo_version_id)
 
+          expect(deps_added).to eq([])
           expect(db[:dependencies].filter(requirements: requirement,
                                           scope:        'runtime',
                                           rubygem_id:   @bar_rubygem_id,

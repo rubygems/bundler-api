@@ -101,6 +101,8 @@ class BundlerApi::GemDBHelper
   end
 
   def insert_dependencies(spec, version_id)
+    deps_added = []
+
     spec.dependencies.each do |dep|
       rubygem_name = nil
       requirement  = nil
@@ -122,6 +124,7 @@ class BundlerApi::GemDBHelper
                                         rubygem_id:   dep_rubygem[:id],
                                         version_id:   version_id).first
         unless dep
+          deps_added << "#{requirement} #{rubygem_name}"
           @db[:dependencies].insert(
             requirements: requirement,
             created_at:   Time.now,
@@ -133,5 +136,7 @@ class BundlerApi::GemDBHelper
         end
       end
     end
+
+    deps_added
   end
 end
