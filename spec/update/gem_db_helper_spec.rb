@@ -178,6 +178,28 @@ describe BundlerApi::GemDBHelper do
                                         rubygem_id:   @bar_rubygem_id,
                                         version_id:   @foo_version_id).count).to eq(1)
       end
+
+      context "sometimes the dep is an array" do
+        let(:foo_spec) do
+          spec = generate_gemspec('foo', '1.0')
+          spec.extend(Module.new {
+            def dependencies
+              [["bar", "~> 1.0"]]
+            end
+          })
+
+          spec
+        end
+
+        it "should insert the dependencies" do
+          helper.insert_dependencies(foo_spec, @foo_version_id)
+
+          expect(db[:dependencies].filter(requirements: requirement,
+                                          scope:        'runtime',
+                                          rubygem_id:   @bar_rubygem_id,
+                                          version_id:   @foo_version_id).count).to eq(1)
+        end
+      end
     end
   end
 end

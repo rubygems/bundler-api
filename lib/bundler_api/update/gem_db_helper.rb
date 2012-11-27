@@ -102,15 +102,29 @@ class BundlerApi::GemDBHelper
 
   def insert_dependencies(spec, version_id)
     spec.dependencies.each do |dep|
-      dep_rubygem = @db[:rubygems].filter(name: dep.name).select(:id).first
+      rubygem_name = nil
+      requirement  = nil
+      scope        = nil
+
+      if dep.is_a?(Gem::Dependency)
+        rubygem_name = dep.name
+        requirement   = dep.requirement.to_s
+        scope        = dep.type.to_s
+      else
+        rubygem_name, requirement = dep
+        # assume runtime for legacy deps
+        scope                     = "runtime"
+      end
+
+      dep_rubygem = @db[:rubygems].filter(name: rubygem_name).select(:id).first
       if dep_rubygem
         @db[:dependencies].insert(
-          requirements: dep.requirement.to_s,
+          requirements: requirement,
           created_at:   Time.now,
           updated_at:   Time.now,
           rubygem_id:   dep_rubygem[:id],
           version_id:   version_id,
-          scope:        dep.type.to_s,
+          scope:        scope
         )
       end
     end
