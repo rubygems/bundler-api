@@ -18,6 +18,7 @@ eval(<<GEMSPEC)
 
       s.add_runtime_dependency("bar", "~> 1.0") if name == "foo"
       s.add_development_dependency("#{name}-dev", ">= 1.0")
+      yield(s) if block_given?
     end
 GEMSPEC
   end
