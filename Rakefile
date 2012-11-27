@@ -8,6 +8,7 @@ require 'locksmith/pg'
 require_relative 'lib/bundler_api/update/consumer_pool'
 require_relative 'lib/bundler_api/update/job'
 require_relative 'lib/bundler_api/update/yank_job'
+require_relative 'lib/bundler_api/update/fix_dep_job'
 require_relative 'lib/bundler_api/update/atomic_counter'
 require_relative 'lib/bundler_api/gem_helper'
 require_relative 'lib/bundler_api/pgstats'
@@ -154,8 +155,7 @@ end
 def fix_deps(db, thread_count)
   specs         = get_specs
   return 60 unless specs
-  add_gem_count = BundlerApi::AtomicCounter.new
-  mutex         = Mutex.new
+  mutex         = nil
   prerelease    = false
   pool          = BundlerApi::ConsumerPool.new(thread_count)
 
@@ -170,15 +170,13 @@ def fix_deps(db, thread_count)
 
     name, version, platform = spec
     payload                 = BundlerApi::GemHelper.new(name, version, platform, prerelease)
-    pool.enq(BundlerApi::Job.new(db, payload, mutex, add_gem_count, true))
+    pool.enq(BundlerApi::FixDepJob.new(db, payload, mutex))
   end
 
   puts "Finished Enqueuing Jobs!"
 
   pool.poison
   pool.join
-
-  puts "# of gem versions added: #{add_gem_count.count}"
 end
 
 desc "update database"
