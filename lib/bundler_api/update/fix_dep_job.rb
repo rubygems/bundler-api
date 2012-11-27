@@ -21,10 +21,17 @@ class BundlerApi::FixDepJob
   private
   def fix_deps(spec)
     raise "Failed to load spec" unless spec
+
+    deps_added = []
+
     @db.transaction do
       _, rubygem_id = @db_helper.find_or_insert_rubygem(spec)
       _, version_id = @db_helper.find_or_insert_version(spec, rubygem_id, @payload.platform, true)
-      @db_helper.insert_dependencies(spec, version_id)
+      deps_added    = @db_helper.insert_dependencies(spec, version_id)
+    end
+
+    if deps_added.any?
+      deps_added.each {|dep| puts "Adding Missing Dep to #{spec.name}: #{dep}" }
     end
   end
 end
