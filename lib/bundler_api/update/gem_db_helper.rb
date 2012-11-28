@@ -1,3 +1,4 @@
+require 'set'
 require_relative '../../bundler_api'
 require_relative '../metriks'
 
@@ -105,28 +106,27 @@ class BundlerApi::GemDBHelper
 
     spec.dependencies.each do |dep|
       rubygem_name = nil
-      requirement  = nil
+      requirements = nil
       scope        = nil
 
       if dep.is_a?(Gem::Dependency)
         rubygem_name = dep.name.to_s
-        requirement  = dep.requirement.to_s
+        requirements = dep.requirement.to_s
         scope        = dep.type.to_s
       else
-        rubygem_name, requirement = dep
+        rubygem_name, requirements = dep
         # assume runtime for legacy deps
         scope                     = "runtime"
       end
 
       dep_rubygem = @db[:rubygems].filter(name: rubygem_name).select(:id).first
       if dep_rubygem
-        dep = @db[:dependencies].filter(requirements: requirement,
-                                        rubygem_id:   dep_rubygem[:id],
+        dep = @db[:dependencies].filter(rubygem_id:   dep_rubygem[:id],
                                         version_id:   version_id).first
-        unless dep
-          deps_added << "#{requirement} #{rubygem_name}"
+        if !dep || !matching_requirements?(requirements, dep[:requirements])
+          deps_added << "#{requirements} #{rubygem_name}"
           @db[:dependencies].insert(
-            requirements: requirement,
+            requirements: requirements,
             created_at:   Time.now,
             updated_at:   Time.now,
             rubygem_id:   dep_rubygem[:id],
@@ -138,5 +138,10 @@ class BundlerApi::GemDBHelper
     end
 
     deps_added
+  end
+
+  private
+  def matching_requirements?(requirements1, requirements2 )
+    Set.new(requirements1.split(", ")) == Set.new(requirements2.split(", "))
   end
 end

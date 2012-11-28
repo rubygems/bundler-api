@@ -267,6 +267,39 @@ describe BundlerApi::GemDBHelper do
                                           rubygem_id:   @bar_rubygem_id,
                                           version_id:   @foo_version_id).count).to eq(1)
         end
+
+        context "when the dep order is using the legacy style" do
+          let(:foo_spec) do
+            generate_gemspec('foo', '1.0') do |s|
+              s.add_runtime_dependency "baz", [">= 0","= 1.0.1"]
+            end
+          end
+          let(:baz_spec) { generate_gemspec('baz', '1.0') }
+
+          before do
+            @baz_rubygem_id = helper.find_or_insert_rubygem(baz_spec).last
+            db[:dependencies].insert(
+              requirements: ">= 0, = 1.0.1",
+              rubygem_id:   @baz_rubygem_id,
+              version_id:   @foo_version_id,
+              scope:        'runtime'
+            )
+          end
+
+          it "should just skip adding it again" do
+            deps_added = helper.insert_dependencies(foo_spec, @foo_version_id)
+
+            expect(deps_added).to eq([])
+            expect(db[:dependencies].filter(requirements: requirement,
+                                            scope:        'runtime',
+                                            rubygem_id:   @bar_rubygem_id,
+                                            version_id:   @foo_version_id).count).to eq(1)
+            expect(db[:dependencies].filter(requirements: ">= 0, = 1.0.1",
+                                            scope:        'runtime',
+                                            rubygem_id:   @baz_rubygem_id,
+                                            version_id:   @foo_version_id).count).to eq(1)
+          end
+        end
       end
     end
   end
