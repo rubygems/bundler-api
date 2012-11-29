@@ -54,4 +54,16 @@ class BundlerApi::Web < Sinatra::Base
   get "/specs.4.8.gz" do
     redirect "#{RUBYGEMS_URL}/specs.4.8.gz"
   end
+
+  get "/errors/exception" do
+    raise "This is an exception!"
+  end
+
+  get "/errors/404" do
+    halt(404)
+  end
+
+  get "/errors/500" do
+    halt(500)
+  end
 end
