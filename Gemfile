@@ -13,6 +13,7 @@ gem 'rake'
 gem 'sequel'
 gem 'sequel_pg'
 gem 'sinatra'
+gem 'thin'
 
 group :test do
   gem 'artifice'
