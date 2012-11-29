@@ -32,8 +32,6 @@ GEM
     multi_json (1.3.6)
     multipart-post (1.1.5)
     pg (0.14.1)
-    puma (1.6.3)
-      rack (~> 1.2)
     rack (1.4.1)
     rack-protection (1.2.0)
       rack
@@ -65,7 +63,6 @@ DEPENDENCIES
   metriks
   metriks-middleware
   pg
-  puma
   rack-test
   rack-timeout
   rake
