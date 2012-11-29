@@ -18,6 +18,8 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   error do |e|
+    # Honeybadger 1.3.1 only knows how to look for rack.exception :(
+    request.env['rack.exception'] = request.env['sinatra.error']
   end
 
   get "/api/v1/dependencies" do
