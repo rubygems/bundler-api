@@ -60,11 +60,4 @@ class BundlerApi::Web < Sinatra::Base
     raise "This is an exception!"
   end
 
-  get "/errors/404" do
-    halt(404)
-  end
-
-  get "/errors/500" do
-    halt(500)
-  end
 end
