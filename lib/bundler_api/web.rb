@@ -18,7 +18,6 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   error do |e|
-    STDERR.puts e.message
   end
 
   get "/api/v1/dependencies" do
