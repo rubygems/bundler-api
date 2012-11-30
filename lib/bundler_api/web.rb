@@ -14,9 +14,21 @@ class BundlerApi::Web < Sinatra::Base
     use Honeybadger::Rack
   end
 
-  def initialize(conn = Sequel.connect(ENV["FOLLOWER_DATABASE_URL"], :max_connections => ENV['MAX_THREADS']))
+  def initialize(conn = nil)
+    @conn = conn || Sequel.connect(ENV["FOLLOWER_DATABASE_URL"], :max_connections => ENV['MAX_THREADS'])
     super()
-    @conn = conn
+  end
+
+  def get_deps
+    halt(200) if params[:gems].nil?
+
+    Metriks.timer('dependencies').time do
+      gems = params[:gems].split(',')
+      Metriks.histogram('gems.count').update(gems.size)
+      deps = BundlerApi::DepCalc.deps_for(@conn, gems)
+      Metriks.histogram('dependencies.count').update(deps.size)
+      deps
+    end
   end
 
   error do |e|
@@ -25,21 +37,15 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/api/v1/dependencies" do
-    return "" unless params[:gems]
-    Metriks.timer('dependencies').time do
-      gems = params[:gems].split(',')
-      Metriks.histogram('gems.count').update(gems.size)
-      deps = BundlerApi::DepCalc.deps_for(@conn, gems)
-      Metriks.histogram('dependencies.count').update(deps.size)
-      Metriks.timer('dependencies.marshal').time do
-        Marshal.dump(deps)
-      end
+    Metriks.timer('dependencies.marshal').time do
+      Marshal.dump(get_deps)
     end
   end
 
   get "/api/v1/dependencies.json" do
-    gems = params[:gems].split(',')
-    DepCalc.deps_for(@conn, gems).to_json
+    Metriks.timer('dependencies.jsonify').time do
+      get_deps.to_json
+    end
   end
 
   get "/quick/Marshal.4.8/:id" do

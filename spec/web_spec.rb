@@ -49,6 +49,36 @@ describe BundlerApi::Web do
     end
   end
 
+
+  context "GET /api/v1/dependencies.json" do
+    let(:request) { "/api/v1/dependencies.json" }
+
+    context "there are no gems" do
+      it "returns an empty string" do
+        get request
+
+        expect(last_response).to be_ok
+        expect(last_response.body).to eq("")
+      end
+    end
+
+    context "there are gems" do
+      it "returns a marshal dump" do
+        result = [{
+          "name"         => 'rack',
+          "number"       => '1.0.0',
+          "platform"     => 'ruby',
+          "dependencies" => []
+        }]
+
+        get "#{request}?gems=rack"
+
+        expect(last_response).to be_ok
+        expect(JSON.parse(last_response.body)).to eq(result)
+      end
+    end
+  end
+
   context "GET /quick/Marshal.4.8/:id" do
     it "redirects" do
       get "/quick/Marshal.4.8/rack"
