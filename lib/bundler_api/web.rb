@@ -22,13 +22,14 @@ class BundlerApi::Web < Sinatra::Base
   def get_deps
     halt(200) if params[:gems].nil?
 
+    gems, deps = nil
     Metriks.timer('dependencies').time do
       gems = params[:gems].split(',')
-      Metriks.histogram('gems.count').update(gems.size)
       deps = BundlerApi::DepCalc.deps_for(@conn, gems)
-      Metriks.histogram('dependencies.count').update(deps.size)
-      deps
     end
+    Metriks.histogram('gems.count').update(gems.size)
+    Metriks.histogram('dependencies.count').update(deps.size)
+    deps
   end
 
   error do |e|
