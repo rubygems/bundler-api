@@ -44,12 +44,14 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/api/v1/dependencies" do
+    content_type 'application/octet-stream'
     Metriks.timer('dependencies.marshal').time do
       Marshal.dump(get_deps)
     end
   end
 
   get "/api/v1/dependencies.json" do
+    content_type 'application/json;charset=UTF-8'
     Metriks.timer('dependencies.jsonify').time do
       get_deps.to_json
     end
