@@ -15,7 +15,13 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   def initialize(conn = nil)
-    @conn = conn || Sequel.connect(ENV["FOLLOWER_DATABASE_URL"], :max_connections => ENV['MAX_THREADS'])
+    db_url    = ENV["FOLLOWER_DATABASE_URL"]
+    db_url  ||= begin
+      follower = `heroku config -s -a bundler-api-staging | grep FOLLOWER`
+      follower.split("=").last
+    end
+    max_conns = ENV['MAX_THREADS'] || 2
+    @conn = conn || Sequel.connect(db_url, :max_connections => max_conns)
     super()
   end
 
