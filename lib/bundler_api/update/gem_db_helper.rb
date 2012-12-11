@@ -14,7 +14,7 @@ class BundlerApi::GemDBHelper
 
     if @mutex
       @mutex.synchronize do
-        return @@gem_cache[key] if @gem_cache[key]
+        return @gem_cache[key] if @gem_cache[key]
       end
     end
 

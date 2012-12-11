@@ -27,6 +27,18 @@ describe BundlerApi::GemDBHelper do
         expect(result[:rubygem_id]).to be_true
         expect(result[:version_id]).to be_true
       end
+
+      context "when using a mutex" do
+        let(:mutex) { Mutex.new }
+
+        it "returns the rubygems and versions id from the cache when called twice" do
+          helper.exists?(payload)
+          result = helper.exists?(payload)
+
+          expect(result[:rubygem_id]).to be_true
+          expect(result[:version_id]).to be_true
+        end
+      end
     end
 
     context "if the gem does not exst" do
