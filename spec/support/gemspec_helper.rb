@@ -23,7 +23,6 @@ eval(<<GEMSPEC)
 GEMSPEC
   end
 
-
   def parse_splat(splat)
     splat.sub('.gemspec.rz', '').split('-')
   end
