@@ -12,7 +12,7 @@ describe BundlerApi::GemDBHelper do
     db.transaction(:rollback => :always) { example.run }
   end
 
-  describe "#gem_exists?" do
+  describe "#exists?" do
     let(:payload) { BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), "ruby", false) }
 
     context "if the gem exists" do
