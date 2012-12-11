@@ -3,7 +3,6 @@ source "https://rubygems.org"
 ruby '1.9.3'
 
 gem 'honeybadger'
-gem 'librato-metrics'
 gem 'lock-smith'
 gem 'metriks'
 gem 'metriks-middleware', :github => 'indirect/metriks-middleware'
