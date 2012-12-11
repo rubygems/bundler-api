@@ -90,7 +90,7 @@ class BundlerApi::GemDBHelper
         platform:    platform,
         created_at:  Time.now,
         indexed:     indexed,
-        prerelease:  spec.version.prerelease?,
+        prerelease:  !spec.version.prerelease?.nil?,
         latest:      true,
         full_name:   spec.full_name,
         # same setting as rubygems.org

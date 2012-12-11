@@ -121,6 +121,22 @@ describe BundlerApi::GemDBHelper do
                                                         select(:id).first[:id])
         end
       end
+
+      context "when it's a prerelease spec" do
+        let(:version) { "1.1.pre" }
+
+        it "should insert the version" do
+          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, indexed)
+
+          expect(insert).to eq(true)
+          expect(version_id).to eq(db[:versions].filter(rubygem_id: @rubygem_id,
+                                                        number:     version,
+                                                        platform:   platform,
+                                                        prerelease: true,
+                                                        indexed:    indexed).
+                                                        select(:id).first[:id])
+        end
+      end
     end
 
     context "when the version exists" do
