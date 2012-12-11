@@ -10,11 +10,9 @@ if user && token
   source   = Socket.gethostname
   prefix   = ENV['RACK_ENV'] || 'development'
   on_error = ->(e) do STDOUT.puts("LibratoMetrics: #{ e.message }") end
-  Metriks::Reporter::LibratoMetrics.new(user, token,
-    on_error: on_error,
-    source:   source,
-    prefix: prefix
-  ).start
+  opts = { on_error: on_error, source: source }
+  opts.merge!(prefix: prefix) unless prefix == "production"
+  Metriks::Reporter::LibratoMetrics.new(user, token, opts).start
 
   old_user  = ENV['OLD_LIBRATO_METRICS_USER']
   old_token = ENV['OLD_LIBRATO_METRICS_TOKEN']
