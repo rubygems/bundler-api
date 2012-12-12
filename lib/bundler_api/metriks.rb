@@ -13,6 +13,8 @@ if user && token
                                         source:   source).start
 else
   require 'metriks/reporter/logger'
-  Metriks::Reporter::Logger.new(logger:   Logger.new(STDOUT),
+  Metriks::Reporter::Logger.new(logger:   Logger.new("/dev/null"),
                                 interval: 10).start
 end
+
+require 'metriks/middleware'

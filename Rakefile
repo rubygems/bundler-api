@@ -7,23 +7,31 @@ require 'time'
 require 'locksmith/pg'
 require_relative 'lib/bundler_api/update/consumer_pool'
 require_relative 'lib/bundler_api/update/job'
-require_relative 'lib/bundler_api/update/counter'
+require_relative 'lib/bundler_api/update/yank_job'
+require_relative 'lib/bundler_api/update/fix_dep_job'
+require_relative 'lib/bundler_api/update/atomic_counter'
+require_relative 'lib/bundler_api/gem_helper'
 require_relative 'lib/bundler_api/pgstats'
 
 $stdout.sync = true
 Thread.abort_on_exception = true
 
+begin
+  require 'rspec/core/rake_task'
+
+  desc "Run specs"
+  RSpec::Core::RakeTask.new(:spec) do |t|
+    t.rspec_opts = %w(-fs --color)
+    #t.ruby_opts  = %w(-w)
+  end
+  task :default => :spec
+rescue LoadError => e
+end
+
 def read_index(uri)
   Metriks.timer('rake.read_index').time do
     Zlib::GzipReader.open(open(uri)) {|gz| Marshal.load(gz) }
   end
-end
-
-def create_hash_key(name, version, platform)
-  full_name = "#{name}-#{version}"
-  full_name << "-#{platform}" if platform != 'ruby'
-
-  full_name
 end
 
 def modified?(uri, cache_file)
@@ -95,7 +103,10 @@ def get_local_gems(db)
   SQL
 
   local_gems = {}
-  dataset.all.each {|h| local_gems[create_hash_key(h[:name], h[:number], h[:platform])] = h[:id] }
+  dataset.all.each do |h|
+    gem_helper                       = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform])
+    local_gems[gem_helper.full_name] = h[:id]
+  end
   puts "# of non yanked local gem versions: #{local_gems.size}"
 
   local_gems
@@ -108,11 +119,12 @@ def update(db, thread_count)
   return 60 unless specs
 
   timer         = Metriks.timer('rake.update').time
-  add_gem_count = Counter.new
+  add_gem_count = BundlerApi::AtomicCounter.new
   mutex         = Mutex.new
+  yank_mutex    = Mutex.new
   local_gems    = get_local_gems(db)
   prerelease    = false
-  pool          = ConsumerPool.new(thread_count)
+  pool          = BundlerApi::ConsumerPool.new(thread_count)
 
   pool.start
   specs.each do |spec|
@@ -122,15 +134,9 @@ def update(db, thread_count)
     end
 
     name, version, platform = spec
-    key                     = create_hash_key(name, version.version, platform)
-    mutex.synchronize do
-      local_gems.delete(key)
-    end
-
-    # add new gems
-    payload = Payload.new(name, version, platform, prerelease)
-    job     = Job.new(db, payload, mutex, add_gem_count)
-    pool.enq(job)
+    payload                 = BundlerApi::GemHelper.new(name, version, platform, prerelease)
+    pool.enq(BundlerApi::YankJob.new(local_gems, payload, yank_mutex))
+    pool.enq(BundlerApi::Job.new(db, payload, mutex, add_gem_count))
   end
 
   puts "Finished Enqueuing Jobs!"
@@ -147,11 +153,49 @@ ensure
   timer.stop if timer
 end
 
+def fix_deps(db, thread_count)
+  specs         = get_specs
+  return 60 unless specs
+  counter       = BundlerApi::AtomicCounter.new
+  mutex         = nil
+  prerelease    = false
+  pool          = BundlerApi::ConsumerPool.new(thread_count)
+
+  pool.start
+
+  prerelease    = false
+  specs.each do |spec|
+    if spec == :prerelease
+      prerelease = true
+      next
+    end
+
+    name, version, platform = spec
+    payload                 = BundlerApi::GemHelper.new(name, version, platform, prerelease)
+    pool.enq(BundlerApi::FixDepJob.new(db, payload, counter, mutex))
+  end
+
+  puts "Finished Enqueuing Jobs!"
+
+  pool.poison
+  pool.join
+
+  puts "# of gem deps fixed: #{counter.count}"
+end
+
 desc "update database"
 task :update, :thread_count do |t, args|
   thread_count  = args[:thread_count].to_i
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     update(db, thread_count)
+  end
+end
+
+desc "fixing existing dependencies"
+task :fix_deps, :thread_count do |t, args|
+  thread_count  = args[:thread_count].to_i
+  Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
+    fix_deps(db, thread_count)
   end
 end
 
@@ -208,4 +252,14 @@ task :collect_db_stats do
     end
 
   threads.each(&:join)
+end
+
+desc "test a specific gem"
+task :insert, :name, :version, :platform do |t, args|
+  counter = BundlerApi::AtomicCounter.new
+  mutex   = Mutex.new
+  payload = BundlerApi::GemHelper.new(args[:name], Gem::Version.new(args[:version]), args[:platform], false)
+  Sequel.connect(ENV["DATABASE_URL"], max_connections: 1) do |db|
+    BundlerApi::Job.new(db, payload, mutex, counter).run
+  end
 end
