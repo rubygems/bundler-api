@@ -41,6 +41,11 @@ class BundlerApi::Web < Sinatra::Base
 
   def get_payload
     params = JSON.parse(request.body.read)
+
+    if @rubygems_token && (params["token"] != @rubygems_token)
+      halt 403, "You're not Rubygems"
+    end
+
     %w(name version platform prerelease).each do |key|
       halt 422, "No spec #{key} given" if params[key].nil?
     end
@@ -78,7 +83,6 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   post "/api/v1/add_spec.json" do
-    # return unless @rubygems_token && params[:rubygems_token] == @rubygems_token
     payload = get_payload
     job = BundlerApi::Job.new(@conn, payload)
     job.run
@@ -87,7 +91,6 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   post "/api/v1/remove_spec.json" do
-    # return unless params[:rubygems_token] == @rubygems_token
     payload    = get_payload
     rubygem_id = @conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
     version    = @conn[:versions].where(
