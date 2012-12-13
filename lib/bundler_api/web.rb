@@ -88,9 +88,13 @@ class BundlerApi::Web < Sinatra::Base
 
   post "/api/v1/remove_spec.json" do
     # return unless params[:rubygems_token] == @rubygems_token
-    payload = get_payload
-    job = BundlerApi::YankJob.new(@conn, payload)
-    job.run
+    payload    = get_payload
+    rubygem_id = @conn[:rubygems].filter(name: payload.name.to_s).select(:id).first
+    version    = @conn[:versions].filter(
+      rubygem_id: rubygem_id,
+      number:     payload.version.version,
+      platform:   payload.platform
+    ).update(indexed: false)
 
     json_payload(payload)
   end

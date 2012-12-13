@@ -6,30 +6,36 @@ describe BundlerApi::Web do
   include Rack::Test::Methods
 
   class MockSequel
+    @@rack_triple = [{
+      name:     "rack",
+      number:   "1.0.0",
+      platform: "ruby",
+      dep_name: nil
+    }]
+
     def [](*args)
       case args.first
       when :rubygems, :versions
+        @select = (@full ? [{:id => 1}] : [])
+        @first = nil
+        self
+      when :dependencies
+        @select = [{:id => 1}]
+        @first = {:requirements => ">= 1.0"}
         self
       else
-        if args[2] == "1.0.1"
-          []
-        else
-          [{
-            name:     "rack",
-            number:   "1.0.0",
-            platform: "ruby",
-            dep_name: nil
-          }]
-        end
+        args[2] == "1.0.1" ? [] : @@rack_triple
       end
     end
 
-    attr_reader :filtered, :selected, :inserted, :deleted
+    attr_reader :whered, :filtered, :selected, :inserted, :updated
+    attr_accessor :full
+    def where(*args); @whered ||= []; @whered << args; self; end
     def filter(*args); @filtered ||= []; @filtered << args; self; end
-    def select(*args); @selected ||= []; @selected << args; self; end
+    def select(*args); @selected ||= []; @selected << args; @select; end
     def insert(*args); @inserted ||= []; @inserted << args; true; end
-    def delete(*args); @deleted ||= []; @deleted << args; true; end
-    def first; nil; end
+    def update(*args); @updated ||= []; @updated << args; true; end
+    def first; @first; end
     def transaction; yield; end
   end
 
@@ -123,10 +129,14 @@ describe BundlerApi::Web do
     let(:payload){ {:name => "rack", :version => "1.0.0",
       :platform => "ruby", :prerelease => false} }
 
-    fit "removes the spec from the database" do
+    before do
+      @db.full = true
+    end
+
+    it "removes the spec from the database" do
       post url, JSON.dump(payload)
 
-      expect(@db.deleted[0].first).to eq("rack-1.0.0")
+      expect(@db.updated[0].first[:indexed]).to eq(false)
 
       expect(last_response).to be_ok
       res = JSON.parse(last_response.body)
