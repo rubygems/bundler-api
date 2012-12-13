@@ -90,7 +90,7 @@ class BundlerApi::Web < Sinatra::Base
     # return unless params[:rubygems_token] == @rubygems_token
     payload    = get_payload
     rubygem_id = @conn[:rubygems].filter(name: payload.name.to_s).select(:id).first
-    version    = @conn[:versions].filter(
+    version    = @conn[:versions].where(
       rubygem_id: rubygem_id,
       number:     payload.version.version,
       platform:   payload.platform
