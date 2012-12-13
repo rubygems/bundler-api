@@ -6,7 +6,7 @@ class BundlerApi::Job
   attr_reader :payload
   @@gem_cache = {}
 
-  def initialize(db, payload, mutex, gem_count = nil)
+  def initialize(db, payload, mutex = Mutex.new, gem_count = nil)
     @db        = db
     @payload   = payload
     @mutex     = mutex
