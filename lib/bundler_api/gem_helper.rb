@@ -35,7 +35,7 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     timer.stop if timer
   end
 
-  private
+private
   def fetch(url, redirects = 0, tries = 0)
     raise BundlerApi::HTTPError, "Too many redirects #{url}" if redirects >= REDIRECT_LIMIT
     raise BundlerApi::HTTPError, "Could not download #{url}" if tries >= TRY_LIMIT

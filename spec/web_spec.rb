@@ -5,19 +5,39 @@ require_relative '../lib/bundler_api/web'
 describe BundlerApi::Web do
   include Rack::Test::Methods
 
-  MockSequel = Class.new(Object) do
-    define_method(:[]) do |conn, gems|
-      [{
-        name:     "rack",
-        number:   "1.0.0",
-        platform: "ruby",
-        dep_name: nil
-      }]
+  class MockSequel
+    def [](*args)
+      case args.first
+      when :rubygems, :versions
+        self
+      else
+        if args[2] == "1.0.1"
+          []
+        else
+          [{
+            name:     "rack",
+            number:   "1.0.0",
+            platform: "ruby",
+            dep_name: nil
+          }]
+        end
+      end
     end
+
+    attr_reader :filtered, :selected, :inserted
+    def filter(*args); @filtered ||= []; @filtered << args; self; end
+    def select(*args); @selected ||= []; @selected << args; self; end
+    def insert(*args); @inserted ||= []; @inserted << args; true; end
+    def first; nil; end
+    def transaction; yield; end
+  end
+
+  before do
+    @db = MockSequel.new
   end
 
   def app
-    BundlerApi::Web.new(MockSequel.new)
+    BundlerApi::Web.new(@db)
   end
 
   context "GET /api/v1/dependencies" do
@@ -76,6 +96,24 @@ describe BundlerApi::Web do
         expect(last_response).to be_ok
         expect(JSON.parse(last_response.body)).to eq(result)
       end
+    end
+  end
+
+  context "POST /api/v1/add_spec.json" do
+    let(:url){ "/api/v1/add_spec.json" }
+    let(:payload){ {:name => "rack", :version => "1.0.1",
+      :platform => "ruby", :prerelease => false} }
+
+    it "adds the spec to the database" do
+      post url, JSON.dump(payload)
+
+      expect(@db.inserted.first.first[:name]).to eq("rack")
+      expect(@db.inserted.last.first[:full_name]).to eq("rack-1.0.1")
+
+      expect(last_response).to be_ok
+      res = JSON.parse(last_response.body)
+      expect(res["name"]).to eq("rack")
+      expect(res["version"]).to eq("1.0.1")
     end
   end
 

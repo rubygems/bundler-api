@@ -5,6 +5,9 @@ require_relative '../bundler_api'
 require_relative '../bundler_api/dep_calc'
 require_relative '../bundler_api/metriks'
 require_relative '../bundler_api/honeybadger'
+require_relative '../bundler_api/gem_helper'
+require_relative '../bundler_api/update/job'
+
 
 class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
@@ -18,6 +21,7 @@ class BundlerApi::Web < Sinatra::Base
     db_url = ENV["FOLLOWER_DATABASE_URL"]
     max_conns = ENV['MAX_THREADS'] || 2
     @conn = conn || Sequel.connect(db_url, :max_connections => max_conns)
+    @rubygems_token = ENV['RUBYGEMS_TOKEN']
     super()
   end
 
@@ -51,6 +55,29 @@ class BundlerApi::Web < Sinatra::Base
     Metriks.timer('dependencies.jsonify').time do
       get_deps.to_json
     end
+  end
+
+  post "/api/v1/add_spec.json" do
+    params = JSON.parse(request.body.read)
+    # return unless @rubygems_token && params[:rubygems_token] == @rubygems_token
+    %w(name version platform prerelease).each do |key|
+      halt 422, "no spec #{key} given" if params[key].nil?
+    end
+
+    version = Gem::Version.new(params["version"])
+    payload = BundlerApi::GemHelper.new(params["name"], version,
+      params["platform"], params["prerelease"])
+    job = BundlerApi::Job.new(@conn, payload, Mutex.new)
+    job.run
+
+    content_type 'application/json;charset=UTF-8'
+    JSON.dump(:name => payload.name, :version => payload.version.version,
+      :platform => payload.platform, :prerelease => payload.prerelease)
+  end
+
+  post "/api/v1/remove_spec.json" do
+    return unless params[:rubygems_token] == @rubygems_token
+
   end
 
   get "/quick/Marshal.4.8/:id" do
