@@ -42,12 +42,14 @@ class BundlerApi::Web < Sinatra::Base
   def get_payload
     params = JSON.parse(request.body.read)
     %w(name version platform prerelease).each do |key|
-      halt 422, "no spec #{key} given" if params[key].nil?
+      halt 422, "No spec #{key} given" if params[key].nil?
     end
 
     version = Gem::Version.new(params["version"])
     BundlerApi::GemHelper.new(params["name"], version,
       params["platform"], params["prerelease"])
+  rescue JSON::ParserError
+    halt 422, "Invalid JSON"
   end
 
   def json_payload(payload)

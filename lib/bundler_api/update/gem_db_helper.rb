@@ -141,7 +141,7 @@ class BundlerApi::GemDBHelper
   end
 
   private
-  def matching_requirements?(requirements1, requirements2 )
+  def matching_requirements?(requirements1, requirements2)
     Set.new(requirements1.split(", ")) == Set.new(requirements2.split(", "))
   end
 end
