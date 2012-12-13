@@ -24,10 +24,11 @@ describe BundlerApi::Web do
       end
     end
 
-    attr_reader :filtered, :selected, :inserted
+    attr_reader :filtered, :selected, :inserted, :deleted
     def filter(*args); @filtered ||= []; @filtered << args; self; end
     def select(*args); @selected ||= []; @selected << args; self; end
     def insert(*args); @inserted ||= []; @inserted << args; true; end
+    def delete(*args); @deleted ||= []; @deleted << args; true; end
     def first; nil; end
     def transaction; yield; end
   end
@@ -107,13 +108,30 @@ describe BundlerApi::Web do
     it "adds the spec to the database" do
       post url, JSON.dump(payload)
 
-      expect(@db.inserted.first.first[:name]).to eq("rack")
-      expect(@db.inserted.last.first[:full_name]).to eq("rack-1.0.1")
+      expect(@db.inserted[0].first[:name]).to eq("rack")
+      expect(@db.inserted[1].first[:full_name]).to eq("rack-1.0.1")
 
       expect(last_response).to be_ok
       res = JSON.parse(last_response.body)
       expect(res["name"]).to eq("rack")
       expect(res["version"]).to eq("1.0.1")
+    end
+  end
+
+  context "POST /api/v1/remove_spec.json" do
+    let(:url){ "/api/v1/remove_spec.json" }
+    let(:payload){ {:name => "rack", :version => "1.0.0",
+      :platform => "ruby", :prerelease => false} }
+
+    fit "removes the spec from the database" do
+      post url, JSON.dump(payload)
+
+      expect(@db.deleted[0].first).to eq("rack-1.0.0")
+
+      expect(last_response).to be_ok
+      res = JSON.parse(last_response.body)
+      expect(res["name"]).to eq("rack")
+      expect(res["version"]).to eq("1.0.0")
     end
   end
 
