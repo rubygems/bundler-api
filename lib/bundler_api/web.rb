@@ -36,8 +36,8 @@ class BundlerApi::Web < Sinatra::Base
       gems = params[:gems].split(',')
       deps = BundlerApi::DepCalc.deps_for(@conn, gems)
     end
-    Metriks.histogram('gems.count').update(gems.size)
-    Metriks.histogram('dependencies.count').update(deps.size)
+    Metriks.histogram('gems.size').update(gems.size)
+    Metriks.histogram('dependencies.size').update(deps.size)
     deps
   end
 
