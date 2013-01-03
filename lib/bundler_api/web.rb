@@ -13,8 +13,6 @@ require_relative '../bundler_api/update/yank_job'
 class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
 
-  set :logging, true
-
   unless ENV['RACK_ENV'] == 'test'
     use Metriks::Middleware
     use Honeybadger::Rack
