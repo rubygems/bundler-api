@@ -64,10 +64,6 @@ class BundlerApi::Web < Sinatra::Base
       :platform => payload.platform, :prerelease => payload.prerelease)
   end
 
-  before do
-    logger.level = Logger::DEBUG
-  end
-
   error do |e|
     # Honeybadger 1.3.1 only knows how to look for rack.exception :(
     request.env['rack.exception'] = request.env['sinatra.error']
