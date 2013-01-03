@@ -19,10 +19,18 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   def initialize(conn = nil)
-    db_url = ENV["FOLLOWER_DATABASE_URL"]
-    max_conns = ENV['MAX_THREADS'] || 2
-    @conn = conn || Sequel.connect(db_url, :max_connections => max_conns)
     @rubygems_token = ENV['RUBYGEMS_TOKEN']
+
+    max_conns = ENV['MAX_THREADS'] || 2
+
+    @conn = conn || begin
+      db_url = ENV["FOLLOWER_DATABASE_URL"]
+      Sequel.connect(db_url, :max_connections => max_conns)
+    end
+
+    write_url = ENV["DATABASE_URL"]
+    @write_conn = Sequel.connect(write_url, :max_connections => max_conns)
+
     super()
   end
 
@@ -87,7 +95,7 @@ class BundlerApi::Web < Sinatra::Base
     puts "adding gem..."
     payload = get_payload
     puts "got payload! #{payload.inspect}"
-    job = BundlerApi::Job.new(@conn, payload)
+    job = BundlerApi::Job.new(@write_conn, payload)
     job.run
 
     json_payload(payload)
@@ -95,8 +103,8 @@ class BundlerApi::Web < Sinatra::Base
 
   post "/api/v1/remove_spec.json" do
     payload    = get_payload
-    rubygem_id = @conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
-    version    = @conn[:versions].where(
+    rubygem_id = @write_conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
+    version    = @write_conn[:versions].where(
       rubygem_id: rubygem_id,
       number:     payload.version.version,
       platform:   payload.platform
