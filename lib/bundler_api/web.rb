@@ -43,6 +43,7 @@ class BundlerApi::Web < Sinatra::Base
 
   def get_payload
     params = JSON.parse(request.body.read)
+    puts "webhook request: #{params.inspect}"
 
     if @rubygems_token && (params["token"] != @rubygems_token)
       halt 403, "You're not Rubygems"
