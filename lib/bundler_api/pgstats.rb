@@ -1,4 +1,4 @@
-require 'metriks'
+require 'librato/metrics'
 
 class PGStats
   def initialize(db, options = {})
@@ -6,6 +6,7 @@ class PGStats
     @label    = options[:label]    || 'postgres'
     @counters = options[:counters] || Hash.new
     @interval = options[:interval] || 60
+    @client   = options[:client]   || Librato::Metrics.client
   end
 
   def stats
@@ -20,15 +21,26 @@ class PGStats
   end
 
   def submit
+    queue        = @client.new_queue
+    measure_time = now_floored
+
     stats.each do |name, current_counter|
       current_counter = current_counter.to_i
       last_counter    = @counters[name]
       if last_counter && current_counter >= last_counter
         value = current_counter - last_counter
-        Metriks.histogram("#{@label}.#{name}").update(value)
+        queue.add("#{@label}.#{name}" => { :value        => value,
+                                           :measure_time => measure_time })
       end
+
       @counters[name] = current_counter
     end
+
+    queue.submit unless queue.empty?
   end
 
+  def now_floored
+    time = Time.now.to_i
+    time - (time % @interval)
+  end
 end
