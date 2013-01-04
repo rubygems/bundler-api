@@ -8,7 +8,7 @@ end
 
 class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease)
   REDIRECT_LIMIT = 5
-  TRY_LIMIT      = 3
+  TRY_LIMIT      = 4
 
   def initialize(*)
     super
