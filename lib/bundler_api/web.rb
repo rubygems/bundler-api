@@ -92,9 +92,8 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   post "/api/v1/add_spec.json" do
-    puts "adding gem..."
+    Metriks.counter('gems.added').increment
     payload = get_payload
-    puts "got payload! #{payload.inspect}"
     job = BundlerApi::Job.new(@write_conn, payload)
     job.run
 
@@ -102,6 +101,7 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   post "/api/v1/remove_spec.json" do
+    Metriks.counter('gems.removed').increment
     payload    = get_payload
     rubygem_id = @write_conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
     version    = @write_conn[:versions].where(
