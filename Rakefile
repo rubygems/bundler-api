@@ -16,6 +16,15 @@ require_relative 'lib/bundler_api/pgstats'
 $stdout.sync = true
 Thread.abort_on_exception = true
 
+task :add_spec, :name, :version, :platform, :prerelease do |t, args|
+  args.with_defaults(:platform => 'ruby', :prerelease => false)
+  payload = BundlerApi::GemHelper.new(args[:name], Gem::Version.new(args[:version]), args[:platform], args[:prerelease])
+  Sequel.connect(ENV["DATABASE_URL"], max_connections: 1) do |db|
+    BundlerApi::Job.new(db, payload).run
+  end
+  Metriks.counter('gems.added').increment
+end
+
 begin
   require 'rspec/core/rake_task'
 
