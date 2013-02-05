@@ -1,3 +1,5 @@
+require 'stringio'
+require 'logger'
 require_relative 'spec_helper'
 require_relative '../lib/bundler_api/gem_helper'
 require_relative 'support/artifice_apps'
@@ -118,6 +120,8 @@ GEMSPEC
     context "when using multiple threads" do
       let(:version) { "1" }
       let(:port)    { 2000 }
+      let(:output)  { StringIO.new }
+      let(:logger)  { Logger.new(output) }
 
       Thread.abort_on_exception = true
 
@@ -127,15 +131,19 @@ GEMSPEC
                                     :Host      => '0.0.0.0',
                                     :Port      => port,
                                     :server    => 'webrick',
-                                    :AccessLog => [])
+                                    :AccessLog => [],
+                                    :Logger    => logger)
           server.start
         }
         @rackup_thread.run
 
         # ensure server is started
         require 'timeout'
-        Timeout.timeout(15) { sleep(0.1) until @rackup_thread.status == "sleep" }
-        sleep(1)
+        Timeout.timeout(3) {
+          until output.string.include?("WEBrick::HTTPServer#start") do
+            sleep(0.1)
+          end
+        }
       end
 
       after do
