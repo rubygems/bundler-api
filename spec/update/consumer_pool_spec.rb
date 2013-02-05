@@ -59,9 +59,11 @@ describe BundlerApi::ConsumerPool do
   it "processes jobs" do
     pool = BundlerApi::ConsumerPool.new(1)
     pool.enq(TestJob.new)
-    pool.start
-    pool.poison
-    pool.join
+    Timeout.timeout(2) {
+      pool.start
+      pool.poison
+      pool.join
+    }
 
     expect(TestJob.counter).to eq(1)
   end
