@@ -6,7 +6,7 @@ require_relative '../../lib/bundler_api/update/job'
 require_relative '../../lib/bundler_api/update/atomic_counter'
 
 describe BundlerApi::Job do
-  let(:db)      { Sequel.connect(ENV['TEST_DATABASE_URL']) }
+  let(:db)      { Sequel.connect(database_url) }
   let(:builder) { GemBuilder.new(db) }
   let(:counter) { BundlerApi::AtomicCounter.new }
   let(:mutex)   { Mutex.new }

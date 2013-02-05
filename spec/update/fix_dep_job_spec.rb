@@ -9,7 +9,7 @@ describe BundlerApi::FixDepJob do
   describe "#run" do
     include GemspecHelper
 
-    let(:db)        { Sequel.connect(ENV['TEST_DATABASE_URL']) }
+    let(:db)        { Sequel.connect(database_url) }
     let(:gem_cache) { Hash.new }
     let(:mutex)     { nil }
     let(:helper)    { BundlerApi::GemDBHelper.new(db, gem_cache, mutex) }

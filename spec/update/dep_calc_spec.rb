@@ -4,7 +4,7 @@ require_relative '../../lib/bundler_api/dep_calc'
 require_relative '../support/gem_builder'
 
 describe BundlerApi::DepCalc do
-  let(:db) { Sequel.connect(ENV['TEST_DATABASE_URL']) }
+  let(:db) { Sequel.connect(database_url) }
   let(:builder) { GemBuilder.new(db) }
   around(:each) do |example|
     db.transaction(:rollback => :always) { example.run }

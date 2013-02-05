@@ -5,6 +5,7 @@ require_relative '../bundler_api'
 require_relative '../bundler_api/dep_calc'
 require_relative '../bundler_api/metriks'
 require_relative '../bundler_api/honeybadger'
+require_relative '../bundler_api/database_url'
 
 class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
@@ -15,7 +16,7 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   def initialize(conn = nil)
-    db_url = ENV["FOLLOWER_DATABASE_URL"]
+    db_url = BundlerApi::DatabaseUrl.url(ENV["FOLLOWER_DATABASE_URL"])
     max_conns = ENV['MAX_THREADS'] || 2
     @conn = conn || Sequel.connect(db_url, :max_connections => max_conns)
     super()

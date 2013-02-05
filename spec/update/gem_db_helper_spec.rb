@@ -4,7 +4,7 @@ require_relative '../../lib/bundler_api/update/gem_db_helper'
 require_relative '../../lib/bundler_api/gem_helper'
 
 describe BundlerApi::GemDBHelper do
-  let(:db)        { Sequel.connect(ENV['TEST_DATABASE_URL']) }
+  let(:db)        { Sequel.connect(database_url) }
   let(:gem_cache) { Hash.new }
   let(:mutex)     { nil }
   let(:helper)    { BundlerApi::GemDBHelper.new(db, gem_cache, mutex) }
