@@ -5,19 +5,46 @@ require_relative '../lib/bundler_api/web'
 describe BundlerApi::Web do
   include Rack::Test::Methods
 
-  MockSequel = Class.new(Object) do
-    define_method(:[]) do |conn, gems|
-      [{
-        name:     "rack",
-        number:   "1.0.0",
-        platform: "ruby",
-        dep_name: nil
-      }]
+  class MockSequel
+    @@rack_triple = [{
+      name:     "rack",
+      number:   "1.0.0",
+      platform: "ruby",
+      dep_name: nil
+    }]
+
+    def [](*args)
+      case args.first
+      when :rubygems, :versions
+        @select = (@full ? [{:id => 1}] : [])
+        @first = nil
+        self
+      when :dependencies
+        @select = [{:id => 1}]
+        @first = {:requirements => ">= 1.0"}
+        self
+      else
+        args[2] == "1.0.1" ? [] : @@rack_triple
+      end
     end
+
+    attr_reader :whered, :filtered, :selected, :inserted, :updated
+    attr_accessor :full
+    def where(*args); @whered ||= []; @whered << args; self; end
+    def filter(*args); @filtered ||= []; @filtered << args; self; end
+    def select(*args); @selected ||= []; @selected << args; @select; end
+    def insert(*args); @inserted ||= []; @inserted << args; true; end
+    def update(*args); @updated ||= []; @updated << args; true; end
+    def first; @first; end
+    def transaction; yield; end
+  end
+
+  before do
+    @db = MockSequel.new
   end
 
   def app
-    BundlerApi::Web.new(MockSequel.new)
+    BundlerApi::Web.new(@db)
   end
 
   context "GET /api/v1/dependencies" do
@@ -76,6 +103,45 @@ describe BundlerApi::Web do
         expect(last_response).to be_ok
         expect(JSON.parse(last_response.body)).to eq(result)
       end
+    end
+  end
+
+  context "POST /api/v1/add_spec.json" do
+    let(:url){ "/api/v1/add_spec.json" }
+    let(:payload){ {:name => "rack", :version => "1.0.1",
+      :platform => "ruby", :prerelease => false} }
+
+    it "adds the spec to the database" do
+      post url, JSON.dump(payload)
+
+      expect(@db.inserted[0].first[:name]).to eq("rack")
+      expect(@db.inserted[1].first[:full_name]).to eq("rack-1.0.1")
+
+      expect(last_response).to be_ok
+      res = JSON.parse(last_response.body)
+      expect(res["name"]).to eq("rack")
+      expect(res["version"]).to eq("1.0.1")
+    end
+  end
+
+  context "POST /api/v1/remove_spec.json" do
+    let(:url){ "/api/v1/remove_spec.json" }
+    let(:payload){ {:name => "rack", :version => "1.0.0",
+      :platform => "ruby", :prerelease => false} }
+
+    before do
+      @db.full = true
+    end
+
+    it "removes the spec from the database" do
+      post url, JSON.dump(payload)
+
+      expect(@db.updated[0].first[:indexed]).to eq(false)
+
+      expect(last_response).to be_ok
+      res = JSON.parse(last_response.body)
+      expect(res["name"]).to eq("rack")
+      expect(res["version"]).to eq("1.0.0")
     end
   end
 

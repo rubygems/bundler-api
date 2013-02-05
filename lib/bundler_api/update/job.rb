@@ -6,7 +6,7 @@ class BundlerApi::Job
   attr_reader :payload
   @@gem_cache = {}
 
-  def initialize(db, payload, mutex, gem_count)
+  def initialize(db, payload, mutex = Mutex.new, gem_count = nil)
     @db        = db
     @payload   = payload
     @mutex     = mutex
@@ -16,7 +16,7 @@ class BundlerApi::Job
 
   def run
     unless @db_helper.exists?(@payload)
-      @gem_count.increment
+      @gem_count.increment if @gem_count
       spec = @payload.download_spec
       puts "Adding: #{@payload.full_name}"
       @mutex.synchronize do
