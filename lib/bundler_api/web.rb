@@ -28,7 +28,7 @@ class BundlerApi::Web < Sinatra::Base
       Sequel.connect(db_url, :max_connections => max_conns)
     end
 
-    write_url = ENV["DATABASE_URL"]
+    write_url = BundlerApi::DatabaseUrl.url(ENV["DATABASE_URL"])
     @write_conn = Sequel.connect(write_url, :max_connections => max_conns)
 
     super()
