@@ -17,11 +17,5 @@ if user && token
   opts[:prefix] = prefix if prefix && !prefix.empty?
 
   Metriks::Reporter::LibratoMetrics.new(user, token, opts).start
-else
-  require 'metriks/reporter/logger'
-  Metriks::Reporter::Logger.new(
-    logger: Logger.new("/dev/null"),
-    interval: 10
-  ).start
 end
 
