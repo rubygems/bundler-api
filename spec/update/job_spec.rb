@@ -12,6 +12,7 @@ describe BundlerApi::Job do
   let(:mutex)   { Mutex.new }
   around(:each) do |example|
     db.transaction(:rollback => :always) { example.run }
+    db.disconnect
   end
 
   before do

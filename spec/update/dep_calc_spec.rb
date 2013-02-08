@@ -8,6 +8,7 @@ describe BundlerApi::DepCalc do
   let(:builder) { GemBuilder.new(db) }
   around(:each) do |example|
     db.transaction(:rollback => :always) { example.run }
+    db.disconnect
   end
 
   describe ".deps_for" do

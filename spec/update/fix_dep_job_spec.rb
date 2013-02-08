@@ -22,6 +22,7 @@ describe BundlerApi::FixDepJob do
     let(:job)       { BundlerApi::FixDepJob.new(db, payload) }
     around(:each) do |example|
       db.transaction(:rollback => :always) { example.run }
+      db.disconnect
     end
 
     before do

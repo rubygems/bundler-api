@@ -10,6 +10,7 @@ describe BundlerApi::GemDBHelper do
   let(:helper)    { BundlerApi::GemDBHelper.new(db, gem_cache, mutex) }
   around(:each) do |example|
     db.transaction(:rollback => :always) { example.run }
+    db.disconnect
   end
 
   describe "#exists?" do
