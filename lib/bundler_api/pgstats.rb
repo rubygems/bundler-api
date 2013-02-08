@@ -20,6 +20,13 @@ class PGStats
     SQL
   end
 
+  def ratios
+    @db[<<-SQL].first
+      SELECT sum(idx_blks_hit) / sum(idx_blks_hit + idx_blks_read) AS cache_hit_ratio
+      FROM pg_statio_user_indexes;
+    SQL
+  end
+
   def submit
     queue        = @client.new_queue
     measure_time = now_floored
@@ -34,6 +41,11 @@ class PGStats
       end
 
       @counters[name] = current_counter
+    end
+
+    ratios.each do |name, value|
+      queue.add("#{@label}.#{name}" => { :value        => value,
+                                         :measure_time => measure_time })
     end
 
     queue.submit unless queue.empty?
