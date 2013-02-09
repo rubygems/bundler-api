@@ -9,7 +9,7 @@ describe BundlerApi::FixDepJob do
   describe "#run" do
     include GemspecHelper
 
-    let(:db)        { Sequel.connect(ENV['TEST_DATABASE_URL']) }
+    let(:db)        { $db }
     let(:gem_cache) { Hash.new }
     let(:mutex)     { nil }
     let(:helper)    { BundlerApi::GemDBHelper.new(db, gem_cache, mutex) }
@@ -20,10 +20,6 @@ describe BundlerApi::FixDepJob do
     let(:bar_spec)  { generate_gemspec('bar', '1.0', 'ruby') }
     let(:payload)   { BundlerApi::GemHelper.new(name, Gem::Version.new(version), platform) }
     let(:job)       { BundlerApi::FixDepJob.new(db, payload) }
-    around(:each) do |example|
-      db.transaction(:rollback => :always) { example.run }
-      db.disconnect
-    end
 
     before do
       Artifice.activate_with(GemspecGenerator)

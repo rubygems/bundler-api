@@ -1,4 +1,5 @@
 require 'rspec/core'
+require_relative 'support/database'
 require_relative 'support/latch'
 
 ENV['RACK_ENV'] = 'test'
