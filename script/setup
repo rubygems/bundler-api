@@ -1,0 +1,36 @@
+#!/bin/bash
+set -e
+
+if [ "$1" = "-v" ]; then
+  exec 3>&1
+else
+  exec 3>/dev/null
+fi
+
+# DATABASE_URL env var is required to setup the database
+if [ -z "$DATABASE_URL" ]; then
+  echo "DATABASE_URL environment variable required"
+  exit 1
+fi
+
+dbname=$(basename "$DATABASE_URL")
+
+# Wipe and load the database if DROPDB env var is set.
+if [ -n "$DROPDB" ]; then
+  echo "Dropping the database"
+  { psql -tAl | grep -E "^$dbname\|" >/dev/null && \
+      dropdb $dbname
+  } >&3 2>&1
+fi
+
+echo "Creating the database unless exists"
+{ psql -tAl | grep -E "^$dbname\|" >/dev/null || \
+  createdb --no-password $dbname
+} >&3 2>&1
+
+echo "Migrating the database"
+sequel -m db/migrations $DATABASE_URL >&3 2>&1
+
+echo "Done!
+Run \`rake update\` and \`rake fix_deps\` to populate the database with \
+all gems from rubygems.org."
