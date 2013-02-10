@@ -18,7 +18,7 @@ class BundlerApi::Web < Sinatra::Base
     use Honeybadger::Rack
   end
 
-  def initialize(conn = nil)
+  def initialize(conn = nil, write_conn = nil)
     @rubygems_token = ENV['RUBYGEMS_TOKEN']
 
     max_conns = ENV['MAX_THREADS'] || 2
@@ -28,8 +28,10 @@ class BundlerApi::Web < Sinatra::Base
       Sequel.connect(db_url, :max_connections => max_conns)
     end
 
-    write_url = ENV["DATABASE_URL"]
-    @write_conn = Sequel.connect(write_url, :max_connections => max_conns)
+    @write_conn = write_conn || begin
+      write_url = ENV["DATABASE_URL"]
+      Sequel.connect(write_url, :max_connections => max_conns)
+    end
 
     super()
   end

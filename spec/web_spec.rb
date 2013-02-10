@@ -40,11 +40,12 @@ describe BundlerApi::Web do
   end
 
   before do
-    @db = MockSequel.new
+    @read_db  = MockSequel.new
+    @write_db = MockSequel.new
   end
 
   def app
-    BundlerApi::Web.new(@db)
+    BundlerApi::Web.new(@read_db, @write_db)
   end
 
   context "GET /api/v1/dependencies" do
@@ -114,8 +115,8 @@ describe BundlerApi::Web do
     it "adds the spec to the database" do
       post url, JSON.dump(payload)
 
-      expect(@db.inserted[0].first[:name]).to eq("rack")
-      expect(@db.inserted[1].first[:full_name]).to eq("rack-1.0.1")
+      expect(@write_db.inserted[0].first[:name]).to eq("rack")
+      expect(@write_db.inserted[1].first[:full_name]).to eq("rack-1.0.1")
 
       expect(last_response).to be_ok
       res = JSON.parse(last_response.body)
@@ -130,13 +131,13 @@ describe BundlerApi::Web do
       :platform => "ruby", :prerelease => false} }
 
     before do
-      @db.full = true
+      @write_db.full = true
     end
 
     it "removes the spec from the database" do
       post url, JSON.dump(payload)
 
-      expect(@db.updated[0].first[:indexed]).to eq(false)
+      expect(@write_db.updated[0].first[:indexed]).to eq(false)
 
       expect(last_response).to be_ok
       res = JSON.parse(last_response.body)
