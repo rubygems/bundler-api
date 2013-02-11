@@ -171,7 +171,7 @@ def fix_deps(db, thread_count)
     end
 
     name, version, platform = spec
-    payload                 = BundlerApi::GemHelper.new(name, version, platform, prerelease)
+    payload = BundlerApi::GemHelper.new(name, version, platform, prerelease)
     pool.enq(BundlerApi::FixDepJob.new(db, payload, counter, mutex))
   end
 
@@ -185,7 +185,7 @@ end
 
 desc "update database"
 task :update, :thread_count do |t, args|
-  thread_count  = args[:thread_count].to_i
+  thread_count = args[:thread_count].to_i
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     update(db, thread_count)
   end
