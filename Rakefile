@@ -185,7 +185,7 @@ end
 
 desc "update database"
 task :update, :thread_count do |t, args|
-  thread_count = args[:thread_count].to_i
+  thread_count = (args[:thread_count] || 1).to_i
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     update(db, thread_count)
   end
@@ -193,7 +193,7 @@ end
 
 desc "fixing existing dependencies"
 task :fix_deps, :thread_count do |t, args|
-  thread_count  = args[:thread_count].to_i
+  thread_count = (args[:thread_count] || 1).to_i
   Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
     fix_deps(db, thread_count)
   end
