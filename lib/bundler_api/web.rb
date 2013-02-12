@@ -36,17 +36,25 @@ class BundlerApi::Web < Sinatra::Base
     super()
   end
 
-  def get_deps
+  def gems
     halt(200) if params[:gems].nil?
 
-    gems, deps = nil
-    Metriks.timer('dependencies').time do
-      gems = params[:gems].split(',')
-      deps = BundlerApi::DepCalc.deps_for(@conn, gems)
+    gems = params[:gems].split(',')
+    if gems.size >= 100
+      puts "too many gems: #{gems.size}"
+      halt(503)
     end
+    gems
+  end
+
+  def get_deps
+    timer = Metriks.timer('dependencies').time
+    deps  = BundlerApi::DepCalc.deps_for(@conn, gems)
     Metriks.histogram('gems.size').update(gems.size)
     Metriks.histogram('dependencies.size').update(deps.size)
     deps
+  ensure
+    timer.stop if timer
   end
 
   def get_payload
