@@ -111,7 +111,7 @@ describe BundlerApi::Web do
         gems = (1..100).map {|i| "rack#{i}" }.join(',')
         get "#{request}?gems=#{gems}"
 
-        expect(last_response.status).to eq(503)
+        expect(last_response.status).to eq(413)
       end
     end
   end

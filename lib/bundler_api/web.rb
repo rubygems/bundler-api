@@ -42,7 +42,7 @@ class BundlerApi::Web < Sinatra::Base
     gems = params[:gems].split(',')
     if gems.size >= 100
       puts "too many gems: #{gems.size}"
-      halt(503)
+      halt(413)
     end
     gems
   end
