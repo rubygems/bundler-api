@@ -1,8 +1,5 @@
 require 'zlib'
-
 require_relative '../bundler_api'
-require_relative 'metriks'
-
 
 class BundlerApi::DepCalc
   DepKey = Struct.new(:name, :number, :platform)
@@ -24,22 +21,20 @@ class BundlerApi::DepCalc
         AND d.scope = 'runtime';
 SQL
 
-    Metriks.timer('depcalc.deps_for.hash').time do
-      deps = {}
-      dataset.each do |row|
-        key = DepKey.new(row[:name], row[:number], row[:platform])
-        deps[key] = [] unless deps[key]
-        deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
-      end
+    deps = {}
+    dataset.each do |row|
+      key = DepKey.new(row[:name], row[:number], row[:platform])
+      deps[key] = [] unless deps[key]
+      deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
+    end
 
-      deps.map do |dep_key, gem_deps|
-        {
-          name:         dep_key.name,
-          number:       dep_key.number,
-          platform:     dep_key.platform,
-          dependencies: gem_deps
-        }
-      end
+    deps.map do |dep_key, gem_deps|
+      {
+        name:         dep_key.name,
+        number:       dep_key.number,
+        platform:     dep_key.platform,
+        dependencies: gem_deps
+      }
     end
   end
 end
