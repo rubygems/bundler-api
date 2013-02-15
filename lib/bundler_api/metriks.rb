@@ -11,7 +11,7 @@ if user && token
     ENV['RACK_ENV'] unless ENV['RACK_ENV'] == 'production'
   end
 
-  source   = Socket.gethostname
+  source   = [ Socket.gethostname, Process.pid ].join('-')
   on_error = ->(e) do STDOUT.puts("LibratoMetrics: #{ e.message }") end
   opts     = { on_error: on_error, source: source }
   opts[:prefix] = prefix if prefix && !prefix.empty?
