@@ -37,14 +37,8 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   def gems
-    halt 200 if params[:gems].nil?
-
-    gems = params[:gems].split(',')
-    if gems.size >= 100
-      puts "too many gems: #{gems.size}"
-      halt 413, "Faster to download the full index"
-    end
-    gems
+    halt(200) if params[:gems].nil?
+    params[:gems].split(',')
   end
 
   def get_deps

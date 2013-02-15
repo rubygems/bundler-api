@@ -105,15 +105,6 @@ describe BundlerApi::Web do
         expect(JSON.parse(last_response.body)).to eq(result)
       end
     end
-
-    context "there are many gems" do
-      it "returns a marshal dump" do
-        gems = (1..100).map {|i| "rack#{i}" }.join(',')
-        get "#{request}?gems=#{gems}"
-
-        expect(last_response.status).to eq(413)
-      end
-    end
   end
 
   context "POST /api/v1/add_spec.json" do
