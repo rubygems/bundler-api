@@ -132,8 +132,4 @@ class BundlerApi::Web < Sinatra::Base
   get "/specs.4.8.gz" do
     redirect "#{RUBYGEMS_URL}/specs.4.8.gz"
   end
-
-  get '/mem' do
-    (`ps -o rsz #{$$}`.split("\n")[1].to_f / 1024.0).to_s
-  end
 end
