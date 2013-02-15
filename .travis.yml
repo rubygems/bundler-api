@@ -10,7 +10,7 @@ notifications:
     on_failure: always
     channels: "irc.freenode.org#bundler"
   campfire:
-    on_success: change
+    on_success: always
     on_failure: always
     rooms:
       - secure: "Jba3CyoKcwkuX5Qi4Q8W5XPzQqrRtUMJMIaBLj/FJeJydLiDhtHZanozq7LI\nvOIjJDd7YMh52IB/YwJnp38+3BOY4llRozVqCT1wV/AxLRJMcTeaagbeO11d\nEh0a5LacjdlgYDf7b2AVaErQnwEb9utQQR8byPH6lQy9wXi7JTY="
