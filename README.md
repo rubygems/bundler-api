@@ -16,8 +16,8 @@ TEST_DATABASE_URL=postgres:///bundler-api-test
 Databases
 ---------
 
- - `COBALT`: Master database.
- - `TEAL`: Following `COBALT`. Read by public API to resolve dependencies.
- - `ONYX`: Following `COBALT`. Read by
-   [http://rubygems-org.herokuapp.com](http://rubygems-org.herokuapp.com)
-   to create a gem source.
+  - `COBALT`: Master database.
+  - `BROWN`: Following `COBALT`. Read by public API to resolve dependencies.
+  - `VIOLET`: Following `COBALT`. Read by `bundler-api-thin`,
+    `bundler-api-jruby`, `bundler-api-puma`, `bundler-api-ruby2`, and
+    [http://rubygems-org.herokuapp.com](http://rubygems-org.herokuapp.com)
