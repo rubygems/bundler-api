@@ -1,11 +1,13 @@
 source "https://rubygems.org"
 
+gem 'dalli'
 gem 'honeybadger'
 gem 'librato-metrics'
 gem 'lock-smith'
 gem 'metriks'
 gem 'metriks-middleware'
 gem 'pg'
+gem 'rack-cache'
 gem 'rack-timeout'
 gem 'rake'
 gem 'sequel'
