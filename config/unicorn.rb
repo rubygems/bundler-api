@@ -1,5 +1,5 @@
 worker_processes ENV['MAX_THREADS'].to_i
-timeout 30
+timeout 15
 preload_app false
 
 before_fork do |server, worker|
