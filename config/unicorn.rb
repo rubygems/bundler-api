@@ -1,6 +1,7 @@
 worker_processes ENV['MAX_THREADS'].to_i
 timeout 15
 preload_app false
+listen ENV['PORT'], :backlog => ENV['MAX_THREADS'].to_i, :tcp_defer_accept => false
 
 before_fork do |server, worker|
   Signal.trap 'TERM' do
