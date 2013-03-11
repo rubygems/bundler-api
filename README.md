@@ -11,6 +11,7 @@ RACK_ENV=development
 DATABASE_URL=postgres:///bundler-api
 FOLLOWER_DATABASE_URL=postgres:///bundler-api
 TEST_DATABASE_URL=postgres:///bundler-api-test
+MAX_THREADS=1
 ```
 
 Databases
