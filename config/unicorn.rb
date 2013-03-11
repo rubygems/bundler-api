@@ -1,7 +1,9 @@
-worker_processes ENV['MAX_THREADS'].to_i
+MAX_THREADS = Integer(ENV['MAX_THREADS'] || 2)
+
+worker_processes MAX_THREADS
 timeout 15
 preload_app false
-listen ENV['PORT'], :backlog => ENV['MAX_THREADS'].to_i, :tcp_defer_accept => false
+listen ENV['PORT'], :backlog => MAX_THREADS, :tcp_defer_accept => false
 
 before_fork do |server, worker|
   Signal.trap 'TERM' do
