@@ -2,14 +2,12 @@ source "https://rubygems.org"
 
 ruby "1.9.3"
 
-gem 'dalli'
 gem 'honeybadger'
 gem 'librato-metrics'
 gem 'lock-smith'
 gem 'metriks'
 gem 'metriks-middleware'
 gem 'pg'
-gem 'rack-cache'
 gem 'rake'
 gem 'sequel'
 gem 'sequel_pg'
