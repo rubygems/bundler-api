@@ -18,7 +18,7 @@ Databases
 ---------
 
   - `COBALT`: Master database.
-  - `BROWN`: Following `COBALT`. Read by public API to resolve dependencies.
+  - `PURPLE`: Following `COBALT`. Read by public API to resolve dependencies.
   - `VIOLET`: Following `COBALT`. Read by `bundler-api-thin`,
     `bundler-api-jruby`, `bundler-api-puma`, `bundler-api-ruby2`, and
     [http://rubygems-org.herokuapp.com](http://rubygems-org.herokuapp.com)
