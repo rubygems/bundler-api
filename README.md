@@ -4,14 +4,15 @@ bundler-api
 Environment
 -----------
 
-The follow environment variables are needed to run bundler-api.
+The follow environment variables are needed to run bundler-api. You can 
+store these in the .gitignored ````.env```` file to have them automatically 
+loaded by Foreman and ````script/setup````.
 
-```
-RACK_ENV=development
-DATABASE_URL=postgres:///bundler-api
-FOLLOWER_DATABASE_URL=postgres:///bundler-api
-TEST_DATABASE_URL=postgres:///bundler-api-test
-```
+    RACK_ENV=development
+    DATABASE_URL=postgres:///bundler-api
+    FOLLOWER_DATABASE_URL=postgres:///bundler-api
+    TEST_DATABASE_URL=postgres:///bundler-api-test
+
 
 Databases
 ---------
