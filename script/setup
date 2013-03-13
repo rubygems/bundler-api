@@ -7,6 +7,10 @@ else
   exec 3>/dev/null
 fi
 
+if [ -e ".env" ]; then
+  while read line; do export $line; done < ".env"
+fi
+
 # DATABASE_URL env var is required to setup the database
 if [ -z "$DATABASE_URL" ]; then
   echo "DATABASE_URL environment variable required"
