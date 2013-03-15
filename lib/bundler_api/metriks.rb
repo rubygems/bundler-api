@@ -16,7 +16,7 @@ if user && token
     Socket.gethostname
   end
 
-  source   = [ app_name, Process.pid ].join('-')
+  source   = [ app_name, Process.pid ].join(':')
   on_error = ->(e) do STDOUT.puts("LibratoMetrics: #{ e.message }") end
   opts     = { on_error: on_error, source: source }
   opts[:prefix] = prefix if prefix && !prefix.empty?
