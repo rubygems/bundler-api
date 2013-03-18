@@ -16,9 +16,8 @@ if user && token
     Socket.gethostname
   end
 
-  source   = [ app_name, Process.pid ].join(':')
   on_error = ->(e) do STDOUT.puts("LibratoMetrics: #{ e.message }") end
-  opts     = { on_error: on_error, source: source }
+  opts     = { on_error: on_error, source: app_name }
   opts[:prefix] = prefix if prefix && !prefix.empty?
 
   Metriks::Reporter::LibratoMetrics.new(user, token, opts).start
