@@ -1,3 +1,11 @@
+GIT
+  remote: git://github.com/heroku/rack-queue-metrics.git
+  revision: 2f28f19d5aef84ee02eee6a65b18ab3c752e3840
+  branch: split
+  specs:
+    rack-queue-metrics (1.0.2)
+      raindrops
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -68,6 +76,7 @@ DEPENDENCIES
   metriks
   metriks-middleware
   pg
+  rack-queue-metrics!
   rack-test
   rake
   rspec-core
