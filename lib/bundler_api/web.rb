@@ -46,7 +46,7 @@ class BundlerApi::Web < Sinatra::Base
         instrument_name = "#{ENV['LIBRATO_METRICS_PREFIX']}.#{instrument_name}" if ENV['LIBRATO_METRICS_PREFIX']
         queue.add instrument_name => {
           :source => ENV['PS'] || payload[:addr],
-          :value  => payload[:queued],
+          :value  => payload[:requests][:queued],
           :type   => 'gauge',
           :attributes => {
             :source_aggregate => true,
