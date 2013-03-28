@@ -41,8 +41,10 @@ class BundlerApi::Web < Sinatra::Base
       @client.authenticate(user, token)
       ActiveSupport::Notifications.subscribe("rack.queue-metrics.queue-depth") do |*args|
         _, _, _, _, payload = args
-        queue  = @client.new_queue
-        queue.add 'unicorn.queue-depth' => {
+        queue           = @client.new_queue
+        instrument_name = 'unicorn.queue-depth'
+        instrument_name = "#{ENV['LIBRATO_METRICS_PREFIX']}.#{instrument_name}" if ENV['LIBRATO_METRICS_PREFIX']
+        queue.add instrument_name => {
           :source => ENV['PS'] || payload[:addr],
           :value  => payload[:queued],
           :type   => 'gauge',
