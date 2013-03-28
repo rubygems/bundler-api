@@ -36,7 +36,7 @@ class BundlerApi::Web < Sinatra::Base
       Sequel.connect(ENV["DATABASE_URL"])
     end
 
-    if user = ENV['LIBRATO_METRICS_USER'] && token = ENV['LIBRATO_METRICS_TOKEN']
+    if (user = ENV['LIBRATO_METRICS_USER']) && (token = ENV['LIBRATO_METRICS_TOKEN'])
       @client = Librato::Metrics::Client.new
       @client.authenticate(user, token)
       ActiveSupport::Notifications.subscribe("rack.queue-metrics.queue-depth") do |*args|
