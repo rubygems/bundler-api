@@ -1,9 +1,9 @@
 require 'sinatra/base'
 require 'sequel'
 require 'json'
-require 'queue-metrics/queue_depth'
-require 'queue-metrics/queue_time'
-require 'queue-metrics/app_time'
+require 'active_support/notifications'
+require 'rack-queue-metrics'
+require 'librato/metrics'
 require_relative '../bundler_api'
 require_relative '../bundler_api/dep_calc'
 require_relative '../bundler_api/metriks'
@@ -34,6 +34,25 @@ class BundlerApi::Web < Sinatra::Base
 
     @write_conn = write_conn || begin
       Sequel.connect(ENV["DATABASE_URL"])
+    end
+
+    if user = ENV['LIBRATO_METRICS_USER'] && token = ENV['LIBRATO_METRICS_TOKEN']
+      @client = Librato::Metrics::Client.new
+      @client.authenticate(user, token)
+      ActiveSupport::Notifications.subscribe("rack.queue-metrics.queue-depth") do |*args|
+        _, _, _, _, payload = args
+        queue  = @client.new_queue
+        queue.add 'unicorn.queue-depth' => {
+          :source => ENV['PS'] || payload[:addr],
+          :value  => payload[:queued],
+          :type   => 'gauge',
+          :attributes => {
+            :source_aggregate => true,
+            :display_min      => 0
+          }
+        }
+        queue.submit
+      end
     end
 
     super()
