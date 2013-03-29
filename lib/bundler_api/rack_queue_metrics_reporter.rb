@@ -22,8 +22,11 @@ module Rack
       def setup_unicorn_queue_depth
         ActiveSupport::Notifications.subscribe("rack.queue-metrics.queue-depth") do |*args|
           _, _, _, _, payload = args
-          @queue.add(instrument_name('unicorn.queue-depth') => @default_options.merge(
+          @queue.add(instrument_name('queue-depth') => @default_options.merge(
             :value => payload[:requests][:queued],
+            :source => ENV['PS'] || payload[:addr]))
+          @queue.add(instrument_name('active-requests') => @default_options.merge(
+            :value => payload[:requests][:active],
             :source => ENV['PS'] || payload[:addr]))
           @queue.submit
         end
