@@ -2,6 +2,7 @@ require 'sinatra/base'
 require 'sequel'
 require 'json'
 require 'rack-queue-metrics'
+require 'logger'
 require_relative 'rack_queue_metrics_reporter'
 require_relative '../bundler_api'
 require_relative '../bundler_api/dep_calc'
@@ -16,12 +17,13 @@ class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
-    use Rack::QueueMetrics::QueueTime
+    dev_null = Logger.new('/dev/null')
+    use Rack::QueueMetrics::QueueTime, dev_null
     use Raindrops::Middleware
-    use Rack::QueueMetrics::QueueDepth
+    use Rack::QueueMetrics::QueueDepth, dev_null
     use Metriks::Middleware
     use Honeybadger::Rack
-    use Rack::QueueMetrics::AppTime
+    use Rack::QueueMetrics::AppTime, dev_null
   end
 
   def initialize(conn = nil, write_conn = nil)
