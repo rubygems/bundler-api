@@ -32,6 +32,20 @@ module Rack
         end
       end
 
+      def setup_queue_time
+        ActiveSupport::Notifications.subscribe("rack.queue-metrics.queue-time") do |*args|
+          begin
+          _, _, _, _, payload = args
+          if value = payload[:request_start_delta]
+            @queue.add(instrument_name('request_start_delta') => @default_options.merge(:value => value))
+            @queue.submit
+          end
+          rescue Exception => e
+            $stderr.puts e
+          end
+        end
+      end
+
       private
       def instrument_name(name)
         @prefix ? "#{@prefix}.#{name}" : name
