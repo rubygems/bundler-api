@@ -19,7 +19,7 @@ module Rack
         @queue = @client.new_queue
       end
 
-      def setup_unicorn_queue_depth
+      def setup_queue_depth
         ActiveSupport::Notifications.subscribe("rack.queue-metrics.queue-depth") do |*args|
           _, _, _, _, payload = args
           @queue.add(instrument_name('queue-depth') => @default_options.merge(

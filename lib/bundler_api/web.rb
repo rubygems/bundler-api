@@ -38,7 +38,7 @@ class BundlerApi::Web < Sinatra::Base
     end
 
     reporter = Rack::QueueMetrics::LibratoReporter.new
-    reporter.setup_unicorn_queue_depth
+    reporter.setup_queue_depth
 
     super()
   end
