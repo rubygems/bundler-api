@@ -46,6 +46,22 @@ module Rack
         end
       end
 
+      def setup_app_time
+        ActiveSupport::Notifications.subscribe("rack.queue-metrics.app-time") do |*args|
+          begin
+            _, _, _, _, payload = args
+            [:app_delta, :middleware_delta].each do |key|
+              if value = payload[key]
+                @queue.add(instrument_name(key.to_s) => @default_options.merge(:value => value))
+                @queue.submit
+              end
+            end
+          rescue Exception => e
+            $stderr.puts e
+          end
+        end
+      end
+
       private
       def instrument_name(name)
         @prefix ? "#{@prefix}.#{name}" : name

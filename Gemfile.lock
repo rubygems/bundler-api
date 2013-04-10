@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/heroku/rack-queue-metrics.git
-  revision: 80b60377fa8cccb90766a166926e0fdc562f452b
+  revision: d20d1233914f4f1f6ca5c38805e8e1b4569f68b4
   branch: split
   specs:
     rack-queue-metrics (1.0.2)

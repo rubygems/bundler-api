@@ -40,6 +40,7 @@ class BundlerApi::Web < Sinatra::Base
     reporter = Rack::QueueMetrics::LibratoReporter.new
     reporter.setup_queue_depth
     reporter.setup_queue_time
+    reporter.setup_app_time
 
     super()
   end
