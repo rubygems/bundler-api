@@ -18,12 +18,12 @@ class BundlerApi::Web < Sinatra::Base
 
   unless ENV['RACK_ENV'] == 'test'
     dev_null = Logger.new('/dev/null')
-    use Rack::QueueMetrics::QueueTime, dev_null
+    use Rack::QueueMetrics::QueueTime
     use Raindrops::Middleware
-    use Rack::QueueMetrics::QueueDepth, dev_null
+    use Rack::QueueMetrics::QueueDepth
     use Metriks::Middleware
     use Honeybadger::Rack
-    use Rack::QueueMetrics::AppTime, dev_null
+    use Rack::QueueMetrics::AppTime
   end
 
   def initialize(conn = nil, write_conn = nil)
