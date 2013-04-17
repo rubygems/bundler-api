@@ -1,3 +1,4 @@
+require 'bundler/setup'
 require 'rspec/core'
 require_relative 'support/database'
 require_relative 'support/latch'
