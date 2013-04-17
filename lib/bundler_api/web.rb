@@ -11,6 +11,7 @@ require_relative '../bundler_api/honeybadger'
 require_relative '../bundler_api/gem_helper'
 require_relative '../bundler_api/update/job'
 require_relative '../bundler_api/update/yank_job'
+require_relative '../bundler_api/pilfer_middleware'
 
 
 class BundlerApi::Web < Sinatra::Base
@@ -18,6 +19,7 @@ class BundlerApi::Web < Sinatra::Base
 
   unless ENV['RACK_ENV'] == 'test'
     dev_null = Logger.new('/dev/null')
+    use Pilfer::Middleware
     use Rack::QueueMetrics::QueueTime
     use Raindrops::Middleware
     use Rack::QueueMetrics::QueueDepth
