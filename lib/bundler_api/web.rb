@@ -5,6 +5,7 @@ require 'rack-queue-metrics'
 require 'librato/metrics'
 require 'logger'
 require 'skylight'
+require 'pilfer/middleware'
 require_relative 'rack_queue_metrics_reporter'
 require_relative '../bundler_api'
 require_relative '../bundler_api/dep_calc'
@@ -13,20 +14,26 @@ require_relative '../bundler_api/honeybadger'
 require_relative '../bundler_api/gem_helper'
 require_relative '../bundler_api/update/job'
 require_relative '../bundler_api/update/yank_job'
-require_relative '../bundler_api/pilfer_middleware'
 
 
 class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
+    file_matcher = %r{^#{Regexp.escape(settings.root)}(?!/vendor)}
+    use Pilfer::Middleware, file_matcher: file_matcher do |env|
+      # Don't even try to profile if the secret isn't set. The worst option
+      # would be to profile _every_ requst.
+      ENV.has_key?('PROFILE_SECRET') &&
+        env['HTTP_PROFILE_AUTHORIZATION'] == ENV['PROFILE_SECRET']
+    end
+
     config = Skylight::Config.load_from_env
     instrumenter = Skylight::Instrumenter.new(config)
 
     dev_null = Logger.new('/dev/null')
     use Skylight::Middleware, instrumenter
     use Rack::QueueMetrics::QueueTime, dev_null
-    use Pilfer::Middleware
     use Raindrops::Middleware
     use Rack::QueueMetrics::QueueDepth, dev_null
     use Metriks::Middleware
