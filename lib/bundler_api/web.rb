@@ -19,8 +19,8 @@ class BundlerApi::Web < Sinatra::Base
 
   unless ENV['RACK_ENV'] == 'test'
     dev_null = Logger.new('/dev/null')
-    use Pilfer::Middleware
     use Rack::QueueMetrics::QueueTime, dev_null
+    use Pilfer::Middleware
     use Raindrops::Middleware
     use Rack::QueueMetrics::QueueDepth, dev_null
     use Metriks::Middleware
