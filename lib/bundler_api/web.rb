@@ -2,7 +2,9 @@ require 'sinatra/base'
 require 'sequel'
 require 'json'
 require 'rack-queue-metrics'
+require 'librato/metrics'
 require 'logger'
+require 'skylight'
 require_relative 'rack_queue_metrics_reporter'
 require_relative '../bundler_api'
 require_relative '../bundler_api/dep_calc'
@@ -18,7 +20,11 @@ class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
+    config = Skylight::Config.load_from_env
+    instrumenter = Skylight::Instrumenter.new(config)
+
     dev_null = Logger.new('/dev/null')
+    use Skylight::Middleware, instrumenter
     use Rack::QueueMetrics::QueueTime, dev_null
     use Pilfer::Middleware
     use Raindrops::Middleware

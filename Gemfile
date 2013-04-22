@@ -14,6 +14,7 @@ gem 'sequel'
 gem 'sequel_pg'
 gem 'sinatra'
 gem 'unicorn'
+gem 'skylight'
 
 gem 'rack-queue-metrics', github: 'heroku/rack-queue-metrics', branch: 'master'
 
