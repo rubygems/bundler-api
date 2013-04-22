@@ -15,7 +15,7 @@ gem 'sequel_pg'
 gem 'sinatra'
 gem 'unicorn'
 
-gem 'rack-queue-metrics', github: 'heroku/rack-queue-metrics', branch: 'split'
+gem 'rack-queue-metrics', github: 'heroku/rack-queue-metrics', branch: 'master'
 
 group :test do
   gem 'artifice'

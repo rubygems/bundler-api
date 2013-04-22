@@ -1,7 +1,7 @@
 GIT
   remote: git://github.com/heroku/rack-queue-metrics.git
   revision: d20d1233914f4f1f6ca5c38805e8e1b4569f68b4
-  branch: split
+  branch: master
   specs:
     rack-queue-metrics (1.0.2)
       raindrops
