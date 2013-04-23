@@ -99,7 +99,10 @@ class BundlerApi::Web < Sinatra::Base
     ActiveSupport::Notifications.instrument('app.controller.request', title: "/api/v1/dependencies") do
       content_type 'application/octet-stream'
       Metriks.timer('dependencies.marshal').time do
-        Marshal.dump(get_deps)
+        deps = get_deps
+        ActiveSupport::Notifications.instrument('app.controller.marshal', title: "Marshal") do
+          Marshal.dump(deps)
+        end
       end
     end
   end
