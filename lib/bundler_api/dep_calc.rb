@@ -26,19 +26,24 @@ SQL
     end
 
     deps = {}
-    dataset.each do |row|
-      key = DepKey.new(row[:name], row[:number], row[:platform])
-      deps[key] = [] unless deps[key]
-      deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
+
+    ActiveSupport::Notifications.instrument('app.controller.dataset', title: "Dataset") do
+      dataset.each do |row|
+        key = DepKey.new(row[:name], row[:number], row[:platform])
+        deps[key] = [] unless deps[key]
+        deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
+      end
     end
 
-    deps.map do |dep_key, gem_deps|
-      {
-        name:         dep_key.name,
-        number:       dep_key.number,
-        platform:     dep_key.platform,
-        dependencies: gem_deps
-      }
+    ActiveSupport::Notifications.instrument('app.controller.map', title: "Map") do
+      deps.map do |dep_key, gem_deps|
+        {
+          name:         dep_key.name,
+          number:       dep_key.number,
+          platform:     dep_key.platform,
+          dependencies: gem_deps
+        }
+      end
     end
   end
 end
