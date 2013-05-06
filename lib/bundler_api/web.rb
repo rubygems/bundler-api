@@ -6,6 +6,7 @@ require 'librato/metrics'
 require 'logger'
 require 'skylight'
 require 'pilfer/middleware'
+require 'pilfer/server'
 require_relative 'rack_queue_metrics_reporter'
 require_relative '../bundler_api'
 require_relative '../bundler_api/dep_calc'
@@ -20,14 +21,6 @@ class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
-    file_matcher = %r{^#{Regexp.escape(settings.root)}(?!/vendor)}
-    use Pilfer::Middleware, file_matcher: file_matcher do |env|
-      # Don't even try to profile if the secret isn't set. The worst option
-      # would be to profile _every_ requst.
-      ENV.has_key?('PROFILE_SECRET') &&
-        env['HTTP_PROFILE_AUTHORIZATION'] == ENV['PROFILE_SECRET']
-    end
-
     config = Skylight::Config.load_from_env
     instrumenter = Skylight::Instrumenter.new(config)
 
@@ -39,6 +32,22 @@ class BundlerApi::Web < Sinatra::Base
     use Metriks::Middleware
     use Honeybadger::Rack
     use Rack::QueueMetrics::AppTime, dev_null
+
+    pilfer_server = ENV['PILFER_SERVER']
+    pilfer_token =  ENV['PILFER_TOKEN']
+
+    if pilfer_server && pilfer_token
+      reporter     = Pilfer::Server.new(pilfer_server, pilfer_token)
+      profiler     = Pilfer::Profiler.new(reporter)
+      file_matcher = %r{^#{Regexp.escape(settings.root)}(?!/vendor)}
+      use Pilfer::Middleware, profiler:     profiler,
+                              file_matcher: file_matcher do |env|
+        # Don't even try to profile if the secret isn't set. The worst option
+        # would be to profile _every_ requst.
+        ENV.has_key?('PROFILE_SECRET') &&
+          env['HTTP_PROFILE_AUTHORIZATION'] == ENV['PROFILE_SECRET']
+      end
+    end
   end
 
   def initialize(conn = nil, write_conn = nil)
