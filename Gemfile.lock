@@ -1,4 +1,11 @@
 GIT
+  remote: git://github.com/eric/pilfer.git
+  revision: c21dc8d62b3886edebfb921d891b8ded2e282b78
+  specs:
+    pilfer (0.0.1.pre4)
+      rblineprof (~> 0.3.2)
+
+GIT
   remote: git://github.com/heroku/rack-queue-metrics.git
   revision: d20d1233914f4f1f6ca5c38805e8e1b4569f68b4
   branch: master
@@ -42,8 +49,6 @@ GEM
     multi_json (1.7.2)
     multipart-post (1.1.5)
     pg (0.14.1)
-    pilfer (0.0.1.pre4)
-      rblineprof (~> 0.3.2)
     rack (1.5.2)
     rack-protection (1.2.0)
       rack
@@ -83,7 +88,7 @@ DEPENDENCIES
   metriks
   metriks-middleware
   pg
-  pilfer
+  pilfer!
   rack-queue-metrics!
   rack-test
   rake
