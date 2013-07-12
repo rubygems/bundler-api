@@ -8,11 +8,11 @@ gem 'lock-smith'
 gem 'metriks'
 gem 'metriks-middleware'
 gem 'pg'
+gem 'puma'
 gem 'rake'
 gem 'sequel'
 gem 'sequel_pg'
 gem 'sinatra'
-gem 'unicorn'
 
 group :test do
   gem 'artifice'
