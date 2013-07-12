@@ -1,6 +1,5 @@
 require 'set'
 require_relative '../../bundler_api'
-require_relative '../metriks'
 
 class BundlerApi::GemDBHelper
   def initialize(db, gem_cache, mutex)
@@ -18,7 +17,6 @@ class BundlerApi::GemDBHelper
       end
     end
 
-    timer   = Metriks.timer('job.gem_exists').time
     dataset = @db[<<-SQL, payload.name, payload.version.version, payload.platform]
     SELECT rubygems.id AS rubygem_id, versions.id AS version_id
     FROM rubygems, versions
@@ -38,8 +36,6 @@ class BundlerApi::GemDBHelper
     end
 
     result
-  ensure
-    timer.stop if timer
   end
 
   def find_or_insert_rubygem(spec)

@@ -1,7 +1,6 @@
 require 'uri'
 require 'net/http'
 require_relative '../bundler_api'
-require_relative 'metriks'
 
 class BundlerApi::HTTPError < RuntimeError
 end
@@ -25,14 +24,11 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
 
   def download_spec(base = "http://production.s3.rubygems.org")
     @mutex.synchronize { return @gemspec if @gemspec }
-    timer = Metriks.timer('job.download_spec').time
     url   = "#{base}/quick/Marshal.4.8/#{full_name}.gemspec.rz"
 
     @mutex.synchronize do
       @gemspec = Marshal.load(Gem.inflate(fetch(url)))
     end
-  ensure
-    timer.stop if timer
   end
 
 private

@@ -1,11 +1,6 @@
 require 'sinatra/base'
 require 'sequel'
 require 'json'
-require 'rack-queue-metrics'
-require 'librato/metrics'
-require 'logger'
-require 'skylight'
-require_relative 'rack_queue_metrics_reporter'
 require_relative '../bundler_api'
 require_relative '../bundler_api/dep_calc'
 require_relative '../bundler_api/metriks'
@@ -19,17 +14,8 @@ class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
-    config = Skylight::Config.load_from_env
-    instrumenter = Skylight::Instrumenter.new(config)
-
-    dev_null = Logger.new('/dev/null')
-    use Skylight::Middleware, instrumenter
-    use Rack::QueueMetrics::QueueTime, dev_null
-    use Raindrops::Middleware
-    use Rack::QueueMetrics::QueueDepth, dev_null
     use Metriks::Middleware
     use Honeybadger::Rack
-    use Rack::QueueMetrics::AppTime, dev_null
   end
 
   def initialize(conn = nil, write_conn = nil)
@@ -42,8 +28,6 @@ class BundlerApi::Web < Sinatra::Base
     @write_conn = write_conn || begin
       Sequel.connect(ENV["DATABASE_URL"])
     end
-
-    Rack::QueueMetrics::MetriksReporter.new.setup_all
 
     super()
   end
@@ -94,31 +78,17 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/api/v1/dependencies" do
-    Skylight.current_endpoint = "/api/v1/dependencies"
-    ActiveSupport::Notifications.instrument('app.controller.request', title: "/api/v1/dependencies") do
-      content_type 'application/octet-stream'
-      Metriks.timer('dependencies.marshal').time do
-        deps = nil
-        ActiveSupport::Notifications.instrument('app.controller.get_deps', title: "Get Deps") do
-          deps = get_deps
-        end
-        ActiveSupport::Notifications.instrument('app.controller.marshal', title: "Marshal") do
-          Marshal.dump(deps)
-        end
-      end
-    end
+    content_type 'application/octet-stream'
+    deps = get_deps
+    Marshal.dump(deps)
   end
 
   get "/api/v1/dependencies.json" do
-    Skylight.current_endpoint = "/api/v1/dependencies.json"
     content_type 'application/json;charset=UTF-8'
-    Metriks.timer('dependencies.jsonify').time do
-      get_deps.to_json
-    end
+    get_deps.to_json
   end
 
   post "/api/v1/add_spec.json" do
-    Metriks.counter('gems.added').increment
     payload = get_payload
     job = BundlerApi::Job.new(@write_conn, payload)
     job.run
@@ -127,7 +97,6 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   post "/api/v1/remove_spec.json" do
-    Metriks.counter('gems.removed').increment
     payload    = get_payload
     rubygem_id = @write_conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
     version    = @write_conn[:versions].where(

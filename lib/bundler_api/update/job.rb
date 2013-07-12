@@ -1,5 +1,4 @@
 require_relative '../../bundler_api'
-require_relative '../metriks'
 require_relative 'gem_db_helper'
 
 class BundlerApi::Job
@@ -33,13 +32,10 @@ class BundlerApi::Job
   def insert_spec(spec)
     raise "Failed to load spec" unless spec
 
-    timer = Metriks.timer('job.insert_spec').time
     @db.transaction do
       rubygem_insert, rubygem_id = @db_helper.find_or_insert_rubygem(spec)
       version_insert, version_id = @db_helper.find_or_insert_version(spec, rubygem_id, @payload.platform, true)
       @db_helper.insert_dependencies(spec, version_id)
     end
-  ensure
-    timer.stop if timer
   end
 end

@@ -29,13 +29,10 @@ rescue LoadError => e
 end
 
 def read_index(uri)
-  Metriks.timer('rake.read_index').time do
-    Zlib::GzipReader.open(open(uri)) {|gz| Marshal.load(gz) }
-  end
+  Zlib::GzipReader.open(open(uri)) {|gz| Marshal.load(gz) }
 end
 
 def modified?(uri, cache_file)
-  timer = Metriks.timer('rake.modified').time
   uri   = URI(uri)
   file  = nil
 
@@ -56,8 +53,6 @@ def modified?(uri, cache_file)
   else
     false
   end
-ensure
-  timer.stop
 end
 
 def specs_havent_changed(specs_threads)
@@ -65,7 +60,6 @@ def specs_havent_changed(specs_threads)
 end
 
 def get_specs
-  timer                  = Metriks.timer('rake.get_specs').time
   specs_uri              = "http://rubygems.org/specs.4.8.gz"
   prerelease_specs_uri   = "http://rubygems.org/prerelease_specs.4.8.gz"
   specs_cache            = "./tmp/specs.4.8.gz"
@@ -89,12 +83,9 @@ def get_specs
   puts "# of specs from indexes: #{specs.size - 1}"
 
   specs
-ensure
-  timer.stop
 end
 
 def get_local_gems(db)
-  timer = Metriks.timer('rake.get_local_gems').time
   dataset = db[<<-SQL]
     SELECT rubygems.name, versions.number, versions.platform, versions.id
     FROM rubygems, versions
@@ -110,15 +101,12 @@ def get_local_gems(db)
   puts "# of non yanked local gem versions: #{local_gems.size}"
 
   local_gems
-ensure
-  timer.stop
 end
 
 def update(db, thread_count)
   specs         = get_specs
   return 60 unless specs
 
-  timer         = Metriks.timer('rake.update').time
   add_gem_count = BundlerApi::AtomicCounter.new
   mutex         = Mutex.new
   yank_mutex    = Mutex.new
@@ -149,8 +137,6 @@ def update(db, thread_count)
   db[:versions].where(id: local_gems.values).update(indexed: false) unless local_gems.empty?
   puts "# of gem versions added: #{add_gem_count.count}"
   puts "# of gem versions yanked: #{local_gems.size}"
-ensure
-  timer.stop if timer
 end
 
 def fix_deps(db, thread_count)
@@ -261,5 +247,4 @@ task :add_spec, :name, :version, :platform, :prerelease do |t, args|
   Sequel.connect(ENV["DATABASE_URL"], max_connections: 1) do |db|
     BundlerApi::Job.new(db, payload).run
   end
-  Metriks.counter('gems.added').increment
 end
