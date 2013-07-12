@@ -13,7 +13,6 @@ require_relative '../bundler_api/honeybadger'
 require_relative '../bundler_api/gem_helper'
 require_relative '../bundler_api/update/job'
 require_relative '../bundler_api/update/yank_job'
-require_relative '../bundler_api/pilfer_middleware'
 
 
 class BundlerApi::Web < Sinatra::Base
@@ -26,7 +25,6 @@ class BundlerApi::Web < Sinatra::Base
     dev_null = Logger.new('/dev/null')
     use Skylight::Middleware, instrumenter
     use Rack::QueueMetrics::QueueTime, dev_null
-    use Pilfer::Middleware
     use Raindrops::Middleware
     use Rack::QueueMetrics::QueueDepth, dev_null
     use Metriks::Middleware

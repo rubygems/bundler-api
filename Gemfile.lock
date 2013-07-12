@@ -17,7 +17,6 @@ GEM
       rack-test
     atomic (1.0.1)
     avl_tree (1.1.3)
-    debugger-ruby_core_source (1.2.0)
     diff-lcs (1.1.3)
     faraday (0.8.4)
       multipart-post (~> 1.1)
@@ -42,8 +41,6 @@ GEM
     multi_json (1.7.2)
     multipart-post (1.1.5)
     pg (0.14.1)
-    pilfer (0.0.1.pre3)
-      debugger-ruby_core_source (~> 1.2)
     rack (1.5.2)
     rack-protection (1.2.0)
       rack
@@ -81,7 +78,6 @@ DEPENDENCIES
   metriks
   metriks-middleware
   pg
-  pilfer
   rack-queue-metrics!
   rack-test
   rake
