@@ -11,7 +11,6 @@ require_relative 'lib/bundler_api/update/yank_job'
 require_relative 'lib/bundler_api/update/fix_dep_job'
 require_relative 'lib/bundler_api/update/atomic_counter'
 require_relative 'lib/bundler_api/gem_helper'
-require_relative 'lib/bundler_api/pgstats'
 
 $stdout.sync = true
 Thread.abort_on_exception = true
@@ -204,40 +203,6 @@ task :continual_update, :thread_count, :times do |t, args|
       end
     end
   end
-end
-
-require 'librato/metrics'
-
-def new_librato_client
-  user  = ENV['LIBRATO_METRICS_USER']
-  token = ENV['LIBRATO_METRICS_TOKEN']
-  raise 'Need Librato credentials' unless user && token
-
-  client = Librato::Metrics::Client.new
-  client.authenticate user, token
-  client
-end
-
-desc "collect database statistics every 60 seconds"
-task :collect_db_stats do
-  interval = 60  # Collect stats every 60 seconds.
-  threads  = { 'pg.master'   => ENV['DATABASE_URL'],
-               'pg.follower' => ENV['FOLLOWER_DATABASE_URL'] }.
-    map do |label, url|
-      Thread.new do
-        Sequel.connect(url) do |db|
-          stats = PGStats.new(db, label:    label,
-                                  interval: interval,
-                                  client:   new_librato_client)
-          loop do
-            stats.submit
-            sleep(interval)
-          end
-        end
-      end
-    end
-
-  threads.each(&:join)
 end
 
 desc "Add a specific single gem version to the database"
