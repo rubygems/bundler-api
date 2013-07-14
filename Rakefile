@@ -1,3 +1,5 @@
+$: << 'lib'
+
 require 'sequel'
 require 'open-uri'
 require 'zlib'
@@ -5,12 +7,12 @@ require 'tmpdir'
 require 'net/http'
 require 'time'
 require 'locksmith/pg'
-require_relative 'lib/bundler_api/update/consumer_pool'
-require_relative 'lib/bundler_api/update/job'
-require_relative 'lib/bundler_api/update/yank_job'
-require_relative 'lib/bundler_api/update/fix_dep_job'
-require_relative 'lib/bundler_api/update/atomic_counter'
-require_relative 'lib/bundler_api/gem_helper'
+require 'bundler_api/update/consumer_pool'
+require 'bundler_api/update/job'
+require 'bundler_api/update/yank_job'
+require 'bundler_api/update/fix_dep_job'
+require 'bundler_api/update/atomic_counter'
+require 'bundler_api/gem_helper'
 
 $stdout.sync = true
 Thread.abort_on_exception = true
