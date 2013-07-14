@@ -48,6 +48,18 @@ describe BundlerApi::Web do
     BundlerApi::Web.new(@read_db, @write_db)
   end
 
+  context "GET /" do
+    let(:request) { "/" }
+
+    it "redirects to rubygems.org" do
+      get request
+
+      expect(last_response).to be_redirect
+      expect(last_response.headers['Location']).
+        to eq('https://www.rubygems.org')
+    end
+  end
+
   context "GET /api/v1/dependencies" do
     let(:request) { "/api/v1/dependencies" }
 

@@ -77,6 +77,10 @@ class BundlerApi::Web < Sinatra::Base
     request.env['rack.exception'] = request.env['sinatra.error']
   end
 
+  get "/" do
+    redirect RUBYGEMS_URL
+  end
+
   get "/api/v1/dependencies" do
     content_type 'application/octet-stream'
     deps = get_deps
