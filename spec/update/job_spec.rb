@@ -113,7 +113,7 @@ SQL
         end
 
         jobs.first.run
-        expect { jobs[1].run }.not_to raise_error(Sequel::DatabaseError)
+        expect { jobs[1].run }.not_to raise_error()
 
         gem_exists?(db, 'foo', '1.0', 'jruby')
       end
