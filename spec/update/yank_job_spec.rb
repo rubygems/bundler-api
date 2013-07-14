@@ -1,5 +1,6 @@
-require_relative '../spec_helper'
-require_relative '../../lib/bundler_api/update/yank_job'
+require 'spec_helper'
+require 'support/artifice_apps'
+require 'bundler_api/update/yank_job'
 
 describe BundlerApi::YankJob do
   let(:mutex) { Mutex.new }

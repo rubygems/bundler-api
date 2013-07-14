@@ -1,9 +1,9 @@
 require 'sinatra/base'
-require 'artifice'
-require_relative '../spec_helper'
-require_relative '../support/artifice_apps'
-require_relative '../../lib/bundler_api/update/job'
-require_relative '../../lib/bundler_api/update/atomic_counter'
+require 'spec_helper'
+require 'support/artifice_apps'
+require 'bundler_api/gem_helper'
+require 'bundler_api/update/job'
+require 'bundler_api/update/atomic_counter'
 
 describe BundlerApi::Job do
   let(:db)      { $db }

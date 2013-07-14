@@ -1,5 +1,5 @@
 require 'zlib'
-require_relative '../bundler_api'
+require 'bundler_api'
 
 class BundlerApi::DepCalc
   DepKey = Struct.new(:name, :number, :platform)

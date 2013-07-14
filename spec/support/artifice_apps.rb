@@ -1,5 +1,6 @@
+require 'artifice'
 require 'sinatra/base'
-require_relative 'gemspec_helper'
+require 'support/gemspec_helper'
 
 class GemspecGenerator < Sinatra::Base
   include GemspecHelper

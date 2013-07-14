@@ -1,7 +1,7 @@
-require_relative '../spec_helper'
-require_relative '../support/gemspec_helper'
-require_relative '../../lib/bundler_api/update/gem_db_helper'
-require_relative '../../lib/bundler_api/gem_helper'
+require 'spec_helper'
+require 'support/gemspec_helper'
+require 'bundler_api/update/gem_db_helper'
+require 'bundler_api/gem_helper'
 
 describe BundlerApi::GemDBHelper do
   let(:db)        { $db }

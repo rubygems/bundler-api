@@ -1,6 +1,6 @@
 require 'rack/test'
-require_relative 'spec_helper'
-require_relative '../lib/bundler_api/web'
+require 'spec_helper'
+require 'bundler_api/web'
 
 describe BundlerApi::Web do
   include Rack::Test::Methods

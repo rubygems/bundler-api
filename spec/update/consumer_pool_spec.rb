@@ -1,7 +1,7 @@
 require 'monitor'
 require 'timeout'
-require_relative '../spec_helper'
-require_relative '../../lib/bundler_api/update/consumer_pool'
+require 'spec_helper'
+require 'bundler_api/update/consumer_pool'
 
 describe BundlerApi::ConsumerPool do
   class TestJob

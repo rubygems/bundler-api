@@ -1,7 +1,7 @@
 require 'sequel'
-require_relative '../spec_helper'
-require_relative '../../lib/bundler_api/dep_calc'
-require_relative '../support/gem_builder'
+require 'spec_helper'
+require 'bundler_api/dep_calc'
+require 'support/gem_builder'
 
 describe BundlerApi::DepCalc do
   let(:db)      { $db }

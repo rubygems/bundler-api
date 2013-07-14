@@ -1,6 +1,6 @@
 require 'uri'
 require 'net/http'
-require_relative '../bundler_api'
+require 'bundler_api'
 
 class BundlerApi::HTTPError < RuntimeError
 end

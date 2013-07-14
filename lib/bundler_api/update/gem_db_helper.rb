@@ -1,5 +1,5 @@
 require 'set'
-require_relative '../../bundler_api'
+require 'bundler_api'
 
 class BundlerApi::GemDBHelper
   def initialize(db, gem_cache, mutex)

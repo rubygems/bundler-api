@@ -1,7 +1,7 @@
 require 'bundler/setup'
 require 'rspec/core'
-require_relative 'support/database'
-require_relative 'support/latch'
+require 'support/database'
+require 'support/latch'
 
 ENV['RACK_ENV'] = 'test'
 

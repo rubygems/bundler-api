@@ -1,13 +1,13 @@
 require 'sinatra/base'
 require 'sequel'
 require 'json'
-require_relative '../bundler_api'
-require_relative '../bundler_api/dep_calc'
-require_relative '../bundler_api/metriks'
-require_relative '../bundler_api/honeybadger'
-require_relative '../bundler_api/gem_helper'
-require_relative '../bundler_api/update/job'
-require_relative '../bundler_api/update/yank_job'
+require 'bundler_api'
+require 'bundler_api/dep_calc'
+require 'bundler_api/metriks'
+require 'bundler_api/honeybadger'
+require 'bundler_api/gem_helper'
+require 'bundler_api/update/job'
+require 'bundler_api/update/yank_job'
 
 
 class BundlerApi::Web < Sinatra::Base

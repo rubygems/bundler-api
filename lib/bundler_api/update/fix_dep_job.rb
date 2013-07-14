@@ -1,5 +1,5 @@
-require_relative '../../bundler_api'
-require_relative 'gem_db_helper'
+require 'bundler_api'
+require 'bundler_api/update/gem_db_helper'
 
 class BundlerApi::FixDepJob
   @@gem_cache = {}

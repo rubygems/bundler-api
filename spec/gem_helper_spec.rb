@@ -1,6 +1,6 @@
-require_relative 'spec_helper'
-require_relative '../lib/bundler_api/gem_helper'
-require_relative 'support/artifice_apps'
+require 'spec_helper'
+require 'support/artifice_apps'
+require 'bundler_api/gem_helper'
 
 describe BundlerApi::GemHelper do
   let(:name)    { "foo" }

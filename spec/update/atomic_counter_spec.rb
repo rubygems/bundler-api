@@ -1,5 +1,5 @@
-require_relative '../spec_helper'
-require_relative '../../lib/bundler_api/update/atomic_counter'
+require 'spec_helper'
+require 'bundler_api/update/atomic_counter'
 
 describe BundlerApi::AtomicCounter do
   let(:counter) { BundlerApi::AtomicCounter.new }
