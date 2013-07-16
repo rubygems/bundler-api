@@ -1,8 +1,9 @@
-bundler-api
-===========
+[![Code Climate](https://codeclimate.com/github/bundler/bundler-api.png)](https://codeclimate.com/github/bundler/bundler-api)
+[![Build Status](https://travis-ci.org/bundler/bundler-api.png?branch=master)](https://travis-ci.org/bundler/bundler-api)
 
-Environment
------------
+# bundler-api
+
+## Environment
 
 The follow environment variables are needed to run bundler-api. You can store
 these in the .gitignored `.env` file to have them automatically loaded by
@@ -14,8 +15,7 @@ Foreman and `script/setup`.
     TEST_DATABASE_URL=postgres:///bundler-api-test
 
 
-Databases
----------
+## Databases
 
   - `COBALT`: Master database.
   - `PURPLE`: Following `COBALT`. Read by public API to resolve dependencies.
