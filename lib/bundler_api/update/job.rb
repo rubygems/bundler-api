@@ -22,6 +22,9 @@ class BundlerApi::Job
         insert_spec(spec)
       end
     end
+  rescue BundlerApi::HTTPError => e
+    puts "BundlerApi::Job#run gem=#{@payload.full_name.inspect} " +
+         "message=#{e.message.inspect}"
   end
 
   def self.clear_cache
