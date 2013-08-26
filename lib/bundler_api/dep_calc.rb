@@ -1,4 +1,3 @@
-require 'zlib'
 require 'bundler_api'
 
 class BundlerApi::DepCalc
