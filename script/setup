@@ -33,7 +33,7 @@ echo "Creating the database unless exists"
 } >&3 2>&1
 
 echo "Migrating the database"
-sequel -m db/migrations $DATABASE_URL >&3 2>&1
+bundle exec sequel -m db/migrations $DATABASE_URL >&3 2>&1
 
 echo "Done!
 Run \`rake update\` and \`rake fix_deps\` to populate the database with \
