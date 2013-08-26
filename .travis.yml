@@ -3,7 +3,7 @@ before_script:
   - psql -c 'create database "bundler-api";' -U postgres
   - cp .env.example .env && export $(cat .env) && ./script/setup -v
 rvm: 1.9.3
-script: export $(cat .env) && rspec
+script: export $(cat .env) && bundle exec rspec
 notifications:
   irc:
     on_success: change
