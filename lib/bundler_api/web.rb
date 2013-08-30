@@ -35,6 +35,11 @@ class BundlerApi::Web < Sinatra::Base
     super()
   end
 
+  not_found do
+    status 404
+    body JSON.dump({"error" => "Not found", "code" => 404})
+  end
+
   def gems
     halt(200) if params[:gems].nil?
     params[:gems].split(',')
