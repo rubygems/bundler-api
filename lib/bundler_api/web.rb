@@ -23,11 +23,13 @@ class BundlerApi::Web < Sinatra::Base
     @rubygems_token = ENV['RUBYGEMS_TOKEN']
 
     @conn = conn || begin
-      Sequel.connect(ENV["FOLLOWER_DATABASE_URL"])
+      Sequel.connect(ENV['FOLLOWER_DATABASE_URL'],
+                     max_connections: ENV['MAX_THREADS'])
     end
 
     @write_conn = write_conn || begin
-      Sequel.connect(ENV["DATABASE_URL"])
+      Sequel.connect(ENV['DATABASE_URL'],
+                     max_connections: ENV['MAX_THREADS'])
     end
 
     super()
