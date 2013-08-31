@@ -135,4 +135,9 @@ class BundlerApi::Web < Sinatra::Base
   get "/specs.4.8.gz" do
     redirect "#{RUBYGEMS_URL}/specs.4.8.gz"
   end
+
+  get "/robots.txt" do
+    "Disallow: /\n"
+  end
+
 end
