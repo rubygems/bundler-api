@@ -3,19 +3,17 @@
 
 # bundler-api
 
+## Getting Started
+
+Run `script/build` to create and migrate the database specified in the
+`$DATABASE_URL` environment variable.
+
 ## Environment
 
-The follow environment variables are needed to run bundler-api. You can store
-these in the .gitignored `.env` file to have them automatically loaded by
-Foreman and `script/setup`.
+The default environment is stored in `.env`. Override any of the settings
+found there by creating a `.env.local` file.
 
-    RACK_ENV=development
-    DATABASE_URL=postgres:///bundler-api
-    FOLLOWER_DATABASE_URL=postgres:///bundler-api
-    TEST_DATABASE_URL=postgres:///bundler-api-test
-
-
-## Databases
+## Production Databases
 
   - `COBALT`: Master database.
   - `PURPLE`: Following `COBALT`. Read by public API to resolve dependencies.

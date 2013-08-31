@@ -1,10 +1,10 @@
 language: ruby
 before_script:
   - psql -c 'create database "bundler-api";' -U postgres
-  - cp .env.example .env && export $(cat .env) && ./script/setup -v
+  - ./script/setup --verbose
 rvm: 1.9.3
 bundler_args: --binstubs
-script: export $(cat .env) && rspec
+script: rspec
 notifications:
   irc:
     on_success: change
