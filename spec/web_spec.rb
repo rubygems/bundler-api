@@ -60,6 +60,24 @@ describe BundlerApi::Web do
     end
   end
 
+  context "GET static files" do
+    let(:request) { "/robots.txt" }
+
+    it "redirects to rubygems.org" do
+      get request
+      expect(last_response).to be_ok
+    end
+  end
+
+  context "GET nonexistent files'" do
+    let(:request) { "/nonexistent" }
+
+    it "redirects to rubygems.org" do
+      get request
+      expect(last_response).to be_not_found
+    end
+  end
+
   context "GET /api/v1/dependencies" do
     let(:request) { "/api/v1/dependencies" }
 

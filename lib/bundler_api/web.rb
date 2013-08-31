@@ -35,6 +35,8 @@ class BundlerApi::Web < Sinatra::Base
     super()
   end
 
+  set :root, File.join(File.dirname(__FILE__), '..', '..')
+
   not_found do
     status 404
     body JSON.dump({"error" => "Not found", "code" => 404})
@@ -135,9 +137,4 @@ class BundlerApi::Web < Sinatra::Base
   get "/specs.4.8.gz" do
     redirect "#{RUBYGEMS_URL}/specs.4.8.gz"
   end
-
-  get "/robots.txt" do
-    "Disallow: /\n"
-  end
-
 end
