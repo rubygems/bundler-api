@@ -1,9 +1,11 @@
 require 'bundler/setup'
+
+ENV['RACK_ENV'] = 'test'
+require 'bundler_api/env'
+
 require 'rspec/core'
 require 'support/database'
 require 'support/latch'
-
-ENV['RACK_ENV'] = 'test'
 
 RSpec.configure do |config|
   config.filter_run :focused => true

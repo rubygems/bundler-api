@@ -1,40 +1,64 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env ruby
+# Create and migrate the database specified in the $DATABASE_URL environment
+# variable.
+#
+# Usage: script/rebuild [--verbose] [--rebuild]
+#
+# Options:
+#   --rebuild: drop the database before creating it
+#   --verbose: print errors and warnings from postgres
 
-if [ "$1" = "-v" ]; then
-  exec 3>&1
-else
-  exec 3>/dev/null
-fi
+$stdout.sync = true
 
-if [ -e ".env" ]; then
-  while read line; do export $line; done < ".env"
-fi
+lib = File.expand_path(File.join('..', '..', 'lib'), __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
-# DATABASE_URL env var is required to setup the database
-if [ -z "$DATABASE_URL" ]; then
-  echo "DATABASE_URL environment variable required"
-  exit 1
-fi
+require 'bundler/setup'
+require 'bundler_api/env'
+require 'open3'
 
-dbname=$(basename "$DATABASE_URL")
+def rebuild?
+  @rebuild ||= ARGV.delete('--rebuild')
+end
 
-# Wipe and load the database if DROPDB env var is set.
-if [ -n "$DROPDB" ]; then
-  echo "Dropping the database"
-  { psql -tAl | grep -E "^$dbname\|" >/dev/null && \
-      dropdb $dbname
-  } >&3 2>&1
-fi
+def verbose?
+  @verbose ||= (ARGV.delete('-v') || ARGV.delete('--verbose'))
+end
 
-echo "Creating the database unless exists"
-{ psql -tAl | grep -E "^$dbname\|" >/dev/null || \
-  createdb --no-password $dbname
-} >&3 2>&1
+def print_output(output)
+  return if !verbose? or output.empty?
+  output.lines.each do |line|
+    puts "  #{line}"
+  end
+  puts
+end
 
-echo "Migrating the database"
-sequel -m db/migrations $DATABASE_URL >&3 2>&1
+def database_url
+  ENV['DATABASE_URL']
+end
 
-echo "Done!
-Run \`rake update\` and \`rake fix_deps\` to populate the database with \
+def database_name
+  File.basename(database_url)
+end
+
+abort 'DATABASE_URL environment variable required' unless database_url
+
+if rebuild?
+  puts 'Dropping database'
+  output, _ = Open3.capture2e(*%W(dropdb --if-exists #{database_name}))
+  print_output output
+end
+
+puts 'Creating database'
+output, _ = Open3.capture2e(*%W{createdb --no-password #{database_name}})
+print_output output
+
+puts 'Migrating database'
+output, _ = Open3.capture2e(*%W{sequel --migrate-directory db/migrations
+                                       #{database_url}})
+print_output output
+
+puts "
+Done! \
+Run `rake update` and `rake fix_deps` to populate the database with \
 all gems from rubygems.org."

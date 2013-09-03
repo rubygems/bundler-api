@@ -1,0 +1,2 @@
+#!/usr/bin/env ruby
+exec 'puma', '--config', 'puma.rb'

@@ -1,5 +1,8 @@
 $: << 'lib'
 
+require 'bundler/setup'
+require 'bundler_api/env'
+
 require 'sequel'
 require 'open-uri'
 require 'zlib'
@@ -170,10 +173,14 @@ def fix_deps(db, thread_count)
   puts "# of gem deps fixed: #{counter.count}"
 end
 
+def database_connection(connections = 1, &block)
+  Sequel.connect(ENV['DATABASE_URL'], max_connections: connections, &block)
+end
+
 desc "update database"
 task :update, :thread_count do |t, args|
   thread_count = (args[:thread_count] || 1).to_i
-  Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
+  database_connection(thread_count) do |db|
     update(db, thread_count)
   end
 end
@@ -181,18 +188,18 @@ end
 desc "fixing existing dependencies"
 task :fix_deps, :thread_count do |t, args|
   thread_count = (args[:thread_count] || 1).to_i
-  Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
+  database_connection(thread_count) do |db|
     fix_deps(db, thread_count)
   end
 end
 
 desc "continual update"
 task :continual_update, :thread_count, :times do |t, args|
-  count        = 0
+  thread_count = (args[:thread_count] || 1).to_i
   times        = args[:times].to_i
-  thread_count = args[:thread_count].to_i
+  count        = 0
 
-  Sequel.connect(ENV["DATABASE_URL"], max_connections: thread_count) do |db|
+  database_connection(thread_count) do |db|
     Locksmith::Pg.lock("continual_update") do
       loop do
         if count < times
@@ -211,7 +218,7 @@ desc "Add a specific single gem version to the database"
 task :add_spec, :name, :version, :platform, :prerelease do |t, args|
   args.with_defaults(:platform => 'ruby', :prerelease => false)
   payload = BundlerApi::GemHelper.new(args[:name], Gem::Version.new(args[:version]), args[:platform], args[:prerelease])
-  Sequel.connect(ENV["DATABASE_URL"], max_connections: 1) do |db|
+  database_connection do |db|
     BundlerApi::Job.new(db, payload).run
   end
 end
