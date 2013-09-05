@@ -74,7 +74,7 @@ def get_specs
   specs_threads << Thread.new { modified?(specs_uri, specs_cache) }
   specs_threads << Thread.new { modified?(prerelease_specs_uri, prerelease_specs_cache) }
   if specs_havent_changed(specs_threads)
-    puts "HTTP 304: Specs not modified. Sleeping for 60s."
+    print "HTTP 304: Specs not modified. Sleeping for 60s.\n"
     return
   end
 
@@ -84,7 +84,7 @@ def get_specs
   specs_threads << Thread.new { [:prerelease] }
   specs_threads << Thread.new { read_index(prerelease_specs_cache) }
   specs = specs_threads.inject([]) {|sum, t| sum + t.value }
-  puts "# of specs from indexes: #{specs.size - 1}"
+  print "# of specs from indexes: #{specs.size - 1}\n"
 
   specs
 end
@@ -102,7 +102,7 @@ def get_local_gems(db)
     gem_helper                       = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform])
     local_gems[gem_helper.full_name] = h[:id]
   end
-  puts "# of non yanked local gem versions: #{local_gems.size}"
+  print "# of non yanked local gem versions: #{local_gems.size}\n"
 
   local_gems
 end
@@ -131,16 +131,16 @@ def update(db, thread_count)
     pool.enq(BundlerApi::Job.new(db, payload, mutex, add_gem_count))
   end
 
-  puts "Finished Enqueuing Jobs!"
+  print "Finished Enqueuing Jobs!\n"
 
   pool.poison
   pool.join
 
-  local_gems.keys.each {|gem| puts "Yanking: #{gem}" }
+  local_gems.keys.each {|gem| print "Yanking: #{gem}\n" }
 
   db[:versions].where(id: local_gems.values).update(indexed: false) unless local_gems.empty?
-  puts "# of gem versions added: #{add_gem_count.count}"
-  puts "# of gem versions yanked: #{local_gems.size}"
+  print "# of gem versions added: #{add_gem_count.count}\n"
+  print "# of gem versions yanked: #{local_gems.size}\n"
 end
 
 def fix_deps(db, thread_count)
@@ -165,12 +165,12 @@ def fix_deps(db, thread_count)
     pool.enq(BundlerApi::FixDepJob.new(db, payload, counter, mutex))
   end
 
-  puts "Finished Enqueuing Jobs!"
+  print "Finished Enqueuing Jobs!\n"
 
   pool.poison
   pool.join
 
-  puts "# of gem deps fixed: #{counter.count}"
+  print "# of gem deps fixed: #{counter.count}\n"
 end
 
 def database_connection(connections = 1, &block)

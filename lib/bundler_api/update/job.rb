@@ -17,7 +17,7 @@ class BundlerApi::Job
     unless @db_helper.exists?(@payload)
       @gem_count.increment if @gem_count
       spec = @payload.download_spec
-      puts "Adding: #{@payload.full_name}"
+      print "Adding: #{@payload.full_name}\n"
       @mutex.synchronize do
         insert_spec(spec)
       end

@@ -43,7 +43,7 @@ class BundlerApi::FixDepJob
     end
 
     if deps_added.any?
-      puts "Adding Missing Dep to #{spec.full_name}: #{deps_added.join(", ")}"
+      print "Adding Missing Dep to #{spec.full_name}: #{deps_added.join(", ")}\n"
       @counter.increment if @counter
     end
   end
