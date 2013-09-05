@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+# Create and migrate the database specified in the $DATABASE_URL environment
+# variable.
+#
+# Usage: script/migrate [version]
+#
+# Options:
+#   version: migrate the database to version given
+
+$stdout.sync = true
+
+lib = File.expand_path(File.join('..', '..', 'lib'), __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+require 'bundler/setup'
+require 'bundler_api/env'
+
+def database_url
+  ENV['DATABASE_URL']
+end
+
+def version
+  ARGV.first
+end
+
+abort 'DATABASE_URL environment variable required' unless database_url
+
+puts 'Migrating database'
+command = *%W{sequel --migrate-directory db/migrations}
+command += %W{--migrate-version #{version}} if version
+command << database_url
+system *command

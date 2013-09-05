@@ -48,12 +48,7 @@ class BundlerApi::GemDBHelper
       rubygem_id = rubygem[:id]
     else
       insert     = true
-      rubygem_id = @db[:rubygems].insert(
-        name:       spec.name,
-        created_at: Time.now,
-        updated_at: Time.now,
-        downloads:  0
-      )
+      rubygem_id = @db[:rubygems].insert(name: spec.name)
     end
 
     [insert, rubygem_id]
@@ -76,21 +71,13 @@ class BundlerApi::GemDBHelper
       insert     = true
       indexed    = true if indexed.nil?
       version_id = @db[:versions].insert(
-        authors:     spec.authors,
-        description: spec.description,
         number:      spec.version.version,
         rubygem_id:  rubygem_id,
-        updated_at:  Time.now,
-        summary:     spec.summary,
         # rubygems.org actually uses the platform from the index and not from the spec
         platform:    platform,
-        created_at:  Time.now,
         indexed:     indexed,
         prerelease:  !spec.version.prerelease?.nil?,
-        latest:      true,
-        full_name:   spec.full_name,
-        # same setting as rubygems.org
-        built_at:    spec.date
+        full_name:   spec.full_name
       )
     end
 
@@ -123,8 +110,6 @@ class BundlerApi::GemDBHelper
           deps_added << "#{requirements} #{rubygem_name}"
           @db[:dependencies].insert(
             requirements: requirements,
-            created_at:   Time.now,
-            updated_at:   Time.now,
             rubygem_id:   dep_rubygem[:id],
             version_id:   version_id,
             scope:        scope

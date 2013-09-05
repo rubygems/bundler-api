@@ -30,6 +30,7 @@ begin
   end
   task :default => :spec
 rescue LoadError => e
+  # rspec won't exist on production
 end
 
 def read_index(uri)
