@@ -7,7 +7,7 @@ module BundlerApi
     end
 
     def self.local_env?
-      ENV['RACK_ENV'].nil? or
+      ENV['RACK_ENV'].nil? ||
         ENV['RACK_ENV'] == 'development' or
         ENV['RACK_ENV'] == 'test'
     end

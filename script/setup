@@ -26,7 +26,7 @@ def verbose?
 end
 
 def print_output(output)
-  return if !verbose? or output.empty?
+  return if !verbose? || output.empty?
   output.lines.each do |line|
     puts "  #{line}"
   end
