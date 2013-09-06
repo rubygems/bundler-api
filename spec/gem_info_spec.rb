@@ -93,4 +93,25 @@ describe BundlerApi::GemInfo do
     end
   end
 
+  describe "#versions" do
+    before do
+      a = builder.create_rubygem("a")
+      b = builder.create_rubygem("b")
+      c = builder.create_rubygem("c")
+      builder.create_version(a, "a")
+      builder.create_version(a, "a", "1.0.1")
+      builder.create_version(b, "b")
+      builder.create_version(b, "b", "1.0.1", "ruby", false)
+      builder.create_version(c, "c", "1.0.0", "java")
+    end
+
+    it "should return a hash of gems and versions" do
+      result = {
+        "a" => ["1.0.0", "1.0.1"],
+        "b" => ["1.0.0"],
+        "c" => ["1.0.0-java"]
+      }
+      expect(gem_info.versions).to eq(result)
+    end
+  end
 end

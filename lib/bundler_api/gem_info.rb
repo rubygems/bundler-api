@@ -48,4 +48,21 @@ SQL
     @conn[:rubygems].select(:name).order(:name).all.map {|r| r[:name] }
   end
 
+  # return a list of gem names and their versions
+  def versions
+    specs_hash = Hash.new {|h, k| h[k] = [] }
+    rows = @conn[<<-SQL]
+      SELECT r.name, v.number, v.platform
+      FROM rubygems AS r, versions AS v
+      WHERE v.rubygem_id = r.id
+        AND v.indexed is true
+SQL
+    rows.each do |row|
+      name, version, platform = row[:name], row[:number], row[:platform]
+      version = "#{version}-#{platform}" if platform != "ruby"
+      specs_hash[name] << version
+    end
+
+    specs_hash.each {|k, v| v.sort! }
+  end
 end
