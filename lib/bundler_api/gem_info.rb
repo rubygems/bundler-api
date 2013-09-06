@@ -42,4 +42,10 @@ SQL
       }
     end
   end
+
+  # return list of gem names
+  def names
+    @conn[:rubygems].select(:name).order(:name).all.map {|r| r[:name] }
+  end
+
 end

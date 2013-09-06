@@ -184,7 +184,7 @@ describe BundlerApi::Web do
 
   context "/api/v2/names.list" do
     before do
-      any_instance_of(BundlerApi::V2DB) do |klass|
+      any_instance_of(BundlerApi::GemInfo) do |klass|
         stub(klass).names { %w(a b c d) }
       end
     end

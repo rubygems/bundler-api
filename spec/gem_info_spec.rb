@@ -79,4 +79,18 @@ describe BundlerApi::GemInfo do
       end
     end
   end
+
+  describe "#names" do
+    before do
+      builder.create_rubygem("a")
+      builder.create_rubygem("c")
+      builder.create_rubygem("b")
+      builder.create_rubygem("d")
+    end
+
+    it "should return the list back in order" do
+      expect(gem_info.names).to eq(%w(a b c d))
+    end
+  end
+
 end
