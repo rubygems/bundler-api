@@ -5,6 +5,7 @@ require 'bundler_api/env'
 
 require 'rspec/core'
 require 'rspec/mocks'
+require 'rr'
 require 'support/database'
 require 'support/latch'
 require 'support/matchers'

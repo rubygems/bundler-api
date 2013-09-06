@@ -181,4 +181,24 @@ describe BundlerApi::Web do
       expect(last_response).to be_redirect
     end
   end
+
+  context "/api/v2/names.list" do
+    before do
+      any_instance_of(BundlerApi::V2DB) do |klass|
+        stub(klass).names { %w(a b c d) }
+      end
+    end
+
+    it "returns an array" do
+      get "/api/v2/names.list"
+
+      expect(last_response).to be_ok
+      expect(last_response.body).to eq(<<-NAMES.chomp)
+a
+b
+c
+d
+      NAMES
+    end
+  end
 end

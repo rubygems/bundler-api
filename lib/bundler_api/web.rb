@@ -11,6 +11,7 @@ require 'bundler_api/honeybadger'
 require 'bundler_api/gem_helper'
 require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
+require 'bundler_api/v2_db'
 
 
 class BundlerApi::Web < Sinatra::Base
@@ -133,6 +134,12 @@ class BundlerApi::Web < Sinatra::Base
 
       json_payload(payload)
     end
+  end
+
+  get "/api/v2/names.list" do
+    content_type 'text/plain'
+
+    BundlerApi::V2DB.new(@conn).names.join("\n")
   end
 
   get "/quick/Marshal.4.8/:id" do
