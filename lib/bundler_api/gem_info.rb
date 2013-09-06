@@ -1,11 +1,16 @@
 require 'bundler_api'
 
-class BundlerApi::DepCalc
+# Return data about all the gems: all gem names, all versions of all gems, all dependencies for all versions of a gem
+class BundlerApi::GemInfo
   DepKey = Struct.new(:name, :number, :platform)
 
+  def initialize(connection)
+    @conn = connection
+  end
+
   # @param [String] array of strings with the gem names
-  def self.deps_for(connection, gems)
-    dataset = connection[<<-SQL, Sequel.value_list(gems)]
+  def deps_for(gems)
+    dataset = @conn[<<-SQL, Sequel.value_list(gems)]
       SELECT rv.name, rv.number, rv.platform, d.requirements, for_dep_name.name dep_name
       FROM
         (SELECT r.name, v.number, v.platform, v.id AS version_id

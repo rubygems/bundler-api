@@ -1,16 +1,17 @@
 require 'sequel'
 require 'spec_helper'
-require 'bundler_api/dep_calc'
+require 'bundler_api/gem_info'
 require 'support/gem_builder'
 
-describe BundlerApi::DepCalc do
-  let(:db)      { $db }
-  let(:builder) { GemBuilder.new(db) }
+describe BundlerApi::GemInfo do
+  let(:db)       { $db }
+  let(:builder)  { GemBuilder.new(db) }
+  let(:gem_info) { BundlerApi::GemInfo.new(db) }
 
-  describe ".deps_for" do
+  describe "#deps_for" do
     context "no gems" do
       it "should find the deps" do
-        expect(BundlerApi::DepCalc.deps_for(db, ['rack'])).to eq([])
+        expect(gem_info.deps_for(['rack'])).to eq([])
       end
     end
 
@@ -28,7 +29,7 @@ describe BundlerApi::DepCalc do
           dependencies: []
         }]
 
-        expect(BundlerApi::DepCalc.deps_for(db, ['rack'])).to eq(result)
+        expect(gem_info.deps_for(['rack'])).to eq(result)
       end
     end
 
@@ -50,7 +51,7 @@ describe BundlerApi::DepCalc do
           dependencies: [['foo', '= 1.0.0']]
         }]
 
-        expect(BundlerApi::DepCalc.deps_for(db, ['rack'])).to eq(result)
+        expect(gem_info.deps_for(['rack'])).to eq(result)
       end
     end
 
@@ -74,7 +75,7 @@ describe BundlerApi::DepCalc do
           dependencies: [['foo', '= 1.0.0']]
         }]
 
-        expect(BundlerApi::DepCalc.deps_for(db, ['rack'])).to eq(result)
+        expect(gem_info.deps_for(['rack'])).to eq(result)
       end
     end
   end
