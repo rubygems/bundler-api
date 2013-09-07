@@ -152,6 +152,18 @@ class BundlerApi::Web < Sinatra::Base
     output
   end
 
+  get "/api/v2/deps/:name" do
+    output = ""
+    @gem_info.deps_for(params[:name]).each do |row|
+      deps = row[:dependencies].map {|d| d.join(":") }
+      output << "#{row[:number]}"
+      output << " #{deps.join(",")}" if deps.any?
+      output << "\n"
+    end
+
+    output
+  end
+
   get "/quick/Marshal.4.8/:id" do
     redirect "#{RUBYGEMS_URL}/quick/Marshal.4.8/#{params[:id]}"
   end

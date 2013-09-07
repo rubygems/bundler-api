@@ -226,4 +226,37 @@ c 1.0.0-java
       VERSIONS
     end
   end
+
+  context "/api/v2/deps/:gem" do
+    before do
+      any_instance_of(BundlerApi::GemInfo) do |klass|
+        stub(klass).deps_for {
+          [
+            {
+              name:         'rack',
+              number:       '1.0.0',
+              platform:     'ruby',
+              dependencies: []
+            },
+            {
+              name:         'rack',
+              number:       '1.0.1',
+              platform:     'ruby',
+              dependencies: [['foo', '= 1.0.0'], ['bar', '>= 2.1']]
+            }
+          ]
+        }
+      end
+    end
+
+    it "should return the gem list" do
+      get "/api/v2/deps/rack"
+
+      expect(last_response).to be_ok
+      expect(last_response.body).to eq(<<-DEPS)
+1.0.0
+1.0.1 foo:= 1.0.0,bar:>= 2.1
+DEPS
+    end
+  end
 end
