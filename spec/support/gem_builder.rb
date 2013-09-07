@@ -8,13 +8,15 @@ class GemBuilder
   end
 
   def create_version(rubygem_id, name, version = '1.0.0', platform = 'ruby', indexed = true)
+    full_name = "#{name}-#{version}"
+    full_name << "-#{platform}" if platform != 'ruby'
     @conn[:versions].insert(
       number:     version,
       rubygem_id: rubygem_id,
       platform:   platform,
       indexed:    indexed,
       prerelease: false,
-      full_name:  "#{name}-#{version}"
+      full_name:  full_name
     )
   end
 
