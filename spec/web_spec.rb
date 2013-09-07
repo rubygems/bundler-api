@@ -201,4 +201,29 @@ d
       NAMES
     end
   end
+
+  context "/api/v2/versions.list" do
+    before do
+      any_instance_of(BundlerApi::GemInfo) do |klass|
+        stub(klass).versions {
+          {
+            "a" => ["1.0.0", "1.0.1"],
+            "b" => ["1.0.0"],
+            "c" => ["1.0.0-java"]
+          }
+        }
+      end
+    end
+
+    it "returns versions.list" do
+      get "/api/v2/versions.list"
+
+      expect(last_response).to be_ok
+      expect(last_response.body).to eq(<<-VERSIONS)
+a 1.0.0,1.0.1
+b 1.0.0
+c 1.0.0-java
+      VERSIONS
+    end
+  end
 end

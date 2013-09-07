@@ -143,6 +143,13 @@ class BundlerApi::Web < Sinatra::Base
     BundlerApi::GemInfo.new(@conn).names.join("\n")
   end
 
+  get "/api/v2/versions.list" do
+    output = ""
+    @gem_info.versions.sort.each do |gem, versions|
+      output << "#{gem} #{versions.join(",")}\n"
+    end
+
+    output
   end
 
   get "/quick/Marshal.4.8/:id" do
