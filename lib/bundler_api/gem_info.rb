@@ -52,14 +52,12 @@ SQL
   def versions
     specs_hash = Hash.new {|h, k| h[k] = [] }
     rows = @conn[<<-SQL]
-      SELECT r.name, v.number, v.platform
-      FROM rubygems AS r, versions AS v
-      WHERE v.rubygem_id = r.id
-        AND v.indexed is true
+      SELECT v.full_name
+      FROM versions AS v
+      WHERE v.indexed is true
 SQL
     rows.each do |row|
-      name, version, platform = row[:name], row[:number], row[:platform]
-      version = "#{version}-#{platform}" if platform != "ruby"
+      name, version = row[:full_name].split("-", 2)
       specs_hash[name] << version
     end
 
