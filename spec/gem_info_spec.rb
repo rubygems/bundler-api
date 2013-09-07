@@ -55,6 +55,24 @@ describe BundlerApi::GemInfo do
       end
     end
 
+    context "all gems" do
+      before do
+        rack_id = builder.create_rubygem('rack')
+        builder.create_version(rack_id, 'rack')
+      end
+
+      it "should return rack" do
+        result = [{
+          name:         'rack',
+          number:       '1.0.0',
+          platform:     'ruby',
+          dependencies: []
+        }]
+
+        expect(gem_info.deps_for).to eq(result)
+      end
+    end
+
     context "filters on indexed" do
       before do
         rack_id                     = builder.create_rubygem('rack')
