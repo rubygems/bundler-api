@@ -194,27 +194,6 @@ task :fix_deps, :thread_count do |t, args|
   end
 end
 
-desc "continual update"
-task :continual_update, :thread_count, :times do |t, args|
-  thread_count = (args[:thread_count] || 1).to_i
-  times        = args[:times].to_i
-  count        = 0
-
-  database_connection(thread_count) do |db|
-    Locksmith::Pg.lock("continual_update") do
-      loop do
-        if count < times
-          sleep_time = update(db, thread_count)
-          count += 1
-          sleep(sleep_time) if sleep_time # be nice to the server
-        else
-          break
-        end
-      end
-    end
-  end
-end
-
 desc "Add a specific single gem version to the database"
 task :add_spec, :name, :version, :platform, :prerelease do |t, args|
   args.with_defaults(:platform => 'ruby', :prerelease => false)
