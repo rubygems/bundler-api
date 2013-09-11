@@ -3,6 +3,7 @@ source "https://rubygems.org"
 ruby "2.0.0"
 
 gem 'honeybadger'
+gem 'fastly'
 gem 'librato-metrics'
 gem 'lock-smith'
 gem 'metriks'
