@@ -141,4 +141,8 @@ class BundlerApi::Web < Sinatra::Base
   get "/specs.4.8.gz" do
     redirect "#{RUBYGEMS_URL}/specs.4.8.gz"
   end
+
+  get "/prerelease_specs.4.8.gz" do
+    redirect "#{RUBYGEMS_URL}/prerelease_specs.4.8.gz"
+  end
 end

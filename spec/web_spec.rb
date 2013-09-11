@@ -215,4 +215,12 @@ describe BundlerApi::Web do
       expect(last_response).to be_redirect
     end
   end
+
+  context "/prerelease_specs.4.8.gz" do
+    it "redirects" do
+      get "/prerelease_specs.4.8.gz"
+
+      expect(last_response).to be_redirect
+    end
+  end
 end
