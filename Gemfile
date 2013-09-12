@@ -20,6 +20,7 @@ group :test do
   gem 'rack-test'
   gem 'rspec-core'
   gem 'rspec-expectations'
+  gem 'rspec-mocks'
 end
 
 gem 'dotenv', require: false, groups: [:development, :test]
