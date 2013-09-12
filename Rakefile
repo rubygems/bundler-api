@@ -138,8 +138,11 @@ def update(db, thread_count)
   pool.join
 
   local_gems.keys.each {|gem| print "Yanking: #{gem}\n" }
-
   db[:versions].where(id: local_gems.values).update(indexed: false) unless local_gems.empty?
+  local_gems.keys.each {|gem| BundlerApi::Cdn.purge_gem gem }
+
+  BundlerApi::Cdn.purge_specs if !local_gems.empty? || add_gem_count.count > 0
+
   print "# of gem versions added: #{add_gem_count.count}\n"
   print "# of gem versions yanked: #{local_gems.size}\n"
 end
