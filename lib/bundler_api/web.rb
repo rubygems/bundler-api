@@ -12,7 +12,7 @@ require 'bundler_api/update/yank_job'
 
 
 class BundlerApi::Web < Sinatra::Base
-  RUBYGEMS_URL = "https://www.rubygems.org"
+  RUBYGEMS_URL = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
     use Metriks::Middleware
