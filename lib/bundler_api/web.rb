@@ -104,28 +104,32 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   post "/api/v1/add_spec.json" do
-    payload = get_payload
-    job = BundlerApi::Job.new(@write_conn, payload)
-    job.run
+    Metriks.timer('webhook.add_spec').time do
+      payload = get_payload
+      job = BundlerApi::Job.new(@write_conn, payload)
+      job.run
 
-    BundlerApi::Cdn.purge_specs
+      BundlerApi::Cdn.purge_specs
 
-    json_payload(payload)
+      json_payload(payload)
+    end
   end
 
   post "/api/v1/remove_spec.json" do
-    payload    = get_payload
-    rubygem_id = @write_conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
-    version    = @write_conn[:versions].where(
-      rubygem_id: rubygem_id,
-      number:     payload.version.version,
-      platform:   payload.platform
-    ).update(indexed: false)
+    Metriks.timer('webhook.remove_spec').time do
+      payload    = get_payload
+      rubygem_id = @write_conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
+      version    = @write_conn[:versions].where(
+        rubygem_id: rubygem_id,
+        number:     payload.version.version,
+        platform:   payload.platform
+      ).update(indexed: false)
 
-    BundlerApi::Cdn.purge_specs
-    BundlerApi::Cdn.purge_gem payload
+      BundlerApi::Cdn.purge_specs
+      BundlerApi::Cdn.purge_gem payload
 
-    json_payload(payload)
+      json_payload(payload)
+    end
   end
 
   get "/quick/Marshal.4.8/:id" do
