@@ -2,6 +2,7 @@ require 'sinatra/base'
 require 'sequel'
 require 'json'
 require 'bundler_api'
+require 'bundler_api/cdn'
 require 'bundler_api/dep_calc'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
@@ -107,6 +108,8 @@ class BundlerApi::Web < Sinatra::Base
     job = BundlerApi::Job.new(@write_conn, payload)
     job.run
 
+    BundlerApi::Cdn.purge_specs
+
     json_payload(payload)
   end
 
@@ -118,6 +121,9 @@ class BundlerApi::Web < Sinatra::Base
       number:     payload.version.version,
       platform:   payload.platform
     ).update(indexed: false)
+
+    BundlerApi::Cdn.purge_specs
+    BundlerApi::Cdn.purge_gem payload
 
     json_payload(payload)
   end

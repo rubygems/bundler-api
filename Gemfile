@@ -3,6 +3,7 @@ source "https://rubygems.org"
 ruby "2.0.0"
 
 gem 'honeybadger'
+gem 'fastly'
 gem 'librato-metrics'
 gem 'lock-smith'
 gem 'metriks'
@@ -19,6 +20,7 @@ group :test do
   gem 'rack-test'
   gem 'rspec-core'
   gem 'rspec-expectations'
+  gem 'rspec-mocks'
 end
 
 gem 'dotenv', require: false, groups: [:development, :test]
