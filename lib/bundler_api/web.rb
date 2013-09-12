@@ -88,7 +88,7 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/" do
-    redirect RUBYGEMS_URL
+    redirect 'https://www.rubygems.org'
   end
 
   get "/api/v1/dependencies" do
