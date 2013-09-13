@@ -101,8 +101,8 @@ def get_local_gems(db)
 
   local_gems = {}
   dataset.all.each do |h|
-    gem_helper                       = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform])
-    local_gems[gem_helper.full_name] = h[:id]
+    gem_helper = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform])
+    local_gems[gem_helper] = h[:id]
   end
   print "# of non yanked local gem versions: #{local_gems.size}\n"
 
@@ -138,8 +138,10 @@ def update(db, thread_count)
   pool.poison
   pool.join
 
-  local_gems.keys.each {|gem| print "Yanking: #{gem}\n" }
-  db[:versions].where(id: local_gems.values).update(indexed: false) unless local_gems.empty?
+  local_gems.keys.each {|gem| print "Yanking: #{gem.full_name}\n" }
+  unless local_gems.empty?
+    db[:versions].where(id: local_gems.values).update(indexed: false)
+  end
   local_gems.keys.each {|gem| BundlerApi::Cdn.purge_gem gem }
 
   BundlerApi::Cdn.purge_specs if !local_gems.empty? || add_gem_count.count > 0
