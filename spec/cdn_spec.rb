@@ -2,22 +2,28 @@ require 'spec_helper'
 require 'bundler_api/cdn'
 
 describe BundlerApi::Cdn do
-  let(:client) { double(:client, purge: nil) }
+  let(:client) { double(:client, purge_path: nil, purge_key: nil) }
 
   describe '.purge_specs' do
     subject { BundlerApi::Cdn.purge_specs(client) }
+
+    it 'purges dependencies key' do
+      expect(client).to receive(:purge_key).with('dependencies')
+      subject
+    end
+
     it 'purges latest specs' do
-      expect(client).to receive(:purge).with('/latest_specs.4.8.gz')
+      expect(client).to receive(:purge_path).with('/latest_specs.4.8.gz')
       subject
     end
 
     it 'purges specs' do
-      expect(client).to receive(:purge).with('/specs.4.8.gz')
+      expect(client).to receive(:purge_path).with('/specs.4.8.gz')
       subject
     end
 
     it 'purges prerelease specs' do
-      expect(client).to receive(:purge).with('/prerelease_specs.4.8.gz')
+      expect(client).to receive(:purge_path).with('/prerelease_specs.4.8.gz')
       subject
     end
 
@@ -35,14 +41,14 @@ describe BundlerApi::Cdn do
     subject { BundlerApi::Cdn.purge_gem(gem, client) }
 
     it 'purges gemspec' do
-      expect(client).to receive(:purge)
+      expect(client).to receive(:purge_path)
         .with('/quick/Marshal.4.8/bundler-1.0.0.gemspec.rz')
       subject
     end
 
     it 'purges gem' do
-      expect(client).to receive(:purge)
-        .with('/quick/Marshal.4.8/bundler-1.0.0.gem')
+      expect(client).to receive(:purge_path)
+        .with('/gems/bundler-1.0.0.gem')
       subject
     end
 

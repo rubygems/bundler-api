@@ -1,27 +1,51 @@
-require 'fastly'
+require 'net/http'
 
 class BundlerApi::Cdn
   def self.purge_specs(client = self.client)
     return unless client
-    client.purge '/latest_specs.4.8.gz'
-    client.purge '/specs.4.8.gz'
-    client.purge '/prerelease_specs.4.8.gz'
-    print "Purging /latest_specs.4.8.gz /specs.4.8.gz /prerelease_specs.4.8.gz\n"
+    client.purge_key  'dependencies'
+    client.purge_path '/latest_specs.4.8.gz'
+    client.purge_path '/specs.4.8.gz'
+    client.purge_path '/prerelease_specs.4.8.gz'
+    print "Purging dependencies /latest_specs.4.8.gz /specs.4.8.gz /prerelease_specs.4.8.gz\n"
   end
 
   def self.purge_gem(gem, client = self.client)
     return unless client
-    client.purge "/quick/Marshal.4.8/#{gem.full_name}.gemspec.rz"
-    client.purge "/quick/Marshal.4.8/#{gem.full_name}.gem"
-    print "Purging /quick/Marshal.4.8/#{gem.full_name}.gemspec.rz /quick/Marshal.4.8/#{gem.full_name}.gem\n"
+    client.purge_path "/quick/Marshal.4.8/#{gem.full_name}.gemspec.rz"
+    client.purge_path "/gems/#{gem.full_name}.gem"
+    print "Purging /quick/Marshal.4.8/#{gem.full_name}.gemspec.rz /gems/#{gem.full_name}.gem\n"
   end
 
   def self.client
-    return unless api_key
-    @client ||= Fastly.new(api_key: api_key)
+    return unless service_id && base_url
+    Client.new(service_id, base_url)
   end
 
-  def self.api_key
-    ENV['FASTLY_API_KEY']
+  def self.service_id
+    @service_id ||= ENV['FASTLY_SERVICE_ID']
+  end
+
+  def self.base_url
+    @base_url ||= ENV['FASTLY_BASE_URL']
+  end
+
+  Client = Struct.new(:service_id, :base_url) do
+    def purge_key(key)
+      uri = URI("https://api.fastly.com/service/#{service_id}/purge/#{key}")
+      http(uri).post uri.request_uri, nil
+    end
+
+    def purge_path(path)
+      uri = URI("#{base_url}#{path}")
+      http(uri).send_request 'PURGE', uri.path
+    end
+
+    def http(uri)
+      Net::HTTP.new(uri.host, uri.port).tap do |http|
+        http.use_ssl     = true
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      end
+    end
   end
 end
