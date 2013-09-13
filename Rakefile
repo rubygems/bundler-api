@@ -128,7 +128,7 @@ def update(db, thread_count)
     end
 
     name, version, platform = spec
-    payload                 = BundlerApi::GemHelper.new(name, version, platform, prerelease)
+    payload = BundlerApi::GemHelper.new(name, version, platform, prerelease)
     pool.enq(BundlerApi::YankJob.new(local_gems, payload, yank_mutex))
     pool.enq(BundlerApi::Job.new(db, payload, mutex, add_gem_count))
   end

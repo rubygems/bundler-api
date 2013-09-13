@@ -10,7 +10,7 @@ class BundlerApi::YankJob
 
   def run
     @mutex.synchronize do
-      @gem_cache.delete(@payload.full_name)
+      @gem_cache.delete(@payload)
     end
   end
 end
