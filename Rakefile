@@ -101,7 +101,10 @@ def get_local_gems(db)
 
   local_gems = {}
   dataset.all.each do |h|
-    gem_helper = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform], h[:prerelease])
+    gem_helper = BundlerApi::GemHelper.new(h[:name],
+                                           Gem::Version.new(h[:number]),
+                                           h[:platform],
+                                           h[:prerelease])
     local_gems[gem_helper] = h[:id]
   end
   print "# of non yanked local gem versions: #{local_gems.size}\n"
