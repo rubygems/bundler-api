@@ -93,7 +93,7 @@ end
 
 def get_local_gems(db)
   dataset = db[<<-SQL]
-    SELECT rubygems.name, versions.number, versions.platform, versions.id, versions.prerelease
+    SELECT rubygems.name, versions.number, versions.platform, versions.id
     FROM rubygems, versions
     WHERE rubygems.id = versions.rubygem_id
       AND indexed = true
@@ -101,11 +101,8 @@ def get_local_gems(db)
 
   local_gems = {}
   dataset.all.each do |h|
-    gem_helper = BundlerApi::GemHelper.new(h[:name],
-                                           Gem::Version.new(h[:number]),
-                                           h[:platform],
-                                           h[:prerelease])
-    local_gems[gem_helper] = h[:id]
+    gem_helper = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform])
+    local_gems[gem_helper.full_name] = h[:id]
   end
   print "# of non yanked local gem versions: #{local_gems.size}\n"
 
@@ -142,10 +139,10 @@ def update(db, thread_count)
   pool.join
 
   unless local_gems.empty?
-    print "Yanking #{local_gems.size} gems"
-    local_gems.keys.each {|gem| print "Yanking: #{gem.full_name}\n" }
+    print "Yanking #{local_gems.size} gems\n"
+    local_gems.keys.each {|name| print "Yanking: #{name}\n" }
     db[:versions].where(id: local_gems.values).update(indexed: false)
-    local_gems.keys.each {|gem| BundlerApi::Cdn.purge_gem gem }
+    local_gems.keys.each {|name| BundlerApi::Cdn.purge_gem_by_name name }
   end
 
   BundlerApi::Cdn.purge_specs if !local_gems.empty? || add_gem_count.count > 0

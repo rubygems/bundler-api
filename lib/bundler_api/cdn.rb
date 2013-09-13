@@ -10,11 +10,15 @@ class BundlerApi::Cdn
     print "Purging dependencies /latest_specs.4.8.gz /specs.4.8.gz /prerelease_specs.4.8.gz\n"
   end
 
-  def self.purge_gem(gem, client = self.client)
+  def self.purge_gem_by_name(name, client = self.client)
     return unless client
-    client.purge_path "/quick/Marshal.4.8/#{gem.full_name}.gemspec.rz"
-    client.purge_path "/gems/#{gem.full_name}.gem"
-    print "Purging /quick/Marshal.4.8/#{gem.full_name}.gemspec.rz /gems/#{gem.full_name}.gem\n"
+    client.purge_path "/quick/Marshal.4.8/#{name}.gemspec.rz"
+    client.purge_path "/gems/#{name}.gem"
+    print "Purging /quick/Marshal.4.8/#{name}.gemspec.rz /gems/#{name}.gem\n"
+  end
+
+  def self.purge_gem(gem, client = self.client)
+    purge_gem_by_name gem.full_name, client
   end
 
   def self.client

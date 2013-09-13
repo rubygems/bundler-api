@@ -36,6 +36,31 @@ describe BundlerApi::Cdn do
     end
   end
 
+  describe '.purge_gem_by_name' do
+    let(:name) { 'bundler-1.0.0' }
+    subject { BundlerApi::Cdn.purge_gem_by_name(name, client) }
+
+    it 'purges gemspec' do
+      expect(client).to receive(:purge_path)
+        .with('/quick/Marshal.4.8/bundler-1.0.0.gemspec.rz')
+      subject
+    end
+
+    it 'purges gem' do
+      expect(client).to receive(:purge_path)
+        .with('/gems/bundler-1.0.0.gem')
+      subject
+    end
+
+    context 'with a nil client' do
+      let(:client) { nil }
+
+      it 'does nothing' do
+        expect { subject }.to_not raise_error
+      end
+    end
+  end
+
   describe '.purge_gem' do
     let(:gem) { double(:gem, full_name: 'bundler-1.0.0') }
     subject { BundlerApi::Cdn.purge_gem(gem, client) }
