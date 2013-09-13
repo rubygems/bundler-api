@@ -93,7 +93,7 @@ end
 
 def get_local_gems(db)
   dataset = db[<<-SQL]
-    SELECT rubygems.name, versions.number, versions.platform, versions.id
+    SELECT rubygems.name, versions.number, versions.platform, versions.id, versions.prerelease
     FROM rubygems, versions
     WHERE rubygems.id = versions.rubygem_id
       AND indexed = true
@@ -101,7 +101,7 @@ def get_local_gems(db)
 
   local_gems = {}
   dataset.all.each do |h|
-    gem_helper = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform])
+    gem_helper = BundlerApi::GemHelper.new(h[:name], h[:number], h[:platform], h[:prerelease])
     local_gems[gem_helper] = h[:id]
   end
   print "# of non yanked local gem versions: #{local_gems.size}\n"
