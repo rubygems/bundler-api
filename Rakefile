@@ -189,6 +189,7 @@ desc "update database"
 task :update, :thread_count do |t, args|
   thread_count = (args[:thread_count] || 1).to_i
   database_connection(thread_count) do |db|
+    db["select count(*) from rubygems"].count
     update(db, thread_count)
   end
 end
