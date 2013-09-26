@@ -5,7 +5,7 @@
 
 ## Getting Started
 
-Run `script/build` to create and migrate the database specified in the
+Run `script/setup` to create and migrate the database specified in the
 `$DATABASE_URL` environment variable.
 
 ## Environment
