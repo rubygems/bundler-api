@@ -140,7 +140,7 @@ class BundlerApi::Web < Sinatra::Base
   get "/api/v2/names.list" do
     content_type 'text/plain'
 
-    BundlerApi::GemInfo.new(@conn).names.join("\n")
+    @gem_info.names.join("\n")
   end
 
   get "/api/v2/versions.list" do
