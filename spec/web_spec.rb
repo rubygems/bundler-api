@@ -244,7 +244,7 @@ describe BundlerApi::Web do
               name:         'rack',
               number:       '1.0.1',
               platform:     'ruby',
-              dependencies: [['foo', '= 1.0.0'], ['bar', '>= 2.1']]
+              dependencies: [['foo', '= 1.0.0'], ['bar', '>= 2.1', '< 3.0']]
             }
           ]
         }
@@ -258,7 +258,7 @@ describe BundlerApi::Web do
       expect(last_response.body).to eq(<<-DEPS.gsub(/^        /, ''))
         ---
         1.0.0
-        1.0.1 foo:= 1.0.0,bar:>= 2.1
+        1.0.1 foo:= 1.0.0,bar:>= 2.1&< 3.0
         DEPS
     end
   end
