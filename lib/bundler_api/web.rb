@@ -140,11 +140,11 @@ class BundlerApi::Web < Sinatra::Base
   get "/api/v2/names.list" do
     content_type 'text/plain'
 
-    @gem_info.names.join("\n")
+    "---\n" << @gem_info.names.join("\n")
   end
 
   get "/api/v2/versions.list" do
-    output = ""
+    output = "---\n"
     @gem_info.versions.sort.each do |gem, versions|
       output << "#{gem} #{versions.join(",")}\n"
     end
@@ -153,7 +153,7 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/api/v2/deps/:name" do
-    output = ""
+    output = "---\n"
     @gem_info.deps_for(Array(params[:name])).each do |row|
       deps = row[:dependencies].map {|d| d.join(":") }
       output << "#{row[:number]}"
