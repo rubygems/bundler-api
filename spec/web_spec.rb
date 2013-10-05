@@ -193,11 +193,12 @@ describe BundlerApi::Web do
       get "/api/v2/names.list"
 
       expect(last_response).to be_ok
-      expect(last_response.body).to eq(<<-NAMES.chomp)
-a
-b
-c
-d
+      expect(last_response.body).to eq(<<-NAMES.chomp.gsub(/^        /, ''))
+        ---
+        a
+        b
+        c
+        d
       NAMES
     end
   end
@@ -219,10 +220,11 @@ d
       get "/api/v2/versions.list"
 
       expect(last_response).to be_ok
-      expect(last_response.body).to eq(<<-VERSIONS)
-a 1.0.0,1.0.1
-b 1.0.0
-c 1.0.0-java
+      expect(last_response.body).to eq(<<-VERSIONS.gsub(/^        /, ''))
+        ---
+        a 1.0.0,1.0.1
+        b 1.0.0
+        c 1.0.0-java
       VERSIONS
     end
   end
@@ -253,10 +255,11 @@ c 1.0.0-java
       get "/api/v2/deps/rack"
 
       expect(last_response).to be_ok
-      expect(last_response.body).to eq(<<-DEPS)
-1.0.0
-1.0.1 foo:= 1.0.0,bar:>= 2.1
-DEPS
+      expect(last_response.body).to eq(<<-DEPS.gsub(/^        /, ''))
+        ---
+        1.0.0
+        1.0.1 foo:= 1.0.0,bar:>= 2.1
+        DEPS
     end
   end
 end
