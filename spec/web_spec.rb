@@ -5,9 +5,10 @@ require 'bundler_api/web'
 describe BundlerApi::Web do
   include Rack::Test::Methods
 
+  let(:builder) { GemBuilder.new($db) }
+  let(:rack_id) { builder.create_rubygem("rack") }
+
   before do
-    builder = GemBuilder.new($db)
-    rack_id = builder.create_rubygem("rack")
     builder.create_version(rack_id, "rack")
   end
 
@@ -184,9 +185,7 @@ describe BundlerApi::Web do
 
   context "/api/v2/names.list" do
     before do
-      any_instance_of(BundlerApi::GemInfo) do |klass|
-        stub(klass).names { %w(a b c d) }
-      end
+      %w(a b c d).each {|gem_name| builder.create_rubygem(gem_name) }
     end
 
     it "returns an array" do
@@ -199,20 +198,24 @@ describe BundlerApi::Web do
         b
         c
         d
+        rack
       NAMES
     end
   end
 
   context "/api/v2/versions.list" do
     before do
-      any_instance_of(BundlerApi::GemInfo) do |klass|
-        stub(klass).versions {
-          {
-            "a" => ["1.0.0", "1.0.1"],
-            "b" => ["1.0.0"],
-            "c" => ["1.0.0-java"]
-          }
-        }
+      {
+        "a" => ["1.0.0", "1.0.1"],
+        "b" => ["1.0.0"],
+        "c" => ["1.0.0-java"]
+      }.each do |gem_name, versions|
+        gem_id = builder.create_rubygem(gem_name)
+        versions.each do |full_version|
+          version, platform = full_version.split('-', 2)
+          platform = 'ruby' unless platform
+          builder.create_version(gem_id, gem_name, version, platform)
+        end
       end
     end
 
@@ -225,29 +228,17 @@ describe BundlerApi::Web do
         a 1.0.0,1.0.1
         b 1.0.0
         c 1.0.0-java
+        rack 1.0.0
       VERSIONS
     end
   end
 
   context "/api/v2/deps/:gem" do
     before do
-      any_instance_of(BundlerApi::GemInfo) do |klass|
-        stub(klass).deps_for {
-          [
-            {
-              name:         'rack',
-              number:       '1.0.0',
-              platform:     'ruby',
-              dependencies: []
-            },
-            {
-              name:         'rack',
-              number:       '1.0.1',
-              platform:     'ruby',
-              dependencies: [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']]
-            }
-          ]
-        }
+      rack_101 = builder.create_version(rack_id, 'rack', '1.0.1')
+      [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']].each do |dep, requirements|
+        dep_id = builder.create_rubygem(dep)
+        builder.create_dependency(dep_id, rack_101, requirements)
       end
     end
 
@@ -258,7 +249,7 @@ describe BundlerApi::Web do
       expect(last_response.body).to eq(<<-DEPS.gsub(/^        /, ''))
         ---
         1.0.0
-        1.0.1 foo:= 1.0.0,bar:>= 2.1&< 3.0
+        1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0
         DEPS
     end
   end

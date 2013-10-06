@@ -25,7 +25,6 @@ group :test do
   gem 'rspec-core'
   gem 'rspec-expectations'
   gem 'rspec-mocks'
-  gem 'rr'
 end
 
 gem 'dotenv', require: false, groups: [:development, :test]
