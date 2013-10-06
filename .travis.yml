@@ -6,10 +6,6 @@ rvm: 2.0.0
 bundler_args: --binstubs
 script: rspec
 notifications:
-  irc:
-    on_success: change
-    on_failure: always
-    channels: "irc.freenode.org#bundler"
   campfire:
     on_success: always
     on_failure: always
