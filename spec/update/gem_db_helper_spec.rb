@@ -100,6 +100,20 @@ describe BundlerApi::GemDBHelper do
                                                       select(:id).first[:id])
       end
 
+      context "when the deps md5 is set" do
+        before do
+          $db[:rubygems].filter(id: @rubygem_id).update(deps_md5: "82f5ab51")
+        end
+
+        it "installing a new version clears it" do
+          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, indexed)
+          rubygem = $db[:rubygems].filter(id: @rubygem_id).first
+
+          expect(rubygem[:deps_md5]).to eq(nil)
+
+        end
+      end
+
       context "when the platform in the index differs from the spec" do
         let(:platform) { "jruby" }
         let(:spec)     { generate_gemspec(name, version, "java") }

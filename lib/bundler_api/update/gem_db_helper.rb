@@ -81,6 +81,8 @@ class BundlerApi::GemDBHelper
       )
     end
 
+    @db[:rubygems].filter(id: rubygem_id).update(deps_md5: nil)
+
     [insert, version_id]
   end
 
