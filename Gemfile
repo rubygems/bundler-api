@@ -14,6 +14,11 @@ gem 'sequel'
 gem 'sequel_pg'
 gem 'sinatra'
 
+group :development do
+  gem 'pry-byebug'
+  gem 'pry-rescue'
+end
+
 group :test do
   gem 'artifice'
   gem 'rack-test'
