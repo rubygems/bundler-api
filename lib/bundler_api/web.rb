@@ -156,7 +156,7 @@ class BundlerApi::Web < Sinatra::Base
     output = "---\n"
     @gem_info.deps_for(Array(params[:name])).each do |row|
       deps = row[:dependencies].map do |d|
-        [d.first, d[1..-1].join("&")].join(":")
+        [d.first, d.last.gsub(/, /, "&")].join(":")
       end
       output << "#{row[:number]}"
       output << " #{deps.join(",")}" if deps.any?

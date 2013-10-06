@@ -244,7 +244,7 @@ describe BundlerApi::Web do
               name:         'rack',
               number:       '1.0.1',
               platform:     'ruby',
-              dependencies: [['foo', '= 1.0.0'], ['bar', '>= 2.1', '< 3.0']]
+              dependencies: [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']]
             }
           ]
         }
