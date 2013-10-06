@@ -153,17 +153,27 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/api/v2/deps/:name" do
-    output = "---\n"
-    @gem_info.deps_for(Array(params[:name])).each do |row|
-      deps = row[:dependencies].map do |d|
-        [d.first, d.last.gsub(/, /, "&")].join(":")
+    rubygem_row = @conn[:rubygems].select(:deps_md5).where(name: params[:name]).first
+    saved_md5   = rubygem_row[:deps_md5] if rubygem_row
+    if saved_md5 && request.env["HTTP_If-None-Match"] == saved_md5
+      status 304
+      ""
+    else
+      output = "---\n"
+      @gem_info.deps_for(Array(params[:name])).each do |row|
+        deps = row[:dependencies].map do |d|
+          [d.first, d.last.gsub(/, /, "&")].join(":")
+        end
+        output << "#{row[:number]}"
+        output << " #{deps.join(",")}" if deps.any?
+        output << "\n"
       end
-      output << "#{row[:number]}"
-      output << " #{deps.join(",")}" if deps.any?
-      output << "\n"
-    end
+      etag = Digest::MD5.hexdigest(output)
+      @write_conn[:rubygems].where(name: params[:name]).update(deps_md5: etag)
 
-    output
+      headers "ETag" => etag
+      output
+    end
   end
 
   get "/quick/Marshal.4.8/:id" do

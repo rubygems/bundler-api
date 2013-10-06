@@ -242,15 +242,43 @@ describe BundlerApi::Web do
       end
     end
 
-    it "should return the gem list" do
-      get "/api/v2/deps/rack"
-
-      expect(last_response).to be_ok
-      expect(last_response.body).to eq(<<-DEPS.gsub(/^        /, ''))
+    let(:expected_deps) {
+      <<-DEPS.gsub(/^        /, '')
         ---
         1.0.0
         1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0
-        DEPS
+      DEPS
+    }
+    let(:expected_etag) { Digest::MD5.hexdigest(expected_deps) }
+
+    context "client does not have an ETag" do
+      it "should return the gem list" do
+        get "/api/v2/deps/rack"
+
+        expect(last_response).to be_ok
+        expect(last_response.header["ETag"]).to eq(expected_etag)
+        expect(last_response.body).to eq(expected_deps)
+      end
+
+      it "should return 304 on second hit" do
+        get "/api/v2/deps/rack"
+
+        get "/api/v2/deps/rack", {}, "HTTP_If-None-Match" => expected_etag
+
+        expect(last_response.status).to eq(304)
+      end
+    end
+
+    context "client already has an ETag" do
+      before do
+        $db[:rubygems].where(id: rack_id).update(deps_md5: expected_etag)
+      end
+
+      it "should return a 304 if the ETag is the same" do
+        get "/api/v2/deps/rack", {}, "HTTP_If-None-Match" => expected_etag
+
+        expect(last_response.status).to eq(304)
+      end
     end
   end
 end
