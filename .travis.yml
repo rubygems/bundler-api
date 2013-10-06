@@ -7,7 +7,7 @@ bundler_args: --binstubs
 script: rspec
 notifications:
   campfire:
-    on_success: always
+    on_success: changed
     on_failure: always
     rooms:
       - secure: "B4ev1d4ZH0Xro49xIunvZNAF2LR0hDgvfpzYMcqUlLNtY5YSmUHbyroVU60w\n10pgYkEhH3DXzHGSYLoYlxGC7foFCZhTkf9JaNgIoSnQmFet+7C66wEkskoY\nwa9n1V3WGic5ZFVBnrZ1IFM6D3hLlAfQdwnwC5GWSrSS9B0jjdI="
