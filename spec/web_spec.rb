@@ -219,17 +219,31 @@ describe BundlerApi::Web do
       end
     end
 
+    let(:expected_output) { <<-VERSIONS.gsub(/^          /, '')
+          ---
+          a 1.0.0,1.0.1
+          b 1.0.0
+          c 1.0.0-java
+          rack 1.0.0
+        VERSIONS
+    }
+    let(:expected_etag) { Digest::MD5.hexdigest(expected_output) }
+
     it "returns versions.list" do
       get "/api/v2/versions.list"
 
       expect(last_response).to be_ok
-      expect(last_response.body).to eq(<<-VERSIONS.gsub(/^        /, ''))
-        ---
-        a 1.0.0,1.0.1
-        b 1.0.0
-        c 1.0.0-java
-        rack 1.0.0
-      VERSIONS
+      expect(last_response.header["ETag"]).to eq(expected_etag)
+      expect(last_response.body).to eq(expected_output)
+    end
+
+    it "should return 304 on second hit" do
+      get "/api/v2/versions.list"
+      etag = last_response.header["ETag"]
+
+      get "/api/v2/versions.list", {}, "HTTP_If-None-Match" => etag
+
+      expect(last_response.status).to eq(304)
     end
   end
 
