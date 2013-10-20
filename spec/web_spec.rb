@@ -201,6 +201,14 @@ describe BundlerApi::Web do
         rack
       NAMES
     end
+
+    it "should return a 304 on second hit" do
+      get "/api/v2/names.list"
+      etag = last_response.header["ETag"]
+
+      get "/api/v2/names.list", {}, "HTTP_If-None-Match" => etag
+      expect(last_response.status).to eq(304)
+    end
   end
 
   context "/api/v2/versions.list" do

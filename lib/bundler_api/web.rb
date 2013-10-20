@@ -139,8 +139,26 @@ class BundlerApi::Web < Sinatra::Base
 
   get "/api/v2/names.list" do
     content_type 'text/plain'
+    row_name  = "names.list"
+    row       = @conn[:checksums].select(:md5).where(name: row_name).first
+    saved_md5 = row[:md5] if row
 
-    "---\n" << @gem_info.names.join("\n")
+    if saved_md5 && request.env["HTTP_If-None-Match"] == saved_md5
+      status 304
+      ""
+    else
+      output = "---\n#{@gem_info.names.join("\n")}"
+
+      etag = Digest::MD5.hexdigest(output)
+      if row
+        row.update(checksum: etag)
+      else
+        @conn[:checksums].insert(name: row_name, md5: etag)
+      end
+      headers "ETag" => etag
+
+      output
+    end
   end
 
   get "/api/v2/versions.list" do

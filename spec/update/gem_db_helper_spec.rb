@@ -59,6 +59,18 @@ describe BundlerApi::GemDBHelper do
         expect(insert).to eq(true)
         expect(db[:rubygems].filter(name: spec.name).select(:id).first[:id]).to eq(rubygem_id)
       end
+
+      context "when the md5 checksum is set on names.list" do
+        before do
+          $db[:checksums].insert(name: "names.list", md5: "83afeb")
+        end
+
+        it "should clear the md5 checksum" do
+          insert, rubygem_id = helper.find_or_insert_rubygem(spec)
+
+          expect($db[:checksums].select(:md5).filter(name: "names.list").first[:md5]).to eq(nil)
+        end
+      end
     end
 
     context "when the rubygem already exists" do

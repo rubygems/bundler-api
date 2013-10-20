@@ -51,6 +51,8 @@ class BundlerApi::GemDBHelper
       rubygem_id = @db[:rubygems].insert(name: spec.name)
     end
 
+    @db[:checksums].filter(name: "names.list").update(md5: nil) if insert
+
     [insert, rubygem_id]
   end
 
