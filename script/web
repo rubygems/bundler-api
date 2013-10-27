@@ -5,5 +5,8 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'bundler/setup'
 require 'bundler_api/env'
+require 'bundler_api/metriks'
+require 'puma/instrumented_cli'
 
-exec 'puma', '--config', 'puma.rb'
+cli = Puma::InstrumentedCLI.new(ARGV + %w(--config puma.rb))
+cli.run
