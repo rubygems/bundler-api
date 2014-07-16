@@ -15,8 +15,4 @@ found there by creating a `.env.local` file.
 
 ## Production Databases
 
-  - `COBALT`: Master database.
-  - `PURPLE`: Following `COBALT`. Read by public API to resolve dependencies.
-  - `VIOLET`: Following `COBALT`. Read by `bundler-api-thin`,
-    `bundler-api-jruby`, `bundler-api-puma`, `bundler-api-ruby2`, and
-    [http://rubygems-org.herokuapp.com](http://rubygems-org.herokuapp.com)
+  - `AMBER`: The primary database, set to `DATABASE_URL`. Writes from `web` and `update` processes go here. It is also the `FOLLOW_DATABASE_URL`, so reads come from it as well.
