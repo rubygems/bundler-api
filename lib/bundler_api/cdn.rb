@@ -23,7 +23,7 @@ class BundlerApi::Cdn
 
   def self.client
     return unless service_id && base_url
-    Client.new(service_id, base_url)
+    Client.new(service_id, base_url, api_key)
   end
 
   def self.service_id
@@ -38,7 +38,7 @@ class BundlerApi::Cdn
     @api_key ||= ENV['FASTLY_API_KEY']
   end
 
-  Client = Struct.new(:service_id, :base_url) do
+  Client = Struct.new(:service_id, :base_url, :api_key) do
     def purge_key(key)
       uri = URI("https://api.fastly.com/service/#{service_id}/purge/#{key}")
       http(uri).post uri.request_uri, nil, "Fastly-Key" => api_key
