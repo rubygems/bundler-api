@@ -34,15 +34,19 @@ class BundlerApi::Cdn
     @base_url ||= ENV['FASTLY_BASE_URL']
   end
 
+  def self.api_key
+    @api_key ||= ENV['FASTLY_API_KEY']
+  end
+
   Client = Struct.new(:service_id, :base_url) do
     def purge_key(key)
       uri = URI("https://api.fastly.com/service/#{service_id}/purge/#{key}")
-      http(uri).post uri.request_uri, nil
+      http(uri).post uri.request_uri, nil, "Fastly-Key" => api_key
     end
 
     def purge_path(path)
       uri = URI("#{base_url}#{path}")
-      http(uri).send_request 'PURGE', uri.path
+      http(uri).send_request 'PURGE', uri.path, nil, "Fastly-Key" => api_key
     end
 
     def http(uri)
