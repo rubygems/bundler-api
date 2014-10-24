@@ -44,8 +44,8 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   def gems
-    halt(200) if params[:gems].nil?
-    params[:gems].split(',')
+    halt(200) if params[:gems].nil? || params[:gems].empty?
+    params[:gems].is_a?(Array) ? params[:gems] : params[:gems].split(',')
   end
 
   def get_deps
