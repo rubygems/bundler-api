@@ -7,6 +7,7 @@ require 'rspec/core'
 require 'rspec/mocks'
 require 'support/database'
 require 'support/latch'
+require 'support/matchers'
 
 RSpec.configure do |config|
   config.filter_run :focused => true

@@ -2,6 +2,7 @@ require 'sinatra/base'
 require 'sequel'
 require 'json'
 require 'bundler_api'
+require 'bundler_api/agent_reporting'
 require 'bundler_api/cdn'
 require 'bundler_api/dep_calc'
 require 'bundler_api/metriks'
@@ -18,6 +19,7 @@ class BundlerApi::Web < Sinatra::Base
   unless ENV['RACK_ENV'] == 'test'
     use Metriks::Middleware
     use Honeybadger::Rack
+    use BundlerApi::AgentReporting
   end
 
   def initialize(conn = nil, write_conn = nil)
