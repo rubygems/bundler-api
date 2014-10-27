@@ -1,6 +1,6 @@
 language: ruby
 
-rvm: 2.1.2
+rvm: 2.1.3
 
 bundler_args: --binstubs --jobs=3 --retry=3 --deployment
 
