@@ -25,7 +25,6 @@ private
     [ "versions.bundler.#{ ua_match['bundler_version'] }",
       "versions.rubygems.#{ ua_match['gem_version'] }",
       "versions.ruby.#{ ua_match['ruby_version'] }",
-      "versions.ruby.#{ ua_match['ruby_version'] }",
       "archs.#{ ua_match['arch'] }",
       "commands.#{ ua_match['command'] }"
     ].each do |metric|
