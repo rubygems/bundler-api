@@ -186,7 +186,7 @@ class BundlerApi::Web < Sinatra::Base
     end
   end
 
-  get "/deps/:name" do
+  get "/info/:name" do
     rubygem_row = @conn[:rubygems].select(:deps_md5).where(name: params[:name]).first
     saved_md5   = rubygem_row[:deps_md5] if rubygem_row
     if saved_md5 && request.env["HTTP_If-None-Match"] == saved_md5
