@@ -16,7 +16,6 @@ gem 'sinatra'
 
 group :development do
   gem 'pry-byebug'
-  gem 'pry-rescue'
 end
 
 group :test do
