@@ -2,10 +2,11 @@ require 'sequel'
 
 RSpec.configure do |config|
   config.before(:suite) do
-    fail 'TEST_DATABASE_URL is required' unless ENV["TEST_DATABASE_URL"]
+    db_url = ENV["TEST_DATABASE_URL"]
+    fail 'TEST_DATABASE_URL is required' if db_url.nil? || db_url.empty?
 
     # Drop and recreate the database
-    postgres_uri = URI.parse(ENV['TEST_DATABASE_URL']) + "/postgres"
+    postgres_uri = URI.parse(db_url) + "/postgres"
     Sequel.connect(postgres_uri.to_s) do |db|
       db_name = URI.parse(ENV["TEST_DATABASE_URL"]).path[1..-1]
       db.run("DROP DATABASE IF EXISTS #{db_name.inspect}")
@@ -13,7 +14,7 @@ RSpec.configure do |config|
     end
 
     # TODO: Replace global with singleton
-    $db = Sequel.connect(ENV["TEST_DATABASE_URL"])
+    $db = Sequel.connect(db_url)
     Sequel.extension :migration
     Sequel::Migrator.run($db, 'db/migrations')
   end
