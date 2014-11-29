@@ -1,6 +1,7 @@
 require 'rack/test'
 require 'spec_helper'
 require 'bundler_api/web'
+require 'support/gem_builder'
 
 describe BundlerApi::Web do
   include Rack::Test::Methods
@@ -199,6 +200,7 @@ describe BundlerApi::Web do
         c
         d
         rack
+
       NAMES
     end
 
@@ -255,7 +257,7 @@ describe BundlerApi::Web do
     end
   end
 
-  context "/deps/:gem" do
+  context "/info/:gem" do
     before do
       rack_101 = builder.create_version(rack_id, 'rack', '1.0.1')
       [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']].each do |dep, requirements|
@@ -274,7 +276,7 @@ describe BundlerApi::Web do
     let(:expected_etag) { Digest::MD5.hexdigest(expected_deps) }
 
     it "should return the gem list" do
-      get "/deps/rack"
+      get "/info/rack"
 
       expect(last_response).to be_ok
       expect(last_response.header["ETag"]).to eq(expected_etag)
@@ -282,10 +284,9 @@ describe BundlerApi::Web do
     end
 
     it "should return 304 on second hit" do
-      get "/deps/rack"
+      get "/info/rack"
       etag = last_response.headers["ETag"]
-
-      get "/deps/rack", {}, "HTTP_IF_NONE_MATCH" => etag
+      get "/info/rack", {}, "HTTP_IF_NONE_MATCH" => etag
 
       expect(last_response.status).to eq(304)
     end

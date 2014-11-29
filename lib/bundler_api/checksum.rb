@@ -3,11 +3,22 @@ class BundlerApi::Checksum
 
   def initialize(conn, name)
     @conn, @name = conn, name
-    row = @conn[:rubygems].select(:deps_md5).where(name: @name).first
-    @checksum = row[:deps_md5] if row
+    row = @conn[:rubygems].where(name: @name).first
+
+    if row
+      @exists = true
+      @checksum = row[:deps_md5]
+    end
   end
 
   def checksum=(sum)
-    @conn[:rubygems].where(name: @name).update(deps_md5: sum)
+    if @exists
+      @conn[:rubygems].where(name: @name).update(deps_md5: sum)
+    else
+      @conn[:rubygems].insert(name: @name, deps_md5: sum)
+    end
+
+    @checksum = sum
   end
+
 end
