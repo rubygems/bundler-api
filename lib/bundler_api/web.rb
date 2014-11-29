@@ -137,7 +137,7 @@ class BundlerApi::Web < Sinatra::Base
     end
   end
 
-  get "/api/v2/names.list" do
+  get "/names" do
     content_type 'text/plain'
     row_name  = "names.list"
     row       = @conn[:checksums].select(:md5).where(name: row_name).first
@@ -161,7 +161,7 @@ class BundlerApi::Web < Sinatra::Base
     end
   end
 
-  get "/api/v2/versions.list" do
+  get "/versions" do
     row_name  = "versions.list"
     row       = @conn[:checksums].select(:md5).where(name: row_name).first
     saved_md5 = row[:md5] if row
@@ -186,7 +186,7 @@ class BundlerApi::Web < Sinatra::Base
     end
   end
 
-  get "/api/v2/deps/:name" do
+  get "/deps/:name" do
     rubygem_row = @conn[:rubygems].select(:deps_md5).where(name: params[:name]).first
     saved_md5   = rubygem_row[:deps_md5] if rubygem_row
     if saved_md5 && request.env["HTTP_If-None-Match"] == saved_md5

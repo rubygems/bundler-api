@@ -183,13 +183,13 @@ describe BundlerApi::Web do
     end
   end
 
-  context "/api/v2/names.list" do
+  context "/names" do
     before do
       %w(a b c d).each {|gem_name| builder.create_rubygem(gem_name) }
     end
 
     it "returns an array" do
-      get "/api/v2/names.list"
+      get "/names"
 
       expect(last_response).to be_ok
       expect(last_response.body).to eq(<<-NAMES.chomp.gsub(/^        /, ''))
@@ -203,15 +203,15 @@ describe BundlerApi::Web do
     end
 
     it "should return a 304 on second hit" do
-      get "/api/v2/names.list"
+      get "/names"
       etag = last_response.header["ETag"]
 
-      get "/api/v2/names.list", {}, "HTTP_If-None-Match" => etag
+      get "/names", {}, "HTTP_If-None-Match" => etag
       expect(last_response.status).to eq(304)
     end
   end
 
-  context "/api/v2/versions.list" do
+  context "/versions" do
     before do
       {
         "a" => ["1.0.0", "1.0.1"],
@@ -238,7 +238,7 @@ describe BundlerApi::Web do
     let(:expected_etag) { Digest::MD5.hexdigest(expected_output) }
 
     it "returns versions.list" do
-      get "/api/v2/versions.list"
+      get "/versions"
 
       expect(last_response).to be_ok
       expect(last_response.header["ETag"]).to eq(expected_etag)
@@ -246,16 +246,16 @@ describe BundlerApi::Web do
     end
 
     it "should return 304 on second hit" do
-      get "/api/v2/versions.list"
+      get "/versions"
       etag = last_response.header["ETag"]
 
-      get "/api/v2/versions.list", {}, "HTTP_If-None-Match" => etag
+      get "/versions", {}, "HTTP_If-None-Match" => etag
 
       expect(last_response.status).to eq(304)
     end
   end
 
-  context "/api/v2/deps/:gem" do
+  context "/deps/:gem" do
     before do
       rack_101 = builder.create_version(rack_id, 'rack', '1.0.1')
       [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']].each do |dep, requirements|
@@ -274,7 +274,7 @@ describe BundlerApi::Web do
     let(:expected_etag) { Digest::MD5.hexdigest(expected_deps) }
 
     it "should return the gem list" do
-      get "/api/v2/deps/rack"
+      get "/deps/rack"
 
       expect(last_response).to be_ok
       expect(last_response.header["ETag"]).to eq(expected_etag)
@@ -282,10 +282,10 @@ describe BundlerApi::Web do
     end
 
     it "should return 304 on second hit" do
-      get "/api/v2/deps/rack"
+      get "/deps/rack"
       etag = last_response.headers["ETag"]
 
-      get "/api/v2/deps/rack", {}, "HTTP_If-None-Match" => etag
+      get "/deps/rack", {}, "HTTP_If-None-Match" => etag
 
       expect(last_response.status).to eq(304)
     end
