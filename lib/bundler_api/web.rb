@@ -4,6 +4,7 @@ require 'json'
 require 'bundler_api'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/cdn'
+require 'bundler_api/checksum'
 require 'bundler_api/gem_info'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
@@ -138,74 +139,31 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/names" do
-    content_type 'text/plain'
-    row_name  = "names.list"
-    row       = @conn[:checksums].select(:md5).where(name: row_name).first
-    saved_md5 = row[:md5] if row
-
-    if saved_md5 && request.env["HTTP_If-None-Match"] == saved_md5
-      status 304
-      ""
-    else
-      output = "---\n#{@gem_info.names.join("\n")}"
-
-      etag = Digest::MD5.hexdigest(output)
-      if row
-        row.update(checksum: etag)
-      else
-        @conn[:checksums].insert(name: row_name, md5: etag)
+    etag_response_for("names") do
+      output = "---\n"
+      @gem_info.names.each do |n|
+        output << n << "\n"
       end
-      headers "ETag" => etag
-
       output
     end
   end
 
   get "/versions" do
-    row_name  = "versions.list"
-    row       = @conn[:checksums].select(:md5).where(name: row_name).first
-    saved_md5 = row[:md5] if row
-    if saved_md5 && request.env["HTTP_If-None-Match"] == saved_md5
-      status 304
-      ""
-    else
+    etag_response_for("versions") do
       output = "---\n"
       @gem_info.versions.sort.each do |gem, versions|
-        output << "#{gem} #{versions.join(",")}\n"
+        output << gem << " " << versions.join(",") << "\n"
       end
-
-      etag = Digest::MD5.hexdigest(output)
-      if row
-        row.update(checksum: etag)
-      else
-        @conn[:checksums].insert(name: row_name, md5: etag)
-      end
-      headers "ETag" => etag
-
       output
     end
   end
 
   get "/info/:name" do
-    rubygem_row = @conn[:rubygems].select(:deps_md5).where(name: params[:name]).first
-    saved_md5   = rubygem_row[:deps_md5] if rubygem_row
-    if saved_md5 && request.env["HTTP_If-None-Match"] == saved_md5
-      status 304
-      ""
-    else
+    etag_response_for(params[:name]) do
       output = "---\n"
-      @gem_info.deps_for(Array(params[:name])).each do |row|
-        deps = row[:dependencies].map do |d|
-          [d.first, d.last.gsub(/, /, "&")].join(":")
-        end
-        output << "#{row[:number]}"
-        output << " #{deps.join(",")}" if deps.any?
-        output << "\n"
+      deps_for(params[:name]).each do |row|
+        output << version_line(row) << "\n"
       end
-      etag = Digest::MD5.hexdigest(output)
-      @write_conn[:rubygems].where(name: params[:name]).update(deps_md5: etag)
-
-      headers "ETag" => etag
       output
     end
   end
@@ -233,4 +191,36 @@ class BundlerApi::Web < Sinatra::Base
   get "/prerelease_specs.4.8.gz" do
     redirect "#{RUBYGEMS_URL}/prerelease_specs.4.8.gz"
   end
+
+private
+
+  def etag_response_for(name)
+    sum = BundlerApi::Checksum.new(@write_conn, name)
+
+    if sum.checksum && sum.checksum == request.env["HTTP_IF_NONE_MATCH"]
+      status 304
+      return ""
+    else
+      body = yield
+      sum.checksum = Digest::MD5.hexdigest(body)
+      headers "ETag" => sum.checksum
+      content_type 'text/plain'
+      body
+    end
+  end
+
+  def deps_for(name)
+    @gem_info.deps_for(Array(name))
+  end
+
+  def version_line(row)
+    deps = row[:dependencies].map do |d|
+      [d.first, d.last.gsub(/, /, "&")].join(":")
+    end
+
+    line = "#{row[:number]}"
+    line << " " << deps.join(",") if deps.any?
+    line
+  end
+
 end

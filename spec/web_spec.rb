@@ -206,7 +206,7 @@ describe BundlerApi::Web do
       get "/names"
       etag = last_response.header["ETag"]
 
-      get "/names", {}, "HTTP_If-None-Match" => etag
+      get "/names", {}, "HTTP_IF_NONE_MATCH" => etag
       expect(last_response.status).to eq(304)
     end
   end
@@ -249,7 +249,7 @@ describe BundlerApi::Web do
       get "/versions"
       etag = last_response.header["ETag"]
 
-      get "/versions", {}, "HTTP_If-None-Match" => etag
+      get "/versions", {}, "HTTP_IF_NONE_MATCH" => etag
 
       expect(last_response.status).to eq(304)
     end
@@ -285,7 +285,7 @@ describe BundlerApi::Web do
       get "/deps/rack"
       etag = last_response.headers["ETag"]
 
-      get "/deps/rack", {}, "HTTP_If-None-Match" => etag
+      get "/deps/rack", {}, "HTTP_IF_NONE_MATCH" => etag
 
       expect(last_response.status).to eq(304)
     end
