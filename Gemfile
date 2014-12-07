@@ -11,7 +11,7 @@ gem 'pg'
 gem 'puma'
 gem 'rake'
 gem 'sequel'
-gem 'sequel_pg'
+gem 'sequel_pg', require: false
 gem 'sinatra'
 
 group :test do
