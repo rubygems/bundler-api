@@ -23,4 +23,7 @@ group :test do
   gem 'rspec-mocks'
 end
 
-gem 'dotenv', require: false, groups: [:development, :test]
+group :development, :test do
+  gem 'foreman'
+  gem 'dotenv', require: false
+end
