@@ -35,12 +35,10 @@ private
     ]
 
     if ua_match['options']
-      keys << ua_match['options'].split(",").map { |k| "options.#{k}" }
+      keys += ua_match['options'].split(",").map { |k| "options.#{ k }" }
     end
 
-    keys.each do |metric|
-      Metriks.counter(metric).increment()
-    end
+    keys.each { |metric| Metriks.counter(metric).increment }
   end
 
   def known_id?(id)

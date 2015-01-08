@@ -102,7 +102,7 @@ GEMSPEC
 
     context "when it's always throwing an error" do
       before do
-        BundlerApi::GemHelper::TRY_LIMIT = 1
+        stub_const("BundlerApi::GemHelper::TRY_LIMIT", 1)
         Artifice.activate_with(ForeverHTTPError)
       end
 

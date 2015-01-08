@@ -11,9 +11,11 @@ describe BundlerApi::AgentReporting do
   let(:app)        { double(call: true) }
   let(:middleware) { described_class.new(app) }
   let(:metriks)    { FakeMetriks.new }
+  let(:redis)      { double(exists: false, setex: true) }
 
   before do
     Metriks.stub(:counter) { |key| metriks.key = key; metriks }
+    BundlerApi.stub(:redis => redis)
     middleware.call({'HTTP_USER_AGENT' => ua})
   end
 
