@@ -83,7 +83,7 @@ describe BundlerApi::ConsumerPool do
 
     pool.join
 
-    expect(job1.ran).to be_true
-    expect(job2.ran).to be_true
+    expect(job1.ran).to be true
+    expect(job2.ran).to be true
   end
 end
