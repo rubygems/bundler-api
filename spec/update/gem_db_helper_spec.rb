@@ -21,8 +21,8 @@ describe BundlerApi::GemDBHelper do
       it "returns the rubygems and versions id" do
         result = helper.exists?(payload)
 
-        expect(result[:rubygem_id]).to be_true
-        expect(result[:version_id]).to be_true
+        expect(result[:rubygem_id]).not_to be_nil
+        expect(result[:version_id]).not_to be_nil
       end
 
       context "when using a mutex" do
@@ -32,8 +32,8 @@ describe BundlerApi::GemDBHelper do
           helper.exists?(payload)
           result = helper.exists?(payload)
 
-          expect(result[:rubygem_id]).to be_true
-          expect(result[:version_id]).to be_true
+          expect(result[:rubygem_id]).not_to be_nil
+          expect(result[:version_id]).not_to be_nil
         end
       end
     end
