@@ -62,13 +62,21 @@ describe BundlerApi::AgentReporting do
         '9d16bd9809d392ca' ].join(' ')
     end
 
-    describe 'reporting metrics (valid UA)' do
+    describe 'reporting metrics (valid UA, first time)' do
       it 'should report the right values' do
         expect( metriks ).to be_incremented_for('versions.bundler.1.7.3')
         expect( metriks ).to be_incremented_for('versions.rubygems.2.4.1')
         expect( metriks ).to be_incremented_for('versions.ruby.2.1.2')
         expect( metriks ).to be_incremented_for('commands.update')
         expect( metriks ).to be_incremented_for('archs.x86_64-apple-darwin13.2.0')
+      end
+    end
+
+    describe 'reporting metrics (valid UA, return customer)' do
+      let(:redis) { double(exists: true) }
+
+      it 'should not report anything' do
+        expect( metriks.values ).to be_empty
       end
     end
 
