@@ -12,7 +12,7 @@ describe BundlerApi::Web do
   end
 
   def app
-    BundlerApi::Web.new($db, $db)
+    BundlerApi::Web.new($db)
   end
 
   context "GET /" do

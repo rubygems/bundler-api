@@ -22,16 +22,12 @@ class BundlerApi::Web < Sinatra::Base
     use BundlerApi::AgentReporting
   end
 
-  def initialize(conn = nil, write_conn = nil)
+  def initialize(conn = nil)
     @rubygems_token = ENV['RUBYGEMS_TOKEN']
 
     @conn = conn || begin
-      Sequel.connect(ENV['FOLLOWER_DATABASE_URL'],
-                     max_connections: ENV['MAX_THREADS'])
-    end
-
-    @write_conn = write_conn || begin
       Sequel.connect(ENV['DATABASE_URL'],
+                     servers: { read_only: {host: ENV['FOLLOWER_DATABASE_URL'] } },
                      max_connections: ENV['MAX_THREADS'])
     end
 
@@ -109,7 +105,7 @@ class BundlerApi::Web < Sinatra::Base
   post "/api/v1/add_spec.json" do
     Metriks.timer('webhook.add_spec').time do
       payload = get_payload
-      job = BundlerApi::Job.new(@write_conn, payload)
+      job = BundlerApi::Job.new(@conn, payload)
       job.run
 
       BundlerApi::Cdn.purge_specs
@@ -121,8 +117,8 @@ class BundlerApi::Web < Sinatra::Base
   post "/api/v1/remove_spec.json" do
     Metriks.timer('webhook.remove_spec').time do
       payload    = get_payload
-      rubygem_id = @write_conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
-      version    = @write_conn[:versions].where(
+      rubygem_id = @conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
+      version    = @conn[:versions].where(
         rubygem_id: rubygem_id,
         number:     payload.version.version,
         platform:   payload.platform
