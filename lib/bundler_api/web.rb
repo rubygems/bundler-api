@@ -15,6 +15,7 @@ require 'bundler_api/update/yank_job'
 
 class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
+  PG_STATEMENT_TIMEOUT = 1000
 
   unless ENV['RACK_ENV'] == 'test'
     use Metriks::Middleware
@@ -25,9 +26,11 @@ class BundlerApi::Web < Sinatra::Base
   def initialize(conn = nil, write_conn = nil)
     @rubygems_token = ENV['RUBYGEMS_TOKEN']
 
+    statement_timeout = proc {|c| c.execute("SET statement_timeout = #{PG_STATEMENT_TIMEOUT}") }
     @conn = conn || begin
       Sequel.connect(ENV['FOLLOWER_DATABASE_URL'],
-                     max_connections: ENV['MAX_THREADS'])
+                     max_connections: ENV['MAX_THREADS'],
+                     after_connect: statement_timeout)
     end
 
     @write_conn = write_conn || begin
