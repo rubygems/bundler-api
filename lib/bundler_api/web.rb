@@ -99,7 +99,7 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/api/v1/dependencies" do
-    halt 422, "Too many gems" if gems.length > API_REQUEST_LIMIT
+    halt 422, "Too many gems (use --full-index instead)" if gems.length > API_REQUEST_LIMIT
 
     content_type 'application/octet-stream'
     deps = get_deps
@@ -107,7 +107,10 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/api/v1/dependencies.json" do
-    halt 422, {:error => "Too many gems"}.to_json if gems.length > API_REQUEST_LIMIT
+    halt 422, {
+      "error" => "Too many gems (use --full-index instead)",
+      "code"  => 422
+    }.to_json if gems.length > API_REQUEST_LIMIT
 
     content_type 'application/json;charset=UTF-8'
     get_deps.to_json
