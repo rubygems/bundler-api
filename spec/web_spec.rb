@@ -72,6 +72,17 @@ describe BundlerApi::Web do
         expect(Marshal.load(last_response.body)).to eq(result)
       end
     end
+
+    context "there are too many gems" do
+      let(:gems) { 101.times.map { |i| "gem-#{ i }" }.join(',') }
+
+      it "returns a 422" do
+        get "#{request}?gems=#{ gems }"
+
+        expect(last_response).not_to be_ok
+        expect(last_response.body).to eq("Too many gems (use --full-index instead)")
+      end
+    end
   end
 
 
@@ -100,6 +111,22 @@ describe BundlerApi::Web do
 
         expect(last_response).to be_ok
         expect(JSON.parse(last_response.body)).to eq(result)
+      end
+    end
+
+    context "there are too many gems" do
+      let(:gems) { 101.times.map { |i| "gem-#{ i }" }.join(',') }
+
+      it "returns a 422" do
+        error = {
+          "error" => "Too many gems (use --full-index instead)",
+          "code"  => 422
+        }.to_json
+
+        get "#{request}?gems=#{ gems }"
+
+        expect(last_response).not_to be_ok
+        expect(last_response.body).to eq(error)
       end
     end
   end

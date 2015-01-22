@@ -12,10 +12,10 @@ require 'bundler_api/gem_helper'
 require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
 
-
 class BundlerApi::Web < Sinatra::Base
-  RUBYGEMS_URL = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
+  API_REQUEST_LIMIT    = 100
   PG_STATEMENT_TIMEOUT = 1000
+  RUBYGEMS_URL         = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
     use Metriks::Middleware
@@ -99,12 +99,19 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/api/v1/dependencies" do
+    halt 422, "Too many gems (use --full-index instead)" if gems.length > API_REQUEST_LIMIT
+
     content_type 'application/octet-stream'
     deps = get_deps
     Marshal.dump(deps)
   end
 
   get "/api/v1/dependencies.json" do
+    halt 422, {
+      "error" => "Too many gems (use --full-index instead)",
+      "code"  => 422
+    }.to_json if gems.length > API_REQUEST_LIMIT
+
     content_type 'application/json;charset=UTF-8'
     get_deps.to_json
   end
