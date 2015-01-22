@@ -5,7 +5,7 @@ ruby "2.2.0"
 gem 'honeybadger'
 gem 'librato-metrics'
 gem 'lock-smith'
-gem 'metriks'
+gem 'metriks-librato_metrics'
 gem 'metriks-middleware'
 gem 'pg'
 gem 'puma'

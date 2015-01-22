@@ -27,6 +27,8 @@ GEM
       atomic (~> 1.0)
       avl_tree (~> 1.2.0)
       hitimes (~> 1.1)
+    metriks-librato_metrics (1.0.2)
+      metriks (>= 0.9.9.6)
     metriks-middleware (2.1.1)
       metriks (~> 0.9.9)
     multi_json (1.10.1)
@@ -70,7 +72,7 @@ DEPENDENCIES
   honeybadger
   librato-metrics
   lock-smith
-  metriks
+  metriks-librato_metrics
   metriks-middleware
   pg
   puma
