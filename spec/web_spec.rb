@@ -74,7 +74,7 @@ describe BundlerApi::Web do
     end
 
     context "there are too many gems" do
-      let(:gems) { 101.times.map { |i| "gem-#{ i }" }.join(',') }
+      let(:gems) { 201.times.map { |i| "gem-#{ i }" }.join(',') }
 
       it "returns a 422" do
         get "#{request}?gems=#{ gems }"
@@ -115,7 +115,7 @@ describe BundlerApi::Web do
     end
 
     context "there are too many gems" do
-      let(:gems) { 101.times.map { |i| "gem-#{ i }" }.join(',') }
+      let(:gems) { 201.times.map { |i| "gem-#{ i }" }.join(',') }
 
       it "returns a 422" do
         error = {

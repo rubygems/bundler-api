@@ -13,7 +13,7 @@ require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
 
 class BundlerApi::Web < Sinatra::Base
-  API_REQUEST_LIMIT    = 100
+  API_REQUEST_LIMIT    = 200
   PG_STATEMENT_TIMEOUT = 1000
   RUBYGEMS_URL         = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
 
