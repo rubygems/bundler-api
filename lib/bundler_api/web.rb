@@ -22,7 +22,7 @@ class BundlerApi::Web < Sinatra::Base
     use Metriks::Middleware
     use Honeybadger::Rack
     use BundlerApi::AgentReporting
-    use Appsignal::Rack::Listener
+    use Appsignal::Rack::Listener, name: 'bundler-api'
     use Appsignal::Rack::Instrumentation
   end
 
