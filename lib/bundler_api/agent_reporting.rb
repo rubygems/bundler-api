@@ -38,15 +38,13 @@ private
       keys += ua_match['options'].split(",").map { |k| "options.#{ k }" }
     end
 
-    keys.each { |metric| Metriks.counter(metric).increment }
+    keys.each { |metric| Metriks.meter(metric).mark }
   end
 
   def known_id?(id)
-    if BundlerApi.redis.exists(id)
-      true
-    else
-      BundlerApi.redis.setex(id, 120, true)
-      false
-    end
+    return true if BundlerApi.redis.exists(id)
+
+    BundlerApi.redis.setex(id, 120, true)
+    false
   end
 end

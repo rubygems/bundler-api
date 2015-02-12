@@ -5,7 +5,7 @@ describe BundlerApi::AgentReporting do
   class FakeMetriks
     attr_accessor :values, :key
     def initialize; @values = Hash.new { |hash, key| hash[key] = 0 } end
-    def increment;  @values[key] += 1                                end
+    def mark;       @values[key] += 1                                end
   end
 
   let(:app)        { double(call: true) }
@@ -14,7 +14,7 @@ describe BundlerApi::AgentReporting do
   let(:redis)      { double(exists: false, setex: true) }
 
   before do
-    Metriks.stub(:counter) { |key| metriks.key = key; metriks }
+    Metriks.stub(:meter) { |key| metriks.key = key; metriks }
     BundlerApi.stub(:redis => redis)
     middleware.call({'HTTP_USER_AGENT' => ua})
   end
@@ -50,7 +50,6 @@ describe BundlerApi::AgentReporting do
       end
     end
   end
-
 
   context "without options" do
     let(:ua) do
