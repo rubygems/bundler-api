@@ -8,7 +8,6 @@ require 'bundler_api/cdn'
 require 'bundler_api/dep_calc'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
-require 'bundler_api/honeybadger'
 require 'bundler_api/gem_helper'
 require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
@@ -19,11 +18,10 @@ class BundlerApi::Web < Sinatra::Base
   RUBYGEMS_URL         = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
-    use Metriks::Middleware
-    use Honeybadger::Rack
-    use BundlerApi::AgentReporting
     use Appsignal::Rack::Listener, name: 'bundler-api'
     use Appsignal::Rack::Instrumentation
+    use Metriks::Middleware
+    use BundlerApi::AgentReporting
   end
 
   def initialize(conn = nil, write_conn = nil)
@@ -89,11 +87,6 @@ class BundlerApi::Web < Sinatra::Base
     content_type 'application/json;charset=UTF-8'
     JSON.dump(:name => payload.name, :version => payload.version.version,
       :platform => payload.platform, :prerelease => payload.prerelease)
-  end
-
-  error do |e|
-    # Honeybadger 1.3.1 only knows how to look for rack.exception :(
-    request.env['rack.exception'] = request.env['sinatra.error']
   end
 
   get "/" do

@@ -3,7 +3,6 @@ source "https://rubygems.org"
 ruby "2.2.0"
 
 gem 'appsignal'
-gem 'honeybadger'
 gem 'librato-metrics'
 gem 'lock-smith'
 gem 'metriks-librato_metrics'
