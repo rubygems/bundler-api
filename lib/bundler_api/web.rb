@@ -99,6 +99,7 @@ class BundlerApi::Web < Sinatra::Base
 
     content_type 'application/octet-stream'
     deps = get_deps
+
     ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
   end
 
@@ -109,7 +110,9 @@ class BundlerApi::Web < Sinatra::Base
     }.to_json if gems.length > API_REQUEST_LIMIT
 
     content_type 'application/json;charset=UTF-8'
-    ActiveSupport::Notifications.instrument('json.deps') { get_deps.to_json }
+    deps = get_deps
+
+    ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
   end
 
   post "/api/v1/add_spec.json" do
