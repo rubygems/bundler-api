@@ -5,7 +5,7 @@ class BundlerApi::DepCalc
 
   # @param [String] array of strings with the gem names
   def self.deps_for(connection, gems)
-    dataset = connection[<<-SQL, Sequel.value_list(gems)].order(:name)
+    dataset = connection[<<-SQL, Sequel.value_list(gems)].order(:name).all
       SELECT rv.name, rv.number, rv.platform, d.requirements, for_dep_name.name dep_name
       FROM
         (SELECT r.name, v.number, v.platform, v.id AS version_id
@@ -20,15 +20,15 @@ class BundlerApi::DepCalc
         AND d.scope = 'runtime'
 SQL
 
-    deps = {}
-
-    dataset.paged_each do |row|
-      key = DepKey.new(row[:name], row[:number], row[:platform])
-      deps[key] = [] unless deps[key]
-      deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
-    end
-
     ActiveSupport::Notifications.instrument('gather.deps') do
+      deps = {}
+
+      dataset.each do |row|
+        key = DepKey.new(row[:name], row[:number], row[:platform])
+        deps[key] ||= []
+        deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
+      end
+
       deps.map do |dep_key, gem_deps|
         {
           name:         dep_key.name,
