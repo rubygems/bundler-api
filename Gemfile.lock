@@ -2,7 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     aggregate (0.2.2)
-    appsignal (0.11.4)
+    appsignal (0.11.5)
       rack
       thread_safe
     artifice (0.6)
