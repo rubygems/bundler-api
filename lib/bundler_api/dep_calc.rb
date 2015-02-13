@@ -28,13 +28,15 @@ SQL
       deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
     end
 
-    deps.map do |dep_key, gem_deps|
-      {
-        name:         dep_key.name,
-        number:       dep_key.number,
-        platform:     dep_key.platform,
-        dependencies: gem_deps
-      }
+    ActiveSupport::Notifications.instrument('gather.deps') do
+      deps.map do |dep_key, gem_deps|
+        {
+          name:         dep_key.name,
+          number:       dep_key.number,
+          platform:     dep_key.platform,
+          dependencies: gem_deps
+        }
+      end
     end
   end
 end

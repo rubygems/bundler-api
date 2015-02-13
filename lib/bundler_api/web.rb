@@ -106,7 +106,7 @@ class BundlerApi::Web < Sinatra::Base
 
     content_type 'application/octet-stream'
     deps = get_deps
-    Marshal.dump(deps)
+    ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
   end
 
   get "/api/v1/dependencies.json" do
