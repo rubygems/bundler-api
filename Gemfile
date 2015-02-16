@@ -2,7 +2,7 @@ source "https://rubygems.org"
 
 ruby "2.2.0"
 
-gem 'appsignal'
+gem 'appsignal', '0.11.6.beta.0'
 gem 'librato-metrics'
 gem 'lock-smith'
 gem 'metriks-librato_metrics'

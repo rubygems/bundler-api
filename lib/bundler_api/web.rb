@@ -19,7 +19,7 @@ class BundlerApi::Web < Sinatra::Base
 
   unless ENV['RACK_ENV'] == 'test'
     use Appsignal::Rack::Listener, name: 'bundler-api'
-    use Appsignal::Rack::Instrumentation
+    use Appsignal::Rack::SinatraInstrumentation
     use Metriks::Middleware
     use BundlerApi::AgentReporting
   end

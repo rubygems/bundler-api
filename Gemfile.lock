@@ -2,7 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     aggregate (0.2.2)
-    appsignal (0.11.5)
+    appsignal (0.11.6.beta.0)
       rack
       thread_safe
     artifice (0.6)
@@ -67,7 +67,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  appsignal
+  appsignal (= 0.11.6.beta.0)
   artifice
   dotenv
   foreman
