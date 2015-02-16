@@ -46,5 +46,9 @@ private
 
     BundlerApi.redis.setex(id, 120, true)
     false
+  rescue Redis::TimeoutError
+    # Sometimes we get these, and there's no point throwing out a perfectly
+    # good metric.
+    false
   end
 end
