@@ -21,6 +21,12 @@ class BundlerApi::Cdn
     purge_gem_by_name gem.full_name, client
   end
 
+  def self.purge_gem_dependency(name, client = self.client)
+    return unless client
+    client.purge_key "/api/v2/dependencies/#{name}"
+    client.purge_key "/api/v2/dependencies/#{name}.json"
+  end
+
   def self.client
     return unless service_id && base_url
     Client.new(service_id, base_url, api_key)

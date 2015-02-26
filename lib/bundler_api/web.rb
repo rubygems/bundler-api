@@ -94,16 +94,18 @@ class BundlerApi::Web < Sinatra::Base
     redirect 'https://www.rubygems.org'
   end
 
-  get "/api/v1/dependencies" do
+  get("/api/v1/dependencies") { gem_dependency }
+  get("/api/v2/dependencies/:gems") { gem_dependency }
+  def gem_dependency
     halt 422, "Too many gems (use --full-index instead)" if gems.length > API_REQUEST_LIMIT
-
     content_type 'application/octet-stream'
     deps = get_deps
-
     ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
   end
 
-  get "/api/v1/dependencies.json" do
+  get("/api/v1/dependencies.json") { gem_dependency_json }
+  get("/api/v2/dependencies/:gems.json") { gem_dependency_json }
+  def gem_dependency_json
     halt 422, {
       "error" => "Too many gems (use --full-index instead)",
       "code"  => 422
@@ -111,7 +113,6 @@ class BundlerApi::Web < Sinatra::Base
 
     content_type 'application/json;charset=UTF-8'
     deps = get_deps
-
     ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
   end
 
@@ -122,6 +123,7 @@ class BundlerApi::Web < Sinatra::Base
       job.run
 
       BundlerApi::Cdn.purge_specs
+      BundlerApi::Cdn.purge_gem_dependency payload.name
 
       json_payload(payload)
     end
@@ -139,6 +141,7 @@ class BundlerApi::Web < Sinatra::Base
 
       BundlerApi::Cdn.purge_specs
       BundlerApi::Cdn.purge_gem payload
+      BundlerApi::Cdn.purge_gem_dependency payload.name
 
       json_payload(payload)
     end
