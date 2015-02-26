@@ -10,6 +10,7 @@ GEM
     atomic (1.1.16)
     avl_tree (1.2.1)
       atomic (~> 1.1)
+    dalli (2.7.2)
     diff-lcs (1.2.5)
     dotenv (1.0.2)
     faraday (0.9.1)
@@ -69,6 +70,7 @@ PLATFORMS
 DEPENDENCIES
   appsignal (= 0.11.6.beta.0)
   artifice
+  dalli
   dotenv
   foreman
   librato-metrics
