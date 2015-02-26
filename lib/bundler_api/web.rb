@@ -117,18 +117,6 @@ class BundlerApi::Web < Sinatra::Base
     ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
   end
 
-  def cache(&block)
-    if gems.size == 1
-      @dalli_client.fetch("v1/#{gems[0]}", &block)
-    else
-      yield
-    end
-  end
-
-  def delete_cache(gem)
-    @dalli_client.delete "v1/#{gem}"
-  end
-
   post "/api/v1/add_spec.json" do
     Metriks.timer('webhook.add_spec').time do
       payload = get_payload
@@ -136,7 +124,7 @@ class BundlerApi::Web < Sinatra::Base
       job.run
 
       BundlerApi::Cdn.purge_specs
-      delete_cahce(payload.name)
+      delete_cache(payload.name)
 
       json_payload(payload)
     end
@@ -154,7 +142,7 @@ class BundlerApi::Web < Sinatra::Base
 
       BundlerApi::Cdn.purge_specs
       BundlerApi::Cdn.purge_gem payload
-      delete_cahce(payload.name)
+      delete_cache(payload.name)
 
       json_payload(payload)
     end
@@ -182,5 +170,18 @@ class BundlerApi::Web < Sinatra::Base
 
   get "/prerelease_specs.4.8.gz" do
     redirect "#{RUBYGEMS_URL}/prerelease_specs.4.8.gz"
+  end
+
+  private
+  def cache(&block)
+    if gems.size == 1
+      @dalli_client.fetch("v1/#{gems[0]}", &block)
+    else
+      yield
+    end
+  end
+
+  def delete_cache(gem)
+    @dalli_client.delete "v1/#{gem}"
   end
 end
