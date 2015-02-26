@@ -1,6 +1,7 @@
 require 'sinatra/base'
 require 'sequel'
 require 'json'
+require 'dalli'
 require 'bundler_api'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/appsignal'
@@ -39,6 +40,7 @@ class BundlerApi::Web < Sinatra::Base
                      max_connections: ENV['MAX_THREADS'])
     end
 
+    @dalli_client = Dalli::Client.new
     super()
   end
 
@@ -98,8 +100,8 @@ class BundlerApi::Web < Sinatra::Base
     halt 422, "Too many gems (use --full-index instead)" if gems.length > API_REQUEST_LIMIT
 
     content_type 'application/octet-stream'
-    deps = get_deps
 
+    deps = cache { get_deps }
     ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
   end
 
@@ -110,9 +112,21 @@ class BundlerApi::Web < Sinatra::Base
     }.to_json if gems.length > API_REQUEST_LIMIT
 
     content_type 'application/json;charset=UTF-8'
-    deps = get_deps
 
+    deps = cache { get_deps }
     ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
+  end
+
+  def cache(&block)
+    if gems.size == 1
+      @dalli_client.fetch("v1/#{gems[0]}", &block)
+    else
+      yield
+    end
+  end
+
+  def delete_cache(gem)
+    @dalli_client.delete "v1/#{gem}"
   end
 
   post "/api/v1/add_spec.json" do
@@ -122,6 +136,7 @@ class BundlerApi::Web < Sinatra::Base
       job.run
 
       BundlerApi::Cdn.purge_specs
+      delete_cahce(payload.name)
 
       json_payload(payload)
     end
@@ -139,6 +154,7 @@ class BundlerApi::Web < Sinatra::Base
 
       BundlerApi::Cdn.purge_specs
       BundlerApi::Cdn.purge_gem payload
+      delete_cahce(payload.name)
 
       json_payload(payload)
     end
