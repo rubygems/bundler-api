@@ -22,5 +22,9 @@ RSpec.configure do |config|
     c.syntax = [:should, :expect]
   end
 
+  config.before(:each) do
+    Dalli::Client.new.flush
+  end
+
   config.raise_errors_for_deprecations!
 end

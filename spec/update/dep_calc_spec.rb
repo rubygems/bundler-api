@@ -7,10 +7,10 @@ describe BundlerApi::DepCalc do
   let(:db)      { $db }
   let(:builder) { GemBuilder.new(db) }
 
-  describe ".deps_for" do
+  describe ".fetch_dependency" do
     context "no gems" do
       it "should find the deps" do
-        expect(BundlerApi::DepCalc.deps_for(db, ['rack'])).to eq([])
+        expect(BundlerApi::DepCalc.fetch_dependency(db, 'rack')).to eq([])
       end
     end
 
@@ -28,7 +28,7 @@ describe BundlerApi::DepCalc do
           dependencies: []
         }]
 
-        expect(BundlerApi::DepCalc.deps_for(db, ['rack'])).to eq(result)
+        expect(BundlerApi::DepCalc.fetch_dependency(db, 'rack')).to eq(result)
       end
     end
 
@@ -50,7 +50,7 @@ describe BundlerApi::DepCalc do
           dependencies: [['foo', '= 1.0.0']]
         }]
 
-        expect(BundlerApi::DepCalc.deps_for(db, ['rack'])).to eq(result)
+        expect(BundlerApi::DepCalc.fetch_dependency(db, 'rack')).to eq(result)
       end
     end
 
@@ -74,7 +74,7 @@ describe BundlerApi::DepCalc do
           dependencies: [['foo', '= 1.0.0']]
         }]
 
-        expect(BundlerApi::DepCalc.deps_for(db, ['rack'])).to eq(result)
+        expect(BundlerApi::DepCalc.fetch_dependency(db, 'rack')).to eq(result)
       end
     end
   end
