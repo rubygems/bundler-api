@@ -177,7 +177,7 @@ class BundlerApi::Web < Sinatra::Base
   def get_cached_dependencies
     dependencies = []
     keys = gems.map { |g| "deps/v1/#{g}" }
-    @dalli_client.get_multi(keys.dup) do |key, value|
+    @dalli_client.get_multi(keys) do |key, value|
       keys.delete(key)
       dependencies += value
     end
