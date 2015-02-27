@@ -1,6 +1,7 @@
 require 'sinatra/base'
 require 'sequel'
 require 'json'
+require 'dalli'
 require 'bundler_api'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/appsignal'
@@ -39,6 +40,7 @@ class BundlerApi::Web < Sinatra::Base
                      max_connections: ENV['MAX_THREADS'])
     end
 
+    @dalli_client = Dalli::Client.new
     super()
   end
 
@@ -52,16 +54,6 @@ class BundlerApi::Web < Sinatra::Base
   def gems
     halt(200) if params[:gems].nil? || params[:gems].empty?
     params[:gems].is_a?(Array) ? params[:gems] : params[:gems].split(',')
-  end
-
-  def get_deps
-    timer = Metriks.timer('dependencies').time
-    deps  = BundlerApi::DepCalc.deps_for(@conn, gems)
-    Metriks.histogram('gems.size').update(gems.size)
-    Metriks.histogram('dependencies.size').update(deps.size)
-    deps
-  ensure
-    timer.stop if timer
   end
 
   def get_payload
@@ -98,8 +90,8 @@ class BundlerApi::Web < Sinatra::Base
     halt 422, "Too many gems (use --full-index instead)" if gems.length > API_REQUEST_LIMIT
 
     content_type 'application/octet-stream'
-    deps = get_deps
 
+    deps = with_metriks { get_cached_dependencies }
     ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
   end
 
@@ -110,8 +102,8 @@ class BundlerApi::Web < Sinatra::Base
     }.to_json if gems.length > API_REQUEST_LIMIT
 
     content_type 'application/json;charset=UTF-8'
-    deps = get_deps
 
+    deps = with_metriks { get_cached_dependencies }
     ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
   end
 
@@ -122,6 +114,7 @@ class BundlerApi::Web < Sinatra::Base
       job.run
 
       BundlerApi::Cdn.purge_specs
+      delete_cache(payload.name)
 
       json_payload(payload)
     end
@@ -139,6 +132,7 @@ class BundlerApi::Web < Sinatra::Base
 
       BundlerApi::Cdn.purge_specs
       BundlerApi::Cdn.purge_gem payload
+      delete_cache(payload.name)
 
       json_payload(payload)
     end
@@ -166,5 +160,38 @@ class BundlerApi::Web < Sinatra::Base
 
   get "/prerelease_specs.4.8.gz" do
     redirect "#{RUBYGEMS_URL}/prerelease_specs.4.8.gz"
+  end
+
+  private
+
+  def with_metriks
+    timer = Metriks.timer('dependencies').time
+    yield.tap do |deps|
+      Metriks.histogram('gems.size').update(gems.size)
+      Metriks.histogram('dependencies.size').update(deps.size)
+    end
+  ensure
+    timer.stop if timer
+  end
+
+  def get_cached_dependencies
+    dependencies = []
+    keys = gems.map { |g| "deps/v1/#{g}" }
+    @dalli_client.get_multi(keys.dup) do |key, value|
+      keys.delete(key)
+      dependencies += value
+    end
+
+    keys.each do |gem|
+      name = gem.gsub("deps/v1/", "")
+      result = BundlerApi::DepCalc.fetch_dependency(@conn, name)
+      @dalli_client.set(gem, result)
+      dependencies += result
+    end
+    dependencies
+  end
+
+  def delete_cache(gem)
+    @dalli_client.delete "deps/v1/#{gem}"
   end
 end

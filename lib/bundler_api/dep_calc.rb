@@ -4,15 +4,15 @@ class BundlerApi::DepCalc
   DepKey = Struct.new(:name, :number, :platform)
 
   # @param [String] array of strings with the gem names
-  def self.deps_for(connection, gems)
-    dataset = connection[<<-SQL, Sequel.value_list(gems)].order(:name).all
+  def self.fetch_dependency(connection, gem)
+    dataset = connection[<<-SQL, gem].order(:name).all
       SELECT rv.name, rv.number, rv.platform, d.requirements, for_dep_name.name dep_name
       FROM
         (SELECT r.name, v.number, v.platform, v.id AS version_id
         FROM rubygems AS r, versions AS v
         WHERE v.rubygem_id = r.id
           AND v.indexed is true
-          AND r.name IN ?) AS rv
+          AND r.name = ?) AS rv
       LEFT JOIN dependencies AS d ON
         d.version_id = rv.version_id
       LEFT JOIN rubygems AS for_dep_name ON
