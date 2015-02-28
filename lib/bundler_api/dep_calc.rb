@@ -5,19 +5,23 @@ class BundlerApi::DepCalc
 
   # @param [String] array of strings with the gem names
   def self.fetch_dependency(connection, gem)
-    dataset = connection[<<-SQL, gem].order(:name).all
-      SELECT rv.name, rv.number, rv.platform, d.requirements, for_dep_name.name dep_name
-      FROM
-        (SELECT r.name, v.number, v.platform, v.id AS version_id
-        FROM rubygems AS r, versions AS v
-        WHERE v.rubygem_id = r.id
-          AND v.indexed is true
-          AND r.name = ?) AS rv
-      LEFT JOIN dependencies AS d ON
-        d.version_id = rv.version_id
-      LEFT JOIN rubygems AS for_dep_name ON
-        d.rubygem_id = for_dep_name.id
-        AND d.scope = 'runtime'
+    dataset = connection[<<-SQL, gem].all
+SELECT
+    rubygems.name     "name",
+    versions.platform "platform",
+    versions.number   "number",
+    dependency_rubygems.name "dep_name",
+    dependencies.requirements "requirements"
+FROM
+    rubygems
+INNER JOIN
+    versions ON rubygems.id = versions.rubygem_id AND versions.indexed IS TRUE
+LEFT JOIN
+    dependencies ON versions.id = dependencies.version_id AND dependencies.scope = 'runtime'
+LEFT JOIN
+    rubygems "dependency_rubygems" ON dependencies.rubygem_id = "dependency_rubygems".id
+WHERE
+    rubygems.name = ?
 SQL
 
     ActiveSupport::Notifications.instrument('gather.deps') do
