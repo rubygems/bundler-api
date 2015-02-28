@@ -5,7 +5,7 @@ class BundlerApi::DepCalc
 
   # @param [String] array of strings with the gem names
   def self.fetch_dependency(connection, gem)
-    dataset = connection[<<-SQL, gem].order(:name).all
+    dataset = connection[<<-SQL, gem].all
 SELECT
     rubygems.name     "name",
     versions.platform "platform",
