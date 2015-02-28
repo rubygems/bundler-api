@@ -64,7 +64,8 @@ class BundlerApi::Web < Sinatra::Base
 
   def gems
     halt(200) if params[:gems].nil? || params[:gems].empty?
-    params[:gems].is_a?(Array) ? params[:gems] : params[:gems].split(',')
+    g = params[:gems].is_a?(Array) ? params[:gems] : params[:gems].split(',')
+    g.uniq
   end
 
   def get_payload
