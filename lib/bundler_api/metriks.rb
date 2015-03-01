@@ -16,7 +16,11 @@ if user && token
     Socket.gethostname
   end
 
-  on_error = ->(e) do STDOUT.puts("LibratoMetrics: #{ e.message }") end
+  on_error = ->(e) do
+    STDOUT.puts("LibratoMetrics: #{ e.message }")
+    STDOUT.puts(e.backtrace)
+  end
+
   opts     = { on_error: on_error, source: app_name }
   opts[:prefix] = prefix if prefix && !prefix.empty?
 
