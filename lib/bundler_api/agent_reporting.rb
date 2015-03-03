@@ -46,9 +46,12 @@ private
 
     BundlerApi.redis.setex(id, 120, true)
     false
-  rescue Redis::TimeoutError
+  rescue ex
     # Sometimes we get these, and there's no point throwing out a perfectly
-    # good metric.
+    # good metric. We still, however, want to report it in Appsignal so that
+    # we know what's up.
+    Appsignal.add_exception(ex)
+
     false
   end
 end
