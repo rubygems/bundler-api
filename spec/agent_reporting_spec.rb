@@ -12,24 +12,24 @@ describe BundlerApi::AgentReporting do
   let(:middleware) { described_class.new(app) }
   let(:metriks)    { FakeMetriks.new }
   let(:redis)      { double(exists: false, setex: true) }
+  let(:env)        { {'HTTP_USER_AGENT' => ua} }
+  let(:ua) do
+    [ 'bundler/1.7.3',
+      'rubygems/2.4.1',
+      'ruby/2.1.2',
+      '(x86_64-apple-darwin13.2.0)',
+      'command/update',
+      'options/jobs,without,build.mysql',
+      '9d16bd9809d392ca' ].join(' ')
+  end
 
   before do
     Metriks.stub(:meter) { |key| metriks.key = key; metriks }
     BundlerApi.stub(:redis => redis)
-    middleware.call({'HTTP_USER_AGENT' => ua})
+    middleware.call(env)
   end
 
   context "with options" do
-    let(:ua) do
-      [ 'bundler/1.7.3',
-        'rubygems/2.4.1',
-        'ruby/2.1.2',
-        '(x86_64-apple-darwin13.2.0)',
-        'command/update',
-        'options/jobs,without,build.mysql',
-        '9d16bd9809d392ca' ].join(' ')
-    end
-
     describe 'reporting metrics (valid UA)' do
       it 'should report the right values' do
         expect( metriks ).to be_incremented_for('versions.bundler.1.7.3')
@@ -87,4 +87,13 @@ describe BundlerApi::AgentReporting do
     end
   end
 
+  context "when Redis breaks" do
+    before do
+      redis.stub(:exists).and_raise(Redis::CannotConnectError)
+    end
+
+    it "should not raise an exception" do
+      expect { middleware.call(env) }.not_to raise_error
+    end
+  end
 end
