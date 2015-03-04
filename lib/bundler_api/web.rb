@@ -190,11 +190,13 @@ class BundlerApi::Web < Sinatra::Base
     dependencies = []
     keys = gems.map { |g| "deps/v1/#{g}" }
     @dalli_client.get_multi(keys) do |key, value|
+      Metriks.meter('dependencies.memcached.hit').mark
       keys.delete(key)
       dependencies += value
     end
 
     keys.each do |gem|
+      Metriks.meter('dependencies.memcached.miss').mark
       name = gem.gsub("deps/v1/", "")
       result = BundlerApi::DepCalc.fetch_dependency(@conn, name)
       @dalli_client.set(gem, result)
