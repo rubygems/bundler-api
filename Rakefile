@@ -210,3 +210,19 @@ task :add_spec, :name, :version, :platform, :prerelease do |t, args|
     BundlerApi::Job.new(db, payload).run
   end
 end
+
+desc "Yank a specific single gem from the database"
+task :yank_spec, :name, :version, :platform do |t, args|
+  args.with_defaults(:platform => 'ruby')
+  database_connection do |db|
+    gem_id = db[:rubygems].where(name: args[:name]).first[:id]
+    version = db[:versions].where(
+      rubygem_id: gem_id,
+      number: args[:version],
+      platform: args[:platform]
+    ).first
+    version.update(indexed: false)
+
+  end
+  puts "Yanked #{version}!"
+end
