@@ -5,7 +5,7 @@ ruby "2.2.1"
 gem 'appsignal', '0.11.6.beta.0'
 gem 'librato-metrics'
 gem 'lock-smith'
-gem 'metriks-librato_metrics', github: 'arthurnn/metriks-librato_metrics', ref: 'da539de267831e5aadfe52f1bb26df84b040c0f0'
+gem 'metriks-librato_metrics'
 gem 'metriks-middleware'
 gem 'pg'
 gem 'puma'
