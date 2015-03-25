@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "2.2.0"
+ruby "2.2.1"
 
 gem 'appsignal', '0.11.6.beta.0'
 gem 'librato-metrics'
