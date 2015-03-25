@@ -1,11 +1,3 @@
-GIT
-  remote: git://github.com/arthurnn/metriks-librato_metrics.git
-  revision: da539de267831e5aadfe52f1bb26df84b040c0f0
-  ref: da539de267831e5aadfe52f1bb26df84b040c0f0
-  specs:
-    metriks-librato_metrics (1.0.2)
-      metriks (>= 0.9.9.6)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -36,6 +28,8 @@ GEM
       atomic (~> 1.0)
       avl_tree (~> 1.2.0)
       hitimes (~> 1.1)
+    metriks-librato_metrics (1.0.3)
+      metriks (>= 0.9.9.6)
     metriks-middleware (2.1.1)
       metriks (~> 0.9.9)
     multi_json (1.10.1)
@@ -81,7 +75,7 @@ DEPENDENCIES
   foreman
   librato-metrics
   lock-smith
-  metriks-librato_metrics!
+  metriks-librato_metrics
   metriks-middleware
   pg
   puma
