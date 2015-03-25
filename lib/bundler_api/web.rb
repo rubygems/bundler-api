@@ -136,7 +136,7 @@ class BundlerApi::Web < Sinatra::Base
     Metriks.timer('webhook.remove_spec').time do
       payload    = get_payload
       rubygem_id = @write_conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
-      version    = @write_conn[:versions].where(
+      @write_conn[:versions].where(
         rubygem_id: rubygem_id,
         number:     payload.version.version,
         platform:   payload.platform
