@@ -1,4 +1,5 @@
 require 'net/http'
+require 'dalli'
 
 module BundlerApi
   FastlyClient = Struct.new(:service_id, :base_url, :api_key) do

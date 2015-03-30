@@ -1,7 +1,6 @@
 require 'sinatra/base'
 require 'sequel'
 require 'json'
-require 'dalli'
 require 'bundler_api'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/appsignal'
