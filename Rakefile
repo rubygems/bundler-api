@@ -10,7 +10,7 @@ require 'tmpdir'
 require 'net/http'
 require 'time'
 require 'locksmith/pg'
-require 'bundler_api/cdn'
+require 'bundler_api/cache'
 require 'bundler_api/update/consumer_pool'
 require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
@@ -138,14 +138,16 @@ def update(db, thread_count)
   pool.poison
   pool.join
 
+  cache = BundlerApi::CacheInvalidator.new
+
   unless local_gems.empty?
     print "Yanking #{local_gems.size} gems\n"
     local_gems.keys.each {|name| print "Yanking: #{name}\n" }
     db[:versions].where(id: local_gems.values).update(indexed: false)
-    local_gems.keys.each {|name| BundlerApi::Cdn.purge_gem_by_name name }
+    local_gems.keys.each {|name| cache.purge_gem(name) }
   end
 
-  BundlerApi::Cdn.purge_specs if !local_gems.empty? || add_gem_count.count > 0
+  cache.purge_specs if !local_gems.empty? || add_gem_count.count > 0
 
   print "# of gem versions added: #{add_gem_count.count}\n"
   print "# of gem versions yanked: #{local_gems.size}\n"

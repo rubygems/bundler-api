@@ -5,7 +5,7 @@ require 'dalli'
 require 'bundler_api'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/appsignal'
-require 'bundler_api/cdn'
+require 'bundler_api/cache'
 require 'bundler_api/dep_calc'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
@@ -40,18 +40,8 @@ class BundlerApi::Web < Sinatra::Base
                      max_connections: ENV['MAX_THREADS'])
     end
 
-    @dalli_client =
-      if ENV["MEMCACHIER_SERVERS"]
-        Dalli::Client.new((ENV["MEMCACHIER_SERVERS"] || "").split(","),
-                          { username: ENV["MEMCACHIER_USERNAME"],
-                            password: ENV["MEMCACHIER_PASSWORD"],
-                            failover: true,
-                            socket_timeout: 1.5,
-                            socket_failure_delay: 0.2
-                          })
-      else
-        Dalli::Client.new
-      end
+    @cache = BundlerApi::CacheInvalidator.new
+    @dalli_client = @cache.memcached_client
     super()
   end
 
@@ -125,8 +115,8 @@ class BundlerApi::Web < Sinatra::Base
       job = BundlerApi::Job.new(@write_conn, payload)
       job.run
 
-      BundlerApi::Cdn.purge_specs
-      delete_cache(payload.name)
+      @cache.purge_specs
+      @cache.purge_memory_cache(payload.name)
 
       json_payload(payload)
     end
@@ -142,9 +132,8 @@ class BundlerApi::Web < Sinatra::Base
         platform:   payload.platform
       ).update(indexed: false)
 
-      BundlerApi::Cdn.purge_specs
-      BundlerApi::Cdn.purge_gem payload
-      delete_cache(payload.name)
+      @cache.purge_specs
+      @cache.purge_gem(payload.name)
 
       json_payload(payload)
     end
@@ -203,9 +192,5 @@ class BundlerApi::Web < Sinatra::Base
       dependencies += result
     end
     dependencies
-  end
-
-  def delete_cache(gem)
-    @dalli_client.delete "deps/v1/#{gem}"
   end
 end

@@ -9,6 +9,8 @@ require 'support/database'
 require 'support/latch'
 require 'support/matchers'
 
+require 'dalli'
+
 RSpec.configure do |config|
   config.filter_run :focused => true
   config.run_all_when_everything_filtered = true
