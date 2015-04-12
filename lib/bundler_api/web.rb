@@ -224,7 +224,8 @@ private
       [d.first, d.last.gsub(/, /, "&")].join(":")
     end
 
-    line = "#{row[:number]}"
+    line = row[:number].to_s
+    line << "-#{row[:platform]}" unless row[:platform] == "ruby"
     line << " " << deps.join(",") if deps.any?
     line
   end
