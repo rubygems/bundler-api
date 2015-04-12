@@ -69,14 +69,15 @@ SQL
   def versions
     specs_hash = Hash.new {|h, k| h[k] = [] }
     rows = @conn[<<-SQL]
-      SELECT v.full_name
+      SELECT v.full_name, v.number, v.platform
       FROM versions AS v
       WHERE v.indexed is true
 SQL
     rows.each do |row|
       full_name = row[:full_name]
-      rindex = full_name.rindex("-")
-      name, version = full_name[0..(rindex - 1)], full_name[(rindex + 1)..-1]
+      version = row[:number]
+      version += "-" << row[:platform] unless row[:platform] == "ruby"
+      name = full_name.chomp("-" << version)
       specs_hash[name] << version
     end
 
