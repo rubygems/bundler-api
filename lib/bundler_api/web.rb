@@ -198,6 +198,7 @@ private
     sum = BundlerApi::Checksum.new(@write_conn, name)
 
     if sum.checksum && sum.checksum == request.env["HTTP_IF_NONE_MATCH"]
+      headers "ETag" => sum.checksum
       status 304
       return ""
     else
