@@ -74,7 +74,9 @@ SQL
       WHERE v.indexed is true
 SQL
     rows.each do |row|
-      name, version = row[:full_name].split("-", 2)
+      full_name = row[:full_name]
+      rindex = full_name.rindex("-")
+      name, version = full_name[0..(rindex - 1)], full_name[(rindex + 1)..-1]
       specs_hash[name] << version
     end
 
