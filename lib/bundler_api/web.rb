@@ -205,7 +205,12 @@ private
       sum.checksum = Digest::MD5.hexdigest(body)
       headers "ETag" => sum.checksum
       content_type 'text/plain'
-      body
+      ranges = Rack::Utils.byte_ranges(env, body.bytesize)
+      return body unless ranges
+      status 206
+      ranges.map! do |range|
+        body.byteslice(range)
+      end.join
     end
   end
 
