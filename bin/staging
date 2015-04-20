@@ -1,0 +1,2 @@
+#!/bin/sh
+HEROKU_APP=bundler-api-staging HKAPP=bundler-api-staging exec "${HEROKU_COMMAND:-heroku}" "$@"
