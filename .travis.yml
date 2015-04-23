@@ -19,3 +19,9 @@ script: ./bin/rspec
 notifications:
   slack:
     secure: iIhKCxayvPZbgASh9iQsPgUo3T/bMGDC8gJd4EO+LsIrzCVHHRV8/lx+0BisW4RaxYKFo1m2QOzJhSKYv/s4XpfZo7iyM8igRS6Ex+K7ZZtSSAmdq9Da7+45NE/q1eTILMcSeNmbfiuj8tX1nrU+G+w/+N6VcL6MoncxCJi+EAs=
+
+deploy:
+  provider: heroku
+  api_key:
+    secure: CqqIlZu3vkiQoVgrvwwYQPJt/od8CeuicY8BzWF3fN2dIb7hAdvJTr/0neeve3FFoboWPezrylrzMlp8bXxKYI7zM67Q2RitoU72tmrKJNV27Si1L7hVh1eTLVCdYOJCFcxE1sntEBkiXhz6qxK2C/XS/1TwfT5NEsMywqXWl+8=
+  app: bundler-api-staging
