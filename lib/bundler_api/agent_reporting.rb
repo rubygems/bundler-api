@@ -9,6 +9,7 @@ class BundlerApi::AgentReporting
     \((?<arch>.*)\)\s
     command/(?<command>\w+)\s
     (?:options/(?<options>\S+)\s)?
+    (?:ci/(?<ci>\S+)\s)?
     (?<id>.*)
   }x
 
@@ -31,11 +32,15 @@ private
       "versions.rubygems.#{ ua_match['gem_version'] }",
       "versions.ruby.#{ ua_match['ruby_version'] }",
       "archs.#{ ua_match['arch'] }",
-      "commands.#{ ua_match['command'] }"
+      "commands.#{ ua_match['command'] }",
     ]
 
     if ua_match['options']
       keys += ua_match['options'].split(",").map { |k| "options.#{ k }" }
+    end
+
+    if ua_match['ci']
+      keys += ua_match['ci'].split(",").map { |k| "cis.#{ k }" }
     end
 
     keys.each { |metric| Metriks.meter(metric).mark }

@@ -20,6 +20,7 @@ describe BundlerApi::AgentReporting do
       '(x86_64-apple-darwin13.2.0)',
       'command/update',
       'options/jobs,without,build.mysql',
+      'ci/jenkins,ci',
       '9d16bd9809d392ca' ].join(' ')
   end
 
@@ -40,6 +41,8 @@ describe BundlerApi::AgentReporting do
         expect( metriks ).to be_incremented_for('options.jobs')
         expect( metriks ).to be_incremented_for('options.without')
         expect( metriks ).to be_incremented_for('options.build.mysql')
+        expect( metriks ).to be_incremented_for('cis.jenkins')
+        expect( metriks ).to be_incremented_for('cis.ci')
       end
     end
 
@@ -58,6 +61,7 @@ describe BundlerApi::AgentReporting do
         'ruby/2.1.2',
         '(x86_64-apple-darwin13.2.0)',
         'command/update',
+        'ci/semaphore',
         '9d16bd9809d392ca' ].join(' ')
     end
 
@@ -68,6 +72,7 @@ describe BundlerApi::AgentReporting do
         expect( metriks ).to be_incremented_for('versions.ruby.2.1.2')
         expect( metriks ).to be_incremented_for('commands.update')
         expect( metriks ).to be_incremented_for('archs.x86_64-apple-darwin13.2.0')
+        expect( metriks ).to be_incremented_for('cis.semaphore')
       end
     end
 
