@@ -6,15 +6,28 @@ class BundlerApi::VersionsFile
     @conn = connection
   end
 
-  def update(file = nil)
-    file ||= PATH
+  def create_or_update
+    if File.exists? PATH
+      update
+    else
+      create
+    end
+  end
 
+  def create
     content = Time.now.to_i.to_s
     content += "\n---\n"
     content += gems_with_versions
 
-    File.open(file, 'w') do |io|
+    File.open(PATH, 'w') do |io|
       io.write content
+    end
+  end
+
+  def update
+    to_write = with_new_gems
+    File.open(PATH, 'w') do |io|
+      io.write to_write
     end
   end
 
@@ -32,7 +45,7 @@ class BundlerApi::VersionsFile
     end
 
     def created_at
-      DateTime.strptime(File.open(PATH).readline, "%s")
+      DateTime.parse(File.mtime(PATH).to_s)
     end
 
     def gems_with_versions(newer_than = nil)

@@ -214,8 +214,8 @@ task :add_spec, :name, :version, :platform, :prerelease do |t, args|
 end
 
 desc "Gnerate/update the versions.list file"
-task :versions, :file do |t, args|
+task :versions do |t, args|
   database_connection do |db|
-    BundlerApi::VersionsFile.new(db).update(args[:file])
+    BundlerApi::VersionsFile.new(db).create_or_update
   end
 end
