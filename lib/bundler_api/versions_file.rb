@@ -17,7 +17,7 @@ class BundlerApi::VersionsFile
   def create
     content = Time.now.to_i.to_s
     content += "\n---\n"
-    content += gems_with_versions
+    content += gems_for_new_file
 
     File.open(PATH, 'w') do |io|
       io.write content
@@ -32,48 +32,45 @@ class BundlerApi::VersionsFile
   end
 
   def with_new_gems
-    if gems_with_versions(created_at).empty?
+    if new_gems.empty?
       content
     else
-      content + "\n" + gems_with_versions(created_at)
+      content + "\n" + new_gems
     end
   end
 
   private
     def content
       File.open(PATH).read
+
     end
 
     def created_at
       DateTime.parse(File.mtime(PATH).to_s)
     end
 
-    def gems_with_versions(newer_than = nil)
-      if newer_than
-        dataset = @conn[<<-SQL, newer_than]
-            SELECT
-              r.name, string_agg(
-                        concat_ws('-', v.number, nullif(v.platform,'ruby')), ','
-                        ORDER BY number ASC
-                      )
-            FROM rubygems AS r, versions AS v
-            WHERE v.rubygem_id = r.id AND
-                  v.indexed is true AND
-                  v.created_at > ?
-            GROUP BY r.name
-        SQL
-      else
-        dataset = @conn[<<-SQL]
-            SELECT
-              r.name, string_agg(
-                        concat_ws('-', v.number, nullif(v.platform,'ruby')), ','
-                        ORDER BY number ASC
-                      )
-            FROM rubygems AS r, versions AS v
-            WHERE v.rubygem_id = r.id AND v.indexed is true
-            GROUP BY r.name
-        SQL
-      end
+    def gems_for_new_file
+      dataset = @conn[<<-SQL]
+          SELECT
+            r.name, string_agg(
+                      concat_ws('-', v.number, nullif(v.platform,'ruby')), ','
+                      ORDER BY number ASC
+                    )
+          FROM rubygems AS r, versions AS v
+          WHERE v.rubygem_id = r.id AND
+                v.indexed is true
+          GROUP BY r.name
+      SQL
       dataset.map { |entry| "#{entry[:name]} #{entry[:string_agg]}" }.join("\n")
+    end
+
+    def new_gems
+      dataset = @conn[<<-SQL, created_at]
+          SELECT r.name, concat_ws('-', v.number, nullif(v.platform,'ruby'))
+          FROM rubygems AS r, versions AS v
+          WHERE v.rubygem_id = r.id AND v.indexed is true AND v.created_at > ?
+          ORDER BY v.created_at, r.name, concat_ws
+      SQL
+      dataset.map { |entry| "#{entry[:name]} #{entry[:concat_ws]}" }.join("\n")
     end
 end

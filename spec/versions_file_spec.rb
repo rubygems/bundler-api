@@ -11,6 +11,7 @@ describe BundlerApi::GemInfo do
   let(:versions_file) { BundlerApi::VersionsFile.new(db) }
   let (:yesterday) { DateTime.now - 86400 }
   let (:tomorrow) { DateTime.now + 86400 }
+  let (:next_week) { DateTime.now + (7*86400) }
   let (:file_creation_time) { Time.now }
 
   before do
@@ -24,7 +25,7 @@ describe BundlerApi::GemInfo do
   let (:file_contents) { "0123456789\n---\na 0.0.1\nb 0.0.2,0.1.1-java,0.1.2" }
 
   describe "#create"  do
-    it "return a hash of gems and versions" do
+    it "create the versions.list file with the gems on database" do
       file = Tempfile.new('versions.list')
       with_versions_file file.path do
         versions_file.create
@@ -43,14 +44,14 @@ describe BundlerApi::GemInfo do
       builder.create_version(c, "c", "1.0.0", "ruby", true, tomorrow)
     end
 
-    it "add new versions to file" do
+    it "add new versions to the bottom of file" do
       file = Tempfile.new('versions.list')
       file.write file_contents
       file.rewind
       with_versions_file file.path do
         versions_file.update
         file.rewind
-        expect(file.read).to eq(file_contents + "\nb 0.2.0,0.2.0-rbx\nc 1.0.0")
+        expect(file.read).to eq(file_contents + "\nb 0.2.0\nb 0.2.0-rbx\nc 1.0.0")
       end
     end
   end
@@ -65,7 +66,7 @@ describe BundlerApi::GemInfo do
       end
     end
 
-    context "it has something new" do
+    context "when has something new" do
       before { File.any_instance.stub(:read).and_return(file_contents) }
       before { File.any_instance.stub(:mtime).and_return(file_creation_time) }
       before do
@@ -77,7 +78,23 @@ describe BundlerApi::GemInfo do
       end
 
       it "return the content from versions.list with new gems on bottom" do
-        expect(versions_file.with_new_gems).to eq(file_contents + "\nb 0.2.0,0.2.0-rbx\nc 1.0.0")
+        expect(versions_file.with_new_gems).to eq(file_contents + "\nb 0.2.0\nb 0.2.0-rbx\nc 1.0.0")
+      end
+
+      context "from different dates" do
+        before do
+          b = builder.rubygem_id("b")
+          c = builder.rubygem_id("c")
+          builder.create_version(b, "b", "0.2.2", "rbx", true, next_week)
+          builder.create_version(b, "b", "0.2.2", "ruby", true, next_week)
+          builder.create_version(c, "c", "1.0.1", "ruby", true, next_week)
+        end
+
+        it "return the content from versions.list with new gems on bottom" do
+          first_changes = "\nb 0.2.0\nb 0.2.0-rbx\nc 1.0.0"
+          second_changes = "\nb 0.2.2\nb 0.2.2-rbx\nc 1.0.1"
+          expect(versions_file.with_new_gems).to eq(file_contents + first_changes + second_changes )
+        end
       end
     end
   end
