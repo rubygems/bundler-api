@@ -1,0 +1,9 @@
+dependencies:
+  override: []
+
+deploy:
+  override:
+    - push-to-heroku bundler-api-staging
+
+fetch:
+  - fetch-heroku-version bundler-api-staging
