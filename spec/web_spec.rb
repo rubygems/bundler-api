@@ -214,37 +214,18 @@ describe BundlerApi::Web do
   end
 
   context "/versions" do
+    let(:data) { "a 1.0.0,1.0.1\nb 1.0.0\nc 1.0.0-java\na 2.0.0\na 2.0.1" }
     before do
-      {
-        "a" => ["1.0.0", "1.0.1"],
-        "b" => ["1.0.0"],
-        "c" => ["1.0.0-java"]
-      }.each do |gem_name, versions|
-        gem_id = builder.create_rubygem(gem_name)
-        versions.each do |full_version|
-          version, platform = full_version.split('-', 2)
-          platform = 'ruby' unless platform
-          builder.create_version(gem_id, gem_name, version, platform)
-        end
-      end
+      BundlerApi::VersionsFile.any_instance.stub(:with_new_gems).and_return(data)
     end
-
-    let(:expected_output) { <<-VERSIONS.gsub(/^          /, '')
-          ---
-          a 1.0.0,1.0.1
-          b 1.0.0
-          c 1.0.0-java
-          rack 1.0.0
-        VERSIONS
-    }
-    let(:expected_etag) { Digest::MD5.hexdigest(expected_output) }
+    let(:expected_etag) { Digest::MD5.hexdigest(data) }
 
     it "returns versions.list" do
       get "/versions"
 
       expect(last_response).to be_ok
       expect(last_response.header["ETag"]).to eq(expected_etag)
-      expect(last_response.body).to eq(expected_output)
+      expect(last_response.body).to eq(data)
     end
 
     it "should return 304 on second hit" do
