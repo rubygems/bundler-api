@@ -3,17 +3,21 @@ require 'net/http'
 class BundlerApi::Cdn
   def self.purge_specs(client = self.client)
     return unless client
-    client.purge_key  'dependencies'
-    client.purge_path '/latest_specs.4.8.gz'
-    client.purge_path '/specs.4.8.gz'
-    client.purge_path '/prerelease_specs.4.8.gz'
+    threads = []
+    threads << Thread.new { client.purge_key  'dependencies' }
+    threads << Thread.new { client.purge_path '/latest_specs.4.8.gz' }
+    threads << Thread.new { client.purge_path '/specs.4.8.gz' }
+    threads << Thread.new { client.purge_path '/prerelease_specs.4.8.gz' }
+    threads.each { |t| t.join }
     print "Purging dependencies /latest_specs.4.8.gz /specs.4.8.gz /prerelease_specs.4.8.gz\n"
   end
 
   def self.purge_gem_by_name(name, client = self.client)
     return unless client
-    client.purge_path "/quick/Marshal.4.8/#{name}.gemspec.rz"
-    client.purge_path "/gems/#{name}.gem"
+    threads = []
+    threads << Thread.new { client.purge_path "/quick/Marshal.4.8/#{name}.gemspec.rz"}
+    threads << Thread.new { client.purge_path "/gems/#{name}.gem" }
+    threads.each { |t| t.join }
     print "Purging /quick/Marshal.4.8/#{name}.gemspec.rz /gems/#{name}.gem\n"
   end
 
