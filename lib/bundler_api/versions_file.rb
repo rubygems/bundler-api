@@ -23,8 +23,6 @@ class BundlerApi::VersionsFile
     File.open(PATH, 'w') do |io|
       io.write content
     end
-
-    BundlerApi::Cdn.purge_versions_list
   end
 
   def update
@@ -32,8 +30,6 @@ class BundlerApi::VersionsFile
     File.open(PATH, 'w') do |io|
       io.write to_write
     end
-
-    BundlerApi::Cdn.purge_versions_list
   end
 
   def with_new_gems
