@@ -79,7 +79,8 @@ class BundlerApi::GemDBHelper
         platform:    platform,
         indexed:     indexed,
         prerelease:  !spec.version.prerelease?.nil?,
-        full_name:   spec.full_name
+        full_name:   spec.full_name,
+        created_at:  Time.now
       )
     end
 

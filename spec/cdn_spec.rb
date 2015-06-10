@@ -36,6 +36,14 @@ describe BundlerApi::Cdn do
     end
   end
 
+  describe '.purge_versions_list' do
+    subject { BundlerApi::Cdn.purge_versions_list(client) }
+    it 'purges versions' do
+      expect(client).to receive(:purge_path).with("/versions")
+      subject
+    end
+  end
+
   describe '.purge_gem_by_name' do
     let(:name) { 'bundler-1.0.0' }
     subject { BundlerApi::Cdn.purge_gem_by_name(name, client) }

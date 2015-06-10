@@ -11,12 +11,14 @@ require 'net/http'
 require 'time'
 require 'locksmith/pg'
 require 'bundler_api/cdn'
+require 'bundler_api/versions_file'
 require 'bundler_api/update/consumer_pool'
 require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
 require 'bundler_api/update/fix_dep_job'
 require 'bundler_api/update/atomic_counter'
 require 'bundler_api/gem_helper'
+require 'bundler_api/gem_info'
 
 $stdout.sync = true
 Thread.abort_on_exception = true
@@ -208,5 +210,12 @@ task :add_spec, :name, :version, :platform, :prerelease do |t, args|
   payload = BundlerApi::GemHelper.new(args[:name], Gem::Version.new(args[:version]), args[:platform], args[:prerelease])
   database_connection do |db|
     BundlerApi::Job.new(db, payload).run
+  end
+end
+
+desc "Generate/update the versions.list file"
+task :versions do |t, args|
+  database_connection do |db|
+    BundlerApi::VersionsFile.new(db).create_or_update
   end
 end
