@@ -225,6 +225,14 @@ private
     line = row[:number].to_s
     line << "-#{row[:platform]}" unless row[:platform] == "ruby"
     line << " " << deps.join(",") if deps.any?
+
+    required = []
+    ruby_version = row[:required_ruby_version]
+    required << "#{row[:platform]}:#{ruby_version}" if ruby_version
+    rubygems_version = row[:rubygems_version]
+    required << "rubygems:#{rubygems_version}" if rubygems_version
+    line << "|#{required.join(",")}" if required.any?
+
     line
   end
 

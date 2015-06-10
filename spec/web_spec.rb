@@ -62,9 +62,10 @@ describe BundlerApi::Web do
     context "there are gems" do
       it "returns a marshal dump" do
         result = [{
-          name:         'rack',
-          number:       '1.0.0',
+          name:         'rack', number:       '1.0.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
           dependencies: []
         }]
 
@@ -92,9 +93,11 @@ describe BundlerApi::Web do
     context "there are gems" do
       it "returns a marshal dump" do
         result = [{
-          "name"         => 'rack',
-          "number"       => '1.0.0',
-          "platform"     => 'ruby',
+          "name"             => 'rack',
+          "number"           => '1.0.0',
+          "platform"         => 'ruby',
+          "rubygems_version" =>  nil,
+          "required_ruby_version" => nil,
           "dependencies" => []
         }]
 
@@ -245,6 +248,7 @@ describe BundlerApi::Web do
         dep_id = builder.create_rubygem(dep)
         builder.create_dependency(dep_id, rack_101, requirements)
       end
+
     end
 
     let(:expected_deps) {
@@ -270,6 +274,30 @@ describe BundlerApi::Web do
       get "/info/rack", {}, "HTTP_IF_NONE_MATCH" => etag
 
       expect(last_response.status).to eq(304)
+    end
+
+    context "when has a required ruby version" do
+      before do
+        a = builder.create_rubygem("a")
+        a_version = builder.create_version(a, 'a', '1.0.1', 'ruby', true, Time.now, ">1.9", ">2.0")
+        [['a_foo', '= 1.0.0'], ['a_bar', '>= 2.1, < 3.0']].each do |dep, requirements|
+          dep_id = builder.create_rubygem(dep)
+          builder.create_dependency(dep_id, a_version, requirements)
+        end
+      end
+
+      let(:expected_deps) do
+        <<-DEPS.gsub(/^          /, '')
+          ---
+          1.0.1 a_bar:>= 2.1&< 3.0,a_foo:= 1.0.0|ruby:>1.9,rubygems:>2.0
+        DEPS
+      end
+
+      it "should return the gem list with the required ruby version" do
+        get "/info/a"
+        expect(last_response).to be_ok
+        expect(last_response.body).to eq(expected_deps)
+      end
     end
   end
 end

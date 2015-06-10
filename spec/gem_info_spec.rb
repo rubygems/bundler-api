@@ -26,6 +26,8 @@ describe BundlerApi::GemInfo do
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
           dependencies: []
         }]
 
@@ -48,6 +50,8 @@ describe BundlerApi::GemInfo do
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
           dependencies: [['foo', '= 1.0.0']]
         }]
 
@@ -66,6 +70,8 @@ describe BundlerApi::GemInfo do
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
           dependencies: []
         }]
 
@@ -90,6 +96,8 @@ describe BundlerApi::GemInfo do
           name:         'rack',
           number:       '1.1.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
           dependencies: [['foo', '= 1.0.0']]
         }]
 
