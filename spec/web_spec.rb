@@ -267,7 +267,7 @@ describe BundlerApi::Web do
     context "when has a required ruby version" do
       before do
         a = builder.create_rubygem("a")
-        a_version = builder.create_version(a, 'a', '1.0.1', 'ruby', true, Time.now, ">1.9", ">2.0")
+        a_version = builder.create_version(a, 'a', '1.0.1', 'ruby', { required_ruby: ">1.9", rubygems_version: ">2.0" } )
         [['a_foo', '= 1.0.0'], ['a_bar', '>= 2.1, < 3.0']].each do |dep, requirements|
           dep_id = builder.create_rubygem(dep)
           builder.create_dependency(dep_id, a_version, requirements)
