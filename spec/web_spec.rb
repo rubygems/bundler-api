@@ -233,33 +233,35 @@ describe BundlerApi::Web do
   end
 
   context "/info/:gem" do
-    before do
-      rack_101 = builder.create_version(rack_id, 'rack', '1.0.1')
-      [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']].each do |dep, requirements|
-        dep_id = builder.create_rubygem(dep)
-        builder.create_dependency(dep_id, rack_101, requirements)
-      end
-    end
-
     it_behaves_like "return 304 on second hit" do
       let(:url) { "/info/rack" }
     end
 
-    let(:expected_deps) {
-      <<-DEPS.gsub(/^        /, '')
-        ---
-        1.0.0
-        1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0
-      DEPS
-    }
-    let(:expected_etag) { Digest::MD5.hexdigest(expected_deps) }
+    context "when has no required ruby version" do
+      before do
+        rack_101 = builder.create_version(rack_id, 'rack', '1.0.1')
+        [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']].each do |dep, requirements|
+          dep_id = builder.create_rubygem(dep)
+          builder.create_dependency(dep_id, rack_101, requirements)
+        end
+      end
 
-    it "should return the gem list" do
-      get "/info/rack"
+      let(:expected_deps) do
+        <<-DEPS.gsub(/^          /, '')
+          ---
+          1.0.0
+          1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0
+        DEPS
+      end
+      let(:expected_etag) { Digest::MD5.hexdigest(expected_deps) }
 
-      expect(last_response).to be_ok
-      expect(last_response.header["ETag"]).to eq(expected_etag)
-      expect(last_response.body).to eq(expected_deps)
+      it "should return the gem list" do
+        get "/info/rack"
+
+        expect(last_response).to be_ok
+        expect(last_response.header["ETag"]).to eq(expected_etag)
+        expect(last_response.body).to eq(expected_deps)
+      end
     end
 
     context "when has a required ruby version" do
