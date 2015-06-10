@@ -2,6 +2,7 @@ require 'rack/test'
 require 'spec_helper'
 require 'bundler_api/web'
 require 'support/gem_builder'
+require 'support/etag'
 
 describe BundlerApi::Web do
   include Rack::Test::Methods
@@ -188,13 +189,16 @@ describe BundlerApi::Web do
   end
 
   context "/names" do
+    it_behaves_like "return 304 on second hit" do
+      let(:url) { "/names" }
+    end
+
     before do
       %w(a b c d).each {|gem_name| builder.create_rubygem(gem_name) }
     end
 
     it "returns an array" do
       get "/names"
-
       expect(last_response).to be_ok
       expect(last_response.body).to eq(<<-NAMES.chomp.gsub(/^        /, ''))
         ---
@@ -206,17 +210,13 @@ describe BundlerApi::Web do
 
       NAMES
     end
-
-    it "should return a 304 on second hit" do
-      get "/names"
-      etag = last_response.header["ETag"]
-
-      get "/names", {}, "HTTP_IF_NONE_MATCH" => etag
-      expect(last_response.status).to eq(304)
-    end
   end
 
   context "/versions" do
+    it_behaves_like "return 304 on second hit" do
+      let(:url) { "/versions" }
+    end
+
     let(:data) { "a 1.0.0,1.0.1\nb 1.0.0\nc 1.0.0-java\na 2.0.0\na 2.0.1" }
     before do
       BundlerApi::VersionsFile.any_instance.stub(:with_new_gems).and_return(data)
@@ -230,15 +230,6 @@ describe BundlerApi::Web do
       expect(last_response.header["ETag"]).to eq(expected_etag)
       expect(last_response.body).to eq(data)
     end
-
-    it "should return 304 on second hit" do
-      get "/versions"
-      etag = last_response.header["ETag"]
-
-      get "/versions", {}, "HTTP_IF_NONE_MATCH" => etag
-
-      expect(last_response.status).to eq(304)
-    end
   end
 
   context "/info/:gem" do
@@ -248,7 +239,10 @@ describe BundlerApi::Web do
         dep_id = builder.create_rubygem(dep)
         builder.create_dependency(dep_id, rack_101, requirements)
       end
+    end
 
+    it_behaves_like "return 304 on second hit" do
+      let(:url) { "/info/rack" }
     end
 
     let(:expected_deps) {
@@ -266,14 +260,6 @@ describe BundlerApi::Web do
       expect(last_response).to be_ok
       expect(last_response.header["ETag"]).to eq(expected_etag)
       expect(last_response.body).to eq(expected_deps)
-    end
-
-    it "should return 304 on second hit" do
-      get "/info/rack"
-      etag = last_response.headers["ETag"]
-      get "/info/rack", {}, "HTTP_IF_NONE_MATCH" => etag
-
-      expect(last_response.status).to eq(304)
     end
 
     context "when has a required ruby version" do
