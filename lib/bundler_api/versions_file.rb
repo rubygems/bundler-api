@@ -16,7 +16,7 @@ class BundlerApi::VersionsFile
   end
 
   def create
-    content = Time.now.to_i.to_s
+    content = "created_at: #{Time.now.iso8601}"
     content += "\n---\n"
     content += gems_for_new_file
 

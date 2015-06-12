@@ -22,7 +22,7 @@ describe BundlerApi::GemInfo do
     builder.create_version(b, "b", "0.1.1", "java", true, yesterday)
     builder.create_version(b, "b", "0.1.2", "ruby", true, yesterday)
   end
-  let (:file_contents) { "0123456789\n---\na 0.0.1\nb 0.0.2,0.1.1-java,0.1.2" }
+  let (:file_contents) { "created_at: 2015-06-11T23:29:59-03:00\n---\na 0.0.1\nb 0.0.2,0.1.1-java,0.1.2" }
 
   describe "#create"  do
     it "create the versions.list file with the gems on database" do
