@@ -73,6 +73,7 @@ DEPENDENCIES
   artifice
   dotenv
   honeybadger
+  json
   librato-metrics
   lock-smith
   metriks
