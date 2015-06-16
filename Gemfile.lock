@@ -37,7 +37,7 @@ GEM
     pg (0.18.1)
     puma (2.10.2)
       rack (>= 1.1, < 2.0)
-    rack (1.6.0)
+    rack (1.6.2)
     rack-protection (1.5.3)
       rack
     rack-test (0.6.2)
