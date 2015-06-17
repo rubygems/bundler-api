@@ -16,7 +16,8 @@ class GemBuilder
       indexed: true,
       time: Time.now,
       required_ruby: nil,
-      rubygems_version: nil
+      rubygems_version: nil,
+      checksum: nil
     }.merge(extra_args)
 
     full_name = "#{name}-#{version}"
@@ -30,7 +31,8 @@ class GemBuilder
       full_name:  full_name,
       created_at: args[:time],
       required_ruby_version: args[:required_ruby],
-      rubygems_version: args[:rubygems_version]
+      rubygems_version: args[:rubygems_version],
+      checksum: args[:checksum]
     )
   end
 

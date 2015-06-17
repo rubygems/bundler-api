@@ -67,6 +67,7 @@ describe BundlerApi::Web do
           platform:     'ruby',
           rubygems_version: nil,
           required_ruby_version: nil,
+          checksum: nil,
           dependencies: []
         }]
 
@@ -99,6 +100,7 @@ describe BundlerApi::Web do
           "platform"         => 'ruby',
           "rubygems_version" =>  nil,
           "required_ruby_version" => nil,
+          "checksum"         => nil,
           "dependencies" => []
         }]
 
@@ -267,7 +269,8 @@ describe BundlerApi::Web do
     context "when has a required ruby version" do
       before do
         a = builder.create_rubygem("a")
-        a_version = builder.create_version(a, 'a', '1.0.1', 'ruby', { required_ruby: ">1.9", rubygems_version: ">2.0" } )
+        builder_args = { checksum: "abc123", required_ruby: ">1.9", rubygems_version: ">2.0" }
+        a_version = builder.create_version(a, 'a', '1.0.1', 'ruby', builder_args )
         [['a_foo', '= 1.0.0'], ['a_bar', '>= 2.1, < 3.0']].each do |dep, requirements|
           dep_id = builder.create_rubygem(dep)
           builder.create_dependency(dep_id, a_version, requirements)
@@ -277,7 +280,7 @@ describe BundlerApi::Web do
       let(:expected_deps) do
         <<-DEPS.gsub(/^          /, '')
           ---
-          1.0.1 a_bar:>= 2.1&< 3.0,a_foo:= 1.0.0|ruby:>1.9,rubygems:>2.0
+          1.0.1 a_bar:>= 2.1&< 3.0,a_foo:= 1.0.0|ruby:>1.9,rubygems:>2.0,checksum:abc123
         DEPS
       end
 

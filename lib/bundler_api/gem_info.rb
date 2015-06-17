@@ -2,7 +2,7 @@ require 'bundler_api'
 
 # Return data about all the gems: all gem names, all versions of all gems, all dependencies for all versions of a gem
 class BundlerApi::GemInfo
-  DepKey = Struct.new(:name, :number, :platform, :required_ruby_version, :rubygems_version)
+  DepKey = Struct.new(:name, :number, :platform, :required_ruby_version, :rubygems_version, :checksum)
 
   def initialize(connection)
     @conn = connection
@@ -13,10 +13,10 @@ class BundlerApi::GemInfo
     dataset =
       if gems.any?
         @conn[<<-SQL, Sequel.value_list(gems)]
-          SELECT rv.name, rv.number, rv.platform, rv.required_ruby_version,
+          SELECT rv.name, rv.number, rv.platform, rv.required_ruby_version, rv.checksum,
                  rv.rubygems_version, d.requirements, for_dep_name.name dep_name
           FROM
-            (SELECT r.name, v.number, v.platform,v.rubygems_version,
+            (SELECT r.name, v.number, v.platform,v.rubygems_version, v.checksum,
                     v.required_ruby_version, v.id AS version_id
             FROM rubygems AS r, versions AS v
             WHERE v.rubygem_id = r.id
@@ -47,7 +47,7 @@ SQL
     deps = {}
 
     dataset.each do |row|
-      key = DepKey.new(row[:name], row[:number], row[:platform], row[:required_ruby_version], row[:rubygems_version])
+      key = DepKey.new(row[:name], row[:number], row[:platform], row[:required_ruby_version], row[:rubygems_version], row[:checksum])
       deps[key] = [] unless deps[key]
       deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
     end
@@ -59,6 +59,7 @@ SQL
         platform:              dep_key.platform,
         rubygems_version:      dep_key.rubygems_version,
         required_ruby_version: dep_key.required_ruby_version,
+        checksum:              dep_key.checksum,
         dependencies:          gem_deps
       }
     end
