@@ -56,7 +56,7 @@ class BundlerApi::GemDBHelper
     [insert, rubygem_id]
   end
 
-  def find_or_insert_version(spec, rubygem_id, platform = 'ruby', indexed = nil)
+  def find_or_insert_version(spec, rubygem_id, platform = 'ruby', checksum = nil, indexed = nil)
     insert     = nil
     version_id = nil
     version    = @db[:versions].filter(
@@ -81,7 +81,8 @@ class BundlerApi::GemDBHelper
         prerelease:  !spec.version.prerelease?.nil?,
         full_name:   spec.full_name,
         rubygems_version: spec.required_rubygems_version.none? ? nil : spec.required_rubygems_version.to_s,
-        required_ruby_version: spec.required_ruby_version.none? ? nil : spec.required_ruby_version.to_s
+        required_ruby_version: spec.required_ruby_version.none? ? nil : spec.required_ruby_version.to_s,
+        checksum:    checksum,
         created_at:  Time.now
       )
     end
