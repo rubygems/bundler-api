@@ -88,3 +88,6 @@ DEPENDENCIES
   sequel
   sequel_pg
   sinatra
+
+BUNDLED WITH
+   1.10.3
