@@ -3,9 +3,9 @@ require 'bundler_api/redis'
 
 class BundlerApi::AgentReporting
   UA_REGEX = %r{^
-    bundler/(?<bundler_version>\d\.\d\.\d)\s
-    rubygems/(?<gem_version>\d\.\d\.\d)\s
-    ruby/(?<ruby_version>\d\.\d\.\d)\s
+    bundler/(?<bundler_version>#{Gem::Version::VERSION_PATTERN})\s
+    rubygems/(?<gem_version>#{Gem::Version::VERSION_PATTERN})\s
+    ruby/(?<ruby_version>#{Gem::Version::VERSION_PATTERN})\s
     \((?<arch>.*)\)\s
     command/(?<command>\w+)\s
     (?:options/(?<options>\S+)\s)?

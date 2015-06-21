@@ -65,6 +65,13 @@ describe BundlerApi::AgentReporting do
         '9d16bd9809d392ca' ].join(' ')
     end
 
+    describe 'weird version number' do
+      let(:ua) { super().sub('bundler/1.7.3', 'bundler/1.10.4.beta.1') }
+      it 'increments double-digit bundler versions' do
+        expect( metriks ).to be_incremented_for('versions.bundler.1.10.4.beta.1')
+      end
+    end
+
     describe 'reporting metrics (valid UA, first time)' do
       it 'should report the right values' do
         expect( metriks ).to be_incremented_for('versions.bundler.1.7.3')
