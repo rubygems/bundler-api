@@ -1,12 +1,11 @@
 require 'sinatra/base'
 require 'sequel'
 require 'json'
+require 'compact_index'
 require 'bundler_api'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/cdn'
 require 'bundler_api/checksum'
-require 'bundler_api/gem_info'
-require 'bundler_api/versions_file'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
 require 'bundler_api/honeybadger'
@@ -37,8 +36,8 @@ class BundlerApi::Web < Sinatra::Base
                      max_connections: ENV['MAX_THREADS'])
     end
 
-    @gem_info = BundlerApi::GemInfo.new(@conn)
-    @versions_file = BundlerApi::VersionsFile.new(@conn)
+    @gem_info = CompactIndex::GemInfo.new(@conn)
+    @versions_file = CompactIndex::VersionsFile.new(@conn)
 
     super()
   end

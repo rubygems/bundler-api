@@ -10,8 +10,8 @@ require 'tmpdir'
 require 'net/http'
 require 'time'
 require 'locksmith/pg'
+require 'compact_index'
 require 'bundler_api/cdn'
-require 'bundler_api/versions_file'
 require 'bundler_api/update/consumer_pool'
 require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
@@ -216,6 +216,6 @@ end
 desc "Generate/update the versions.list file"
 task :versions do |t, args|
   database_connection do |db|
-    BundlerApi::VersionsFile.new(db).create_or_update
+    CompactIndex::VersionsFile.new(db).create_or_update
   end
 end

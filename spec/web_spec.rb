@@ -65,6 +65,9 @@ describe BundlerApi::Web do
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
+          checksum: nil,
           dependencies: []
         }]
 
@@ -95,6 +98,9 @@ describe BundlerApi::Web do
           "name"         => 'rack',
           "number"       => '1.0.0',
           "platform"     => 'ruby',
+          "rubygems_version" => nil,
+          "required_ruby_version" => nil,
+          "checksum" => nil,
           "dependencies" => []
         }]
 
@@ -216,7 +222,7 @@ describe BundlerApi::Web do
   context "/versions" do
     let(:data) { "a 1.0.0,1.0.1\nb 1.0.0\nc 1.0.0-java\na 2.0.0\na 2.0.1" }
     before do
-      BundlerApi::VersionsFile.any_instance.stub(:with_new_gems).and_return(data)
+      CompactIndex::VersionsFile.any_instance.stub(:with_new_gems).and_return(data)
     end
     let(:expected_etag) { Digest::MD5.hexdigest(data) }
 
