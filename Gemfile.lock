@@ -1,3 +1,9 @@
+GIT
+  remote: git://github.com/bundler/compact_index.git
+  revision: 52b29ef3d459093edb5fb69eb109c8d346588955
+  specs:
+    compact_index (0.1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -71,6 +77,7 @@ PLATFORMS
 
 DEPENDENCIES
   artifice
+  compact_index!
   dotenv
   honeybadger
   librato-metrics
