@@ -13,7 +13,7 @@ gem 'rake'
 gem 'sequel'
 gem 'sequel_pg'
 gem 'sinatra'
-gem 'compact_index', github: 'bundler/compact_index'
+gem 'compact_index', "~> 0.2"
 
 group :development do
   gem 'pry-byebug'

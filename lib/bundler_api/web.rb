@@ -37,7 +37,6 @@ class BundlerApi::Web < Sinatra::Base
     end
 
     @gem_info = CompactIndex::GemInfo.new(@conn)
-    @versions_file = CompactIndex::VersionsFile.new(@conn)
 
     super()
   end
@@ -141,27 +140,19 @@ class BundlerApi::Web < Sinatra::Base
 
   get "/names" do
     etag_response_for("names") do
-      output = "---\n"
-      @gem_info.names.each do |n|
-        output << n << "\n"
-      end
-      output
+      CompactIndex.names(@conn)
     end
   end
 
   get "/versions" do
     etag_response_for("versions") do
-      @versions_file.with_new_gems
+      CompactIndex.versions(@conn)
     end
   end
 
   get "/info/:name" do
     etag_response_for(params[:name]) do
-      output = "---\n"
-      deps_for(params[:name]).each do |row|
-        output << version_line(row) << "\n"
-      end
-      output
+      CompactIndex.info(@conn, params[:name])
     end
   end
 
@@ -211,20 +202,4 @@ private
       end.join
     end
   end
-
-  def deps_for(name)
-    @gem_info.deps_for(Array(name))
-  end
-
-  def version_line(row)
-    deps = row[:dependencies].map do |d|
-      [d.first, d.last.gsub(/, /, "&")].join(":")
-    end
-
-    line = row[:number].to_s
-    line << "-#{row[:platform]}" unless row[:platform] == "ruby"
-    line << " " << deps.join(",") if deps.any?
-    line
-  end
-
 end
