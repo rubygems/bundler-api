@@ -18,7 +18,6 @@ require 'bundler_api/update/yank_job'
 require 'bundler_api/update/fix_dep_job'
 require 'bundler_api/update/atomic_counter'
 require 'bundler_api/gem_helper'
-require 'bundler_api/gem_info'
 
 $stdout.sync = true
 Thread.abort_on_exception = true
