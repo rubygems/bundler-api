@@ -52,8 +52,9 @@ def download_index(url)
 end
 
 def get_specs
-  specs_uri              = "http://rubygems.org/specs.4.8.gz"
-  prerelease_specs_uri   = "http://rubygems.org/prerelease_specs.4.8.gz"
+  rubygems_host          = ENV.fetch("RUBYGEMS_HOST", "http://rubygems.org")
+  specs_uri              = File.join(rubygems_host, "specs.4.8.gz")
+  prerelease_specs_uri   = File.join(rubygems_host, "prerelease_specs.4.8.gz")
   specs_threads          = []
 
   specs_threads << Thread.new { download_index(specs_uri) }
