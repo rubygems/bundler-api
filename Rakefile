@@ -66,8 +66,9 @@ def specs_havent_changed(specs_threads)
 end
 
 def get_specs
-  specs_uri              = "http://rubygems.org/specs.4.8.gz"
-  prerelease_specs_uri   = "http://rubygems.org/prerelease_specs.4.8.gz"
+  rubygems_host          = ENV['RUBYGEMS_HOST']
+  specs_uri              = "#{rubygems_host}/specs.4.8.gz"
+  prerelease_specs_uri   = "#{rubygems_host}/prerelease_specs.4.8.gz"
   specs_cache            = "./tmp/specs.4.8.gz"
   prerelease_specs_cache = "./tmp/prerelease_specs.4.8.gz"
   specs_threads          = []
