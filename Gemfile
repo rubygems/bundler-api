@@ -14,7 +14,7 @@ gem 'sequel'
 gem 'sequel_pg'
 gem 'sinatra'
 gem 'json'
-gem 'compact_index', '~> 0.5.1'
+gem 'compact_index', '~> 0.5.2'
 
 group :development do
   gem 'pry-byebug'

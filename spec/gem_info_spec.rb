@@ -27,7 +27,7 @@ describe BundlerApi::GemInfo do
           number:       '1.0.0',
           platform:     'ruby',
           rubygems_version: nil,
-          required_ruby_version: nil,
+          ruby_version: nil,
           checksum: nil,
           dependencies: []
         }]
@@ -52,7 +52,7 @@ describe BundlerApi::GemInfo do
           number:       '1.0.0',
           platform:     'ruby',
           rubygems_version: nil,
-          required_ruby_version: nil,
+          ruby_version: nil,
           checksum: nil,
           dependencies: [['foo', '= 1.0.0']]
         }]
@@ -73,7 +73,7 @@ describe BundlerApi::GemInfo do
           number:       '1.0.0',
           platform:     'ruby',
           rubygems_version: nil,
-          required_ruby_version: nil,
+          ruby_version: nil,
           checksum: nil,
           dependencies: []
         }]
@@ -100,7 +100,7 @@ describe BundlerApi::GemInfo do
           number:       '1.1.0',
           platform:     'ruby',
           rubygems_version: nil,
-          required_ruby_version: nil,
+          ruby_version: nil,
           checksum: nil,
           dependencies: [['foo', '= 1.0.0']]
         }]

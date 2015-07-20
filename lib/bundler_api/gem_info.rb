@@ -59,7 +59,7 @@ SQL
         number:                dep_key.number,
         platform:              dep_key.platform,
         rubygems_version:      dep_key.rubygems_version,
-        required_ruby_version: dep_key.required_ruby_version,
+        ruby_version:          dep_key.required_ruby_version,
         checksum:              dep_key.checksum,
         dependencies:          gem_deps
       }
