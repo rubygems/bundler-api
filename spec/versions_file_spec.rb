@@ -17,10 +17,10 @@ describe BundlerApi::GemInfo do
   before do
     a = builder.create_rubygem("a")
     b = builder.create_rubygem("b")
-    builder.create_version(a, "a", "0.0.1", "ruby", true, yesterday)
-    builder.create_version(b, "b", "0.0.2", "ruby", true, yesterday)
-    builder.create_version(b, "b", "0.1.1", "java", true, yesterday)
-    builder.create_version(b, "b", "0.1.2", "ruby", true, yesterday)
+    builder.create_version(a, "a", "0.0.1", "ruby", { time: yesterday })
+    builder.create_version(b, "b", "0.0.2", "ruby", { time: yesterday })
+    builder.create_version(b, "b", "0.1.1", "java", { time: yesterday })
+    builder.create_version(b, "b", "0.1.2", "ruby", { time: yesterday })
   end
   let (:file_contents) { "created_at: 2015-06-11T23:29:59-03:00\n---\na 0.0.1\nb 0.0.2,0.1.1-java,0.1.2" }
 
@@ -39,9 +39,9 @@ describe BundlerApi::GemInfo do
     before do
       b = builder.rubygem_id("b")
       c = builder.create_rubygem("c")
-      builder.create_version(b, "b", "0.2.0", "rbx", true, tomorrow)
-      builder.create_version(b, "b", "0.2.0", "ruby", true, tomorrow)
-      builder.create_version(c, "c", "1.0.0", "ruby", true, tomorrow)
+      builder.create_version(b, "b", "0.2.0", "rbx",{ time: tomorrow })
+      builder.create_version(b, "b", "0.2.0", "ruby",{ time:  tomorrow })
+      builder.create_version(c, "c", "1.0.0", "ruby",{ time:  tomorrow })
     end
 
     it "add new versions to the bottom of file" do
@@ -72,9 +72,9 @@ describe BundlerApi::GemInfo do
       before do
         b = builder.rubygem_id("b")
         c = builder.create_rubygem("c")
-        builder.create_version(b, "b", "0.2.0", "rbx", true, tomorrow)
-        builder.create_version(b, "b", "0.2.0", "ruby", true, tomorrow)
-        builder.create_version(c, "c", "1.0.0", "ruby", true, tomorrow)
+        builder.create_version(b, "b", "0.2.0", "rbx", { time: tomorrow })
+        builder.create_version(b, "b", "0.2.0", "ruby", { time: tomorrow })
+        builder.create_version(c, "c", "1.0.0", "ruby", { time: tomorrow })
       end
 
       it "return the content from versions.list with new gems on bottom" do
@@ -85,9 +85,9 @@ describe BundlerApi::GemInfo do
         before do
           b = builder.rubygem_id("b")
           c = builder.rubygem_id("c")
-          builder.create_version(b, "b", "0.2.2", "rbx", true, next_week)
-          builder.create_version(b, "b", "0.2.2", "ruby", true, next_week)
-          builder.create_version(c, "c", "1.0.1", "ruby", true, next_week)
+          builder.create_version(b, "b", "0.2.2", "rbx", { time: next_week })
+          builder.create_version(b, "b", "0.2.2", "ruby", { time:  next_week })
+          builder.create_version(c, "c", "1.0.1", "ruby", { time:  next_week })
         end
 
         it "return the content from versions.list with new gems on bottom" do

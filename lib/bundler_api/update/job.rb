@@ -37,7 +37,7 @@ class BundlerApi::Job
 
     @db.transaction do
       rubygem_insert, rubygem_id = @db_helper.find_or_insert_rubygem(spec)
-      version_insert, version_id = @db_helper.find_or_insert_version(spec, rubygem_id, @payload.platform, true)
+      version_insert, version_id = @db_helper.find_or_insert_version(spec, rubygem_id, @payload.platform, @payload.checksum, true)
       @db_helper.insert_dependencies(spec, version_id)
     end
   end

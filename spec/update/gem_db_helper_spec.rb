@@ -206,13 +206,13 @@ describe BundlerApi::GemDBHelper do
         let(:indexed) { false }
 
         it "updates the indexed value" do
-          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, true)
+          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, 'abc123', true)
 
           expect(db[:versions].filter(id: @version_id).select(:indexed).first[:indexed]).to eq(true)
         end
 
         it "does not update the indexed value" do
-          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, nil)
+          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, 'abc123', nil)
 
           expect(db[:versions].filter(id: @version_id).select(:indexed).first[:indexed]).to eq(false)
         end

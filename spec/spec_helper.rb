@@ -18,4 +18,10 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
   config.mock_with :rspec
+
+  config.before(:each) do
+    BundlerApi::GemHelper.any_instance.stub(:set_checksum) do
+      @checksum = "abc123"
+    end
+  end
 end

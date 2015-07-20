@@ -26,6 +26,9 @@ describe BundlerApi::GemInfo do
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
+          checksum: nil,
           dependencies: []
         }]
 
@@ -48,6 +51,9 @@ describe BundlerApi::GemInfo do
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
+          checksum: nil,
           dependencies: [['foo', '= 1.0.0']]
         }]
 
@@ -66,6 +72,9 @@ describe BundlerApi::GemInfo do
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
+          checksum: nil,
           dependencies: []
         }]
 
@@ -77,7 +86,7 @@ describe BundlerApi::GemInfo do
       before do
         rack_id                     = builder.create_rubygem('rack')
         rack_version_id             = builder.create_version(rack_id, 'rack', '1.1.0')
-        non_indexed_rack_version_id = builder.create_version(rack_id, 'rack', '1.0.0', 'ruby', false)
+        non_indexed_rack_version_id = builder.create_version(rack_id, 'rack', '1.0.0', 'ruby', { indexed: false })
 
         foo_id = builder.create_rubygem('foo')
         builder.create_version(foo_id, 'foo')
@@ -90,6 +99,9 @@ describe BundlerApi::GemInfo do
           name:         'rack',
           number:       '1.1.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
+          checksum: nil,
           dependencies: [['foo', '= 1.0.0']]
         }]
 
@@ -120,7 +132,7 @@ describe BundlerApi::GemInfo do
       builder.create_version(a, "a")
       builder.create_version(a, "a", "1.0.1")
       builder.create_version(b, "b")
-      builder.create_version(b, "b", "1.0.1", "ruby", false)
+      builder.create_version(b, "b", "1.0.1", "ruby", { indexed: false })
       builder.create_version(c, "c", "1.0.0", "java")
       builder.create_version(d, "d-d", "1.0.0")
       builder.create_version(d, "d-d", "1.0.0", "java")

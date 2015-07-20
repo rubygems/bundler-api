@@ -2,6 +2,7 @@ require 'rack/test'
 require 'spec_helper'
 require 'bundler_api/web'
 require 'support/gem_builder'
+require 'support/etag'
 
 describe BundlerApi::Web do
   include Rack::Test::Methods
@@ -62,9 +63,11 @@ describe BundlerApi::Web do
     context "there are gems" do
       it "returns a marshal dump" do
         result = [{
-          name:         'rack',
-          number:       '1.0.0',
+          name:         'rack', number:       '1.0.0',
           platform:     'ruby',
+          rubygems_version: nil,
+          required_ruby_version: nil,
+          checksum: nil,
           dependencies: []
         }]
 
@@ -92,9 +95,12 @@ describe BundlerApi::Web do
     context "there are gems" do
       it "returns a marshal dump" do
         result = [{
-          "name"         => 'rack',
-          "number"       => '1.0.0',
-          "platform"     => 'ruby',
+          "name"             => 'rack',
+          "number"           => '1.0.0',
+          "platform"         => 'ruby',
+          "rubygems_version" =>  nil,
+          "required_ruby_version" => nil,
+          "checksum"         => nil,
           "dependencies" => []
         }]
 
@@ -185,13 +191,16 @@ describe BundlerApi::Web do
   end
 
   context "/names" do
+    it_behaves_like "return 304 on second hit" do
+      let(:url) { "/names" }
+    end
+
     before do
       %w(a b c d).each {|gem_name| builder.create_rubygem(gem_name) }
     end
 
     it "returns an array" do
       get "/names"
-
       expect(last_response).to be_ok
       expect(last_response.body).to eq(<<-NAMES.chomp.gsub(/^        /, ''))
         ---
@@ -203,17 +212,13 @@ describe BundlerApi::Web do
 
       NAMES
     end
-
-    it "should return a 304 on second hit" do
-      get "/names"
-      etag = last_response.header["ETag"]
-
-      get "/names", {}, "HTTP_IF_NONE_MATCH" => etag
-      expect(last_response.status).to eq(304)
-    end
   end
 
   context "/versions" do
+    it_behaves_like "return 304 on second hit" do
+      let(:url) { "/versions" }
+    end
+
     let(:data) { "a 1.0.0,1.0.1\nb 1.0.0\nc 1.0.0-java\na 2.0.0\na 2.0.1" }
     before do
       BundlerApi::VersionsFile.any_instance.stub(:with_new_gems).and_return(data)
@@ -227,49 +232,63 @@ describe BundlerApi::Web do
       expect(last_response.header["ETag"]).to eq(expected_etag)
       expect(last_response.body).to eq(data)
     end
-
-    it "should return 304 on second hit" do
-      get "/versions"
-      etag = last_response.header["ETag"]
-
-      get "/versions", {}, "HTTP_IF_NONE_MATCH" => etag
-
-      expect(last_response.status).to eq(304)
-    end
   end
 
   context "/info/:gem" do
-    before do
-      rack_101 = builder.create_version(rack_id, 'rack', '1.0.1')
-      [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']].each do |dep, requirements|
-        dep_id = builder.create_rubygem(dep)
-        builder.create_dependency(dep_id, rack_101, requirements)
+    it_behaves_like "return 304 on second hit" do
+      let(:url) { "/info/rack" }
+    end
+
+    context "when has no required ruby version" do
+      before do
+        rack_101 = builder.create_version(rack_id, 'rack', '1.0.1')
+        [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']].each do |dep, requirements|
+          dep_id = builder.create_rubygem(dep)
+          builder.create_dependency(dep_id, rack_101, requirements)
+        end
+      end
+
+      let(:expected_deps) do
+        <<-DEPS.gsub(/^          /, '')
+          ---
+          1.0.0
+          1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0
+        DEPS
+      end
+      let(:expected_etag) { Digest::MD5.hexdigest(expected_deps) }
+
+      it "should return the gem list" do
+        get "/info/rack"
+
+        expect(last_response).to be_ok
+        expect(last_response.header["ETag"]).to eq(expected_etag)
+        expect(last_response.body).to eq(expected_deps)
       end
     end
 
-    let(:expected_deps) {
-      <<-DEPS.gsub(/^        /, '')
-        ---
-        1.0.0
-        1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0
-      DEPS
-    }
-    let(:expected_etag) { Digest::MD5.hexdigest(expected_deps) }
+    context "when has a required ruby version" do
+      before do
+        a = builder.create_rubygem("a")
+        builder_args = { checksum: "abc123", required_ruby: ">1.9", rubygems_version: ">2.0" }
+        a_version = builder.create_version(a, 'a', '1.0.1', 'ruby', builder_args )
+        [['a_foo', '= 1.0.0'], ['a_bar', '>= 2.1, < 3.0']].each do |dep, requirements|
+          dep_id = builder.create_rubygem(dep)
+          builder.create_dependency(dep_id, a_version, requirements)
+        end
+      end
 
-    it "should return the gem list" do
-      get "/info/rack"
+      let(:expected_deps) do
+        <<-DEPS.gsub(/^          /, '')
+          ---
+          1.0.1 a_bar:>= 2.1&< 3.0,a_foo:= 1.0.0|ruby:>1.9,rubygems:>2.0,checksum:abc123
+        DEPS
+      end
 
-      expect(last_response).to be_ok
-      expect(last_response.header["ETag"]).to eq(expected_etag)
-      expect(last_response.body).to eq(expected_deps)
-    end
-
-    it "should return 304 on second hit" do
-      get "/info/rack"
-      etag = last_response.headers["ETag"]
-      get "/info/rack", {}, "HTTP_IF_NONE_MATCH" => etag
-
-      expect(last_response.status).to eq(304)
+      it "should return the gem list with the required ruby version" do
+        get "/info/a"
+        expect(last_response).to be_ok
+        expect(last_response.body).to eq(expected_deps)
+      end
     end
   end
 end
