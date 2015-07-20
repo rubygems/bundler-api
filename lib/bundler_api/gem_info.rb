@@ -2,6 +2,7 @@ require 'bundler_api'
 
 # Return data about all the gems: all gem names, all versions of all gems, all dependencies for all versions of a gem
 class BundlerApi::GemInfo
+  VERSIONS_FILE_PATH = "./versions.list"
   DepKey = Struct.new(:name, :number, :platform, :required_ruby_version, :rubygems_version, :checksum)
 
   def initialize(connection)
@@ -70,22 +71,19 @@ SQL
     @conn[:rubygems].select(:name).order(:name).all.map {|r| r[:name] }
   end
 
-  # return a list of gem names and their versions
-  def versions
-    specs_hash = Hash.new {|h, k| h[k] = [] }
-    rows = @conn[<<-SQL]
-      SELECT v.full_name, v.number, v.platform
-      FROM versions AS v
-      WHERE v.indexed is true
-SQL
-    rows.each do |row|
-      full_name = row[:full_name]
-      version = row[:number]
-      version += "-" << row[:platform] unless row[:platform] == "ruby"
-      name = full_name.chomp("-" << version)
-      specs_hash[name] << version
+  def versions(date)
+    dataset = @conn[<<-SQL, date]
+          SELECT r.name, v.created_at,
+                 concat_ws('-', v.number, nullif(v.platform,'ruby'))
+          FROM rubygems AS r, versions AS v
+          WHERE v.rubygem_id = r.id AND
+                v.indexed is true AND
+                v.created_at > ?
+    SQL
+    specs_hash = dataset.each_with_object({}) do |entry, out|
+      out[entry[:name]] ||= []
+      out[entry[:name]] << { number: entry[:concat_ws], created_at: entry[:created_at] }
     end
-
     specs_hash.each {|k, v| v.sort! }
   end
 end

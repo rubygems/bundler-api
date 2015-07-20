@@ -2,6 +2,7 @@ require 'sinatra/base'
 require 'sequel'
 require 'json'
 require 'bundler_api'
+require 'compact_index'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/cdn'
 require 'bundler_api/checksum'
@@ -38,7 +39,8 @@ class BundlerApi::Web < Sinatra::Base
     end
 
     @gem_info = BundlerApi::GemInfo.new(@conn)
-    @versions_file = BundlerApi::VersionsFile.new(@conn)
+    file_path = BundlerApi::GemInfo::VERSIONS_FILE_PATH
+    @versions_file = CompactIndex::VersionsFile.new(file_path)
 
     super()
   end
@@ -142,27 +144,26 @@ class BundlerApi::Web < Sinatra::Base
 
   get "/names" do
     etag_response_for("names") do
-      output = "---\n"
-      @gem_info.names.each do |n|
-        output << n << "\n"
-      end
-      output
+     CompactIndex.names(@gem_info.names)
     end
   end
 
   get "/versions" do
     etag_response_for("versions") do
-      @versions_file.with_new_gems
+      from_date = @versions_file.updated_at
+      extra_gems = @gem_info.versions(from_date)
+      CompactIndex.versions(@versions_file, extra_gems)
     end
   end
 
   get "/info/:name" do
     etag_response_for(params[:name]) do
-      output = "---\n"
-      deps_for(params[:name]).each do |row|
-        output << version_line(row) << "\n"
+      deps = deps_for([params[:name]])
+      deps.each do |dep|
+        dep[:dependencies].map! { |d| { gem: d[0], version: d[1] } }
       end
-      output
+      p deps
+      CompactIndex.info(deps)
     end
   end
 
