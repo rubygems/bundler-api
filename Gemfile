@@ -27,4 +27,5 @@ end
 group :development, :test do
   gem 'foreman'
   gem 'dotenv', require: false
+  gem 'rubocop', require: false
 end

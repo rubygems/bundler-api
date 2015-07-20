@@ -11,6 +11,7 @@ sudo: false
 cache: bundler
 
 before_script:
+  - bundle exec rubocop -D
   - psql -c 'create database "bundler-api";' -U postgres
   - ./script/setup --verbose
 
