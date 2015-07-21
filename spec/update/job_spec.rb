@@ -6,10 +6,15 @@ require 'bundler_api/update/job'
 require 'bundler_api/update/atomic_counter'
 
 describe BundlerApi::Job do
+  include Rack::Test::Methods
   let(:db)      { $db }
   let(:builder) { GemBuilder.new(db) }
   let(:counter) { BundlerApi::AtomicCounter.new }
   let(:mutex)   { Mutex.new }
+
+  def app
+    BundlerApi::Web.new($db, $db)
+  end
 
   before do
     BundlerApi::Job.clear_cache
@@ -33,6 +38,13 @@ WHERE rubygems.id = versions.rubygem_id
   AND versions.number = ?
   AND versions.platform = ?
 SQL
+    end
+
+    def get_gem(attribute, db, name, version = '1.0', platform = 'ruby')
+      db[:rubygems]
+        .join(:versions, rubygem_id: :id)
+        .where(name: name, number: version, platform: "ruby")
+        .first
     end
 
     def dependencies(name, version = "1.0", platform = "ruby")
@@ -74,6 +86,18 @@ SQL
 
       gem_exists?(db, 'foo')
       gem_exists?(db, 'foo', '1.0', 'java')
+    end
+
+
+    it "saves checksum for info endpoint content" do
+      payload = BundlerApi::GemHelper.new("foo1", Gem::Version.new("1.0"), 'ruby')
+      job = BundlerApi::Job.new(db, payload, mutex, counter)
+      job.run
+
+      get '/info/foo1'
+      checksum = Digest::MD5.hexdigest(last_response.body)
+      gem = get_gem(:info_checksum, db, 'foo1')
+      expect(gem[:info_checksum]).to eq(checksum)
     end
 
     context "with gem dependencies" do

@@ -17,6 +17,7 @@ class GemBuilder
       time: Time.now,
       required_ruby: nil,
       rubygems_version: nil,
+      info_checksum: nil,
       checksum: nil
     }.merge(extra_args)
 
@@ -32,7 +33,8 @@ class GemBuilder
       created_at: args[:time],
       required_ruby_version: args[:required_ruby],
       rubygems_version: args[:rubygems_version],
-      checksum: args[:checksum]
+      checksum: args[:checksum],
+      info_checksum: args[:info_checksum]
     )
   end
 

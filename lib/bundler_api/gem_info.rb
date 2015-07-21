@@ -1,4 +1,5 @@
 require 'bundler_api'
+require 'compact_index'
 
 # Return data about all the gems: all gem names, all versions of all gems, all dependencies for all versions of a gem
 class BundlerApi::GemInfo
@@ -73,7 +74,7 @@ SQL
 
   def versions(date)
     dataset = @conn[<<-SQL, date]
-          SELECT r.name, v.created_at,
+          SELECT r.name, v.created_at, v.info_checksum,
                  concat_ws('-', v.number, nullif(v.platform,'ruby'))
           FROM rubygems AS r, versions AS v
           WHERE v.rubygem_id = r.id AND
@@ -82,8 +83,19 @@ SQL
     SQL
     specs_hash = dataset.each_with_object({}) do |entry, out|
       out[entry[:name]] ||= []
-      out[entry[:name]] << { number: entry[:concat_ws], created_at: entry[:created_at] }
+      out[entry[:name]] << {
+        number: entry[:concat_ws],
+        created_at: entry[:created_at],
+        checksum: entry[:info_checksum]
+      }
     end
-    specs_hash.each {|k, v| v.sort! }
+  end
+
+  def info(name)
+    deps = deps_for([name])
+    deps.each do |dep|
+      dep[:dependencies].map! { |d| { gem: d[0], version: d[1] } }
+    end
+    CompactIndex.info(deps)
   end
 end

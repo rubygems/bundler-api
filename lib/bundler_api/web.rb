@@ -157,12 +157,7 @@ class BundlerApi::Web < Sinatra::Base
 
   get "/info/:name" do
     etag_response_for(params[:name]) do
-      deps = deps_for([params[:name]])
-      deps.each do |dep|
-        dep[:dependencies].map! { |d| { gem: d[0], version: d[1] } }
-      end
-      p deps
-      CompactIndex.info(deps)
+      @gem_info.info(params[:name])
     end
   end
 
