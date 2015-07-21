@@ -10,6 +10,8 @@ require 'tmpdir'
 require 'net/http'
 require 'time'
 require 'locksmith/pg'
+require 'rubocop/rake_task'
+
 require 'bundler_api/cache'
 require 'bundler_api/update/consumer_pool'
 require 'bundler_api/update/job'
@@ -21,14 +23,17 @@ require 'bundler_api/gem_helper'
 $stdout.sync = true
 Thread.abort_on_exception = true
 
+RuboCop::RakeTask.new
+
 begin
   require 'rspec/core/rake_task'
 
   desc "Run specs"
   RSpec::Core::RakeTask.new(:spec) do |t|
     t.rspec_opts = %w(-fs --color)
-    #t.ruby_opts  = %w(-w)
+    Rake::Task['rubocop'].invoke
   end
+
   task :default => :spec
 rescue LoadError => e
   # rspec won't exist on production
