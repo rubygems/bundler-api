@@ -34,57 +34,27 @@ rescue LoadError => e
   # rspec won't exist on production
 end
 
-def read_index(uri)
-  Zlib::GzipReader.open(open(uri)) {|gz| Marshal.load(gz) }
-end
+def download_index(url)
+  uri = URI(url)
 
-def modified?(uri, cache_file)
-  uri   = URI(uri)
-  file  = nil
+  Tempfile.create(uri.path) do |file|
+    file.write(open(uri.to_s).read)
+    file.rewind
 
-  file = File.stat(cache_file) if File.exists?(cache_file)
-
-  req = Net::HTTP::Get.new(uri.request_uri)
-  req['If-Modified-Since'] = file.mtime.rfc2822 if file
-
-  res = Net::HTTP.start(uri.hostname, uri.port) {|http|
-    http.request(req)
-  }
-
-  if res.response['Location']
-    modified?(res.response['Location'], cache_file)
-  elsif res.is_a?(Net::HTTPSuccess)
-    File.open(cache_file, 'w') {|file| file.write res.body }
-    true
-  else
-    false
+    Zlib::GzipReader.open(file) do |gz|
+      Marshal.load(gz)
+    end
   end
-end
-
-def specs_havent_changed(specs_threads)
-  !specs_threads[0].value && !specs_threads[1].value
 end
 
 def get_specs
   specs_uri              = "http://rubygems.org/specs.4.8.gz"
   prerelease_specs_uri   = "http://rubygems.org/prerelease_specs.4.8.gz"
-  specs_cache            = "./tmp/specs.4.8.gz"
-  prerelease_specs_cache = "./tmp/prerelease_specs.4.8.gz"
   specs_threads          = []
 
-  FileUtils.mkdir_p("tmp")
-  specs_threads << Thread.new { modified?(specs_uri, specs_cache) }
-  specs_threads << Thread.new { modified?(prerelease_specs_uri, prerelease_specs_cache) }
-  if specs_havent_changed(specs_threads)
-    print "HTTP 304: Specs not modified. Sleeping for 60s.\n"
-    return
-  end
-
-  specs_threads.clear
-
-  specs_threads << Thread.new { read_index(specs_cache) }
+  specs_threads << Thread.new { download_index(specs_uri) }
   specs_threads << Thread.new { [:prerelease] }
-  specs_threads << Thread.new { read_index(prerelease_specs_cache) }
+  specs_threads << Thread.new { download_index(prerelease_specs_uri) }
   specs = specs_threads.inject([]) {|sum, t| sum + t.value }
   print "# of specs from indexes: #{specs.size - 1}\n"
 
