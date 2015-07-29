@@ -11,7 +11,7 @@ describe BundlerApi::Web do
   let(:rack_id) { builder.create_rubygem("rack") }
 
   before do
-    builder.create_version(rack_id, "rack")
+    builder.create_version(rack_id, "rack", "1.0.0", "ruby", info_checksum: 'racksum')
   end
 
   def app
@@ -63,7 +63,8 @@ describe BundlerApi::Web do
     context "there are gems" do
       it "returns a marshal dump" do
         result = [{
-          name:         'rack', number:       '1.0.0',
+          name:         'rack',
+          number:       '1.0.0',
           platform:     'ruby',
           rubygems_version: nil,
           ruby_version: nil,
@@ -219,18 +220,35 @@ describe BundlerApi::Web do
       let(:url) { "/versions" }
     end
 
-    let(:data) { "a 1.0.0,1.0.1\nb 1.0.0\nc 1.0.0-java\na 2.0.0\na 2.0.1" }
-    before do
-      CompactIndex.stub('versions').and_return(data)
+    let :versions_file do
+      gem_info = BundlerApi::GemInfo.new($db)
+      file_path = BundlerApi::GemInfo::VERSIONS_FILE_PATH
+      CompactIndex::VersionsFile.new(file_path)
     end
+
+    before do
+      a = builder.create_rubygem("a")
+      builder.create_version(a, 'a', '1.0.0', 'ruby', info_checksum: 'a100')
+      builder.create_version(a, 'a', '1.0.1', 'ruby', info_checksum: 'a101')
+      b = builder.create_rubygem("b")
+      builder.create_version(b, 'b', '1.0.0', 'ruby', info_checksum: 'b100')
+      c = builder.create_rubygem("c")
+      builder.create_version(c, 'c', '1.0.0-java', 'ruby', info_checksum: 'c100')
+      builder.create_version(a, 'a', '2.0.0', 'ruby', info_checksum: 'a200')
+      builder.create_version(a, 'a', '2.0.1', 'ruby', info_checksum: 'a201')
+
+    end
+
+    let(:data) { versions_file.contents + "rack 1.0.0 racksum\na 1.0.0 a100\na 1.0.1 a101\nb 1.0.0 b100\nc 1.0.0-java c100\na 2.0.0 a200\na 2.0.1 a201\n" }
+
     let(:expected_etag) { Digest::MD5.hexdigest(data) }
 
     it "returns versions.list" do
       get "/versions"
 
       expect(last_response).to be_ok
-      expect(last_response.header["ETag"]).to eq(expected_etag)
       expect(last_response.body).to eq(data)
+      expect(last_response.header["ETag"]).to eq(expected_etag)
     end
   end
 

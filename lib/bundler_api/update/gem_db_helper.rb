@@ -56,6 +56,10 @@ class BundlerApi::GemDBHelper
     [insert, rubygem_id]
   end
 
+  def update_info_checksum(version_id, info_checksum)
+    @db[:versions].where(id: version_id).update(info_checksum: info_checksum)
+  end
+
   def find_or_insert_version(spec, rubygem_id, platform = 'ruby', checksum = nil, indexed = nil)
     insert     = nil
     version_id = nil
