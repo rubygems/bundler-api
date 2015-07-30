@@ -30,7 +30,7 @@ begin
 
   desc "Run specs"
   RSpec::Core::RakeTask.new(:spec) do |t|
-    t.rspec_opts = %w(-fs --color)
+    t.rspec_opts = %w(--color)
     Rake::Task['rubocop'].invoke
   end
 
