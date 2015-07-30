@@ -1,6 +1,6 @@
 language: ruby
 
-rvm: 2.1.5
+rvm: 2.2.2
 
 bundler_args: --binstubs --deployment
 
