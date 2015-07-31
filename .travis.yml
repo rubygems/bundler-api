@@ -11,11 +11,11 @@ sudo: false
 cache: bundler
 
 before_script:
-  - bundle exec rake rubocop
   - psql -c 'create database "bundler-api";' -U postgres
   - ./script/setup --verbose
 
-script: ./bin/rspec
+script:
+  - bundle exec rake spec
 
 notifications:
   slack:
