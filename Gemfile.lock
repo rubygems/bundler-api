@@ -45,7 +45,7 @@ GEM
     pry-byebug (2.0.0)
       byebug (~> 3.4)
       pry (~> 0.10)
-    puma (2.6.0)
+    puma (2.11.3)
     rack (1.5.2)
     rack-protection (1.5.1)
       rack
@@ -91,3 +91,6 @@ DEPENDENCIES
   sequel
   sequel_pg
   sinatra
+
+BUNDLED WITH
+   1.10.6
