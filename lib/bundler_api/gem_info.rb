@@ -74,8 +74,7 @@ SQL
 
   def versions(date)
     dataset = @conn[<<-SQL, date]
-          SELECT r.name, v.created_at, v.info_checksum,
-                 concat_ws('-', v.number, nullif(v.platform,'ruby'))
+          SELECT r.name, v.created_at, v.info_checksum, v.number, v.platform
           FROM rubygems AS r, versions AS v
           WHERE v.rubygem_id = r.id AND
                 v.indexed is true AND
@@ -84,7 +83,8 @@ SQL
     specs_hash = dataset.each_with_object({}) do |entry, out|
       out[entry[:name]] ||= []
       out[entry[:name]] << {
-        number: entry[:concat_ws],
+        number: entry[:number],
+        platform: entry[:platform],
         created_at: entry[:created_at],
         checksum: entry[:info_checksum]
       }
