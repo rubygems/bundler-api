@@ -234,12 +234,12 @@ describe BundlerApi::Web do
       builder.create_version(b, 'b', '1.0.0', 'ruby', info_checksum: 'b100')
       c = builder.create_rubygem("c")
       builder.create_version(c, 'c', '1.0.0-java', 'ruby', info_checksum: 'c100')
-      builder.create_version(a, 'a', '2.0.0', 'ruby', info_checksum: 'a200')
+      builder.create_version(a, 'a', '2.0.0', 'java', info_checksum: 'a200')
       builder.create_version(a, 'a', '2.0.1', 'ruby', info_checksum: 'a201')
 
     end
 
-    let(:data) { versions_file.contents + "rack 1.0.0 racksum\na 1.0.0 a100\na 1.0.1 a101\nb 1.0.0 b100\nc 1.0.0-java c100\na 2.0.0 a200\na 2.0.1 a201\n" }
+    let(:data) { versions_file.contents + "rack 1.0.0 racksum\na 1.0.0 a100\na 1.0.1 a101\nb 1.0.0 b100\nc 1.0.0-java c100\na 2.0.0-java a200\na 2.0.1 a201\n" }
 
     let(:expected_etag) { Digest::MD5.hexdigest(data) }
 
