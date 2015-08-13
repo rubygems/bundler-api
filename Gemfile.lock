@@ -1,3 +1,8 @@
+PATH
+  remote: /Users/fotanus/code/compact_index
+  specs:
+    compact_index (0.7.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -12,7 +17,6 @@ GEM
       slop (~> 3.6)
     coderay (1.1.0)
     columnize (0.8.9)
-    compact_index (0.7.0)
     debugger-linecache (1.2.0)
     diff-lcs (1.2.4)
     dotenv (0.9.0)
@@ -57,7 +61,7 @@ GEM
       diff-lcs (>= 1.1.3, < 2.0)
     rspec-mocks (2.14.4)
     sequel (4.3.0)
-    sequel_pg (1.6.8)
+    sequel_pg (1.6.13)
       pg (>= 0.8.0)
       sequel (>= 3.39.0)
     sinatra (1.4.4)
@@ -72,7 +76,7 @@ PLATFORMS
 
 DEPENDENCIES
   artifice
-  compact_index (~> 0.7)
+  compact_index!
   dotenv
   honeybadger
   json
@@ -89,5 +93,5 @@ DEPENDENCIES
   rspec-expectations
   rspec-mocks
   sequel
-  sequel_pg
+  sequel_pg (~> 1.6.13)
   sinatra

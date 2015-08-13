@@ -62,20 +62,18 @@ describe BundlerApi::Web do
 
     context "there are gems" do
       it "returns a marshal dump" do
-        result = [{
+        result = {
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
-          rubygems_version: nil,
-          ruby_version: nil,
-          checksum: nil,
-          dependencies: []
-        }]
+        }
 
         get "#{request}?gems=rack"
 
         expect(last_response).to be_ok
-        expect(Marshal.load(last_response.body)).to eq(result)
+        result.each do |k,v|
+          expect(Marshal.load(last_response.body).first[k]).to eq(v)
+        end
       end
     end
   end
@@ -95,20 +93,18 @@ describe BundlerApi::Web do
 
     context "there are gems" do
       it "returns a marshal dump" do
-        result = [{
+        result = {
           "name"             => 'rack',
           "number"           => '1.0.0',
-          "platform"         => 'ruby',
-          "rubygems_version" =>  nil,
-          "ruby_version" => nil,
-          "checksum"         => nil,
-          "dependencies" => []
-        }]
+          "platform"         => 'ruby'
+        }
 
         get "#{request}?gems=rack"
 
         expect(last_response).to be_ok
-        expect(JSON.parse(last_response.body)).to eq(result)
+        result.each do |k,v|
+          expect(JSON.parse(last_response.body).first[k]).to eq(v)
+        end
       end
     end
   end

@@ -11,10 +11,10 @@ gem 'pg'
 gem 'puma'
 gem 'rake'
 gem 'sequel'
-gem 'sequel_pg'
+gem 'sequel_pg', '~> 1.6.13'
 gem 'sinatra'
 gem 'json'
-gem 'compact_index', '~>0.7'
+gem 'compact_index', path: '/Users/fotanus/code/compact_index'
 
 group :development do
   gem 'pry-byebug'
