@@ -15,7 +15,7 @@ class BundlerApi::GemInfo
     dataset =
       if gems.any?
         @conn[<<-SQL, Sequel.value_list(gems)]
-          SELECT rv.name, rv.number, rv.platform, rv.required_ruby_version, rv.checksum,
+          SELECT distinct rv.name, rv.number, rv.platform, rv.required_ruby_version, rv.checksum,
                  rv.rubygems_version, d.requirements, rv.created_at, for_dep_name.name dep_name
           FROM
             (SELECT r.name, v.number, v.platform,v.rubygems_version, v.checksum,
