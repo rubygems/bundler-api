@@ -55,12 +55,13 @@ def migrate_checksums(temp_database_url, database_url)
 
   versions_with_nil_checksum.each do |entry|
     checksum_entry = temp_db[:versions]
+      .select_append(:versions__created_at___versions_created_at)
       .join(:rubygems, id: :rubygem_id)
       .where(name: entry[:name], number: entry[:number])
       .first
     if checksum_entry
       checksum = checksum_entry[:sha256]
-      created_at = checksum_entry[:created_at]
+      created_at = checksum_entry[:versions_created_at]
       db[:versions].where(id: entry[:id]).update(checksum: checksum, created_at: created_at)
     end
   end
