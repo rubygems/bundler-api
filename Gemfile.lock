@@ -72,7 +72,7 @@ PLATFORMS
 
 DEPENDENCIES
   artifice
-  compact_index (~> 0.8.1)
+  compact_index (= 0.8.1)
   dotenv
   honeybadger
   json
