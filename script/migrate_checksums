@@ -60,8 +60,8 @@ def migrate_checksums(temp_database_url, database_url)
       .first
     if checksum_entry
       checksum = checksum_entry[:sha256]
-      built_at = checksum_entry[:built_at]
-      db[:versions].where(id: entry[:id]).update(checksum: checksum, created_at: built_at)
+      created_at = checksum_entry[:created_at]
+      db[:versions].where(id: entry[:id]).update(checksum: checksum, created_at: created_at)
     end
   end
 end
