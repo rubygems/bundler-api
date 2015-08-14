@@ -14,7 +14,7 @@ gem 'sequel'
 gem 'sequel_pg', '~> 1.6.13'
 gem 'sinatra'
 gem 'json'
-gem 'compact_index', path: '/Users/fotanus/code/compact_index'
+gem 'compact_index', '~> 0.8.1'
 
 group :development do
   gem 'pry-byebug'
