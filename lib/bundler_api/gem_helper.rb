@@ -22,16 +22,17 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     full_name
   end
 
-  def download_spec(base = "http://production.s3.rubygems.org")
-    @mutex.synchronize { return @gemspec if @gemspec }
-    url   = "#{base}/quick/Marshal.4.8/#{full_name}.gemspec.rz"
+  def download_spec(base = nil)
+    base ||= ENV.fetch("DOWNLOAD_BASE", "http://production.s3.rubygems.org")
+    url = "#{base}/quick/Marshal.4.8/#{full_name}.gemspec.rz"
 
     @mutex.synchronize do
-      @gemspec = Marshal.load(Gem.inflate(fetch(url)))
+      @gemspec ||= Marshal.load(Gem.inflate(fetch(url)))
     end
   end
 
 private
+
   def fetch(url, redirects = 0, tries = 0)
     raise BundlerApi::HTTPError, "Too many redirects #{url}" if redirects >= REDIRECT_LIMIT
     raise BundlerApi::HTTPError, "Could not download #{url}" if tries >= TRY_LIMIT
