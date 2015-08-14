@@ -27,11 +27,7 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     url = "#{base}/quick/Marshal.4.8/#{full_name}.gemspec.rz"
 
     @mutex.synchronize do
-      if @gemspec
-        return @gemspec
-      else
-        @gemspec = Marshal.load(Gem.inflate(fetch(url)))
-      end
+      @gemspec ||= Marshal.load(Gem.inflate(fetch(url)))
     end
   end
 
