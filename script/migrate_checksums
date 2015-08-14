@@ -60,7 +60,7 @@ def migrate_checksums(temp_database_url, database_url)
       .first
     if checksum_entry
       checksum = checksum_entry[:sha256]
-      built_at = checksum_entr[:built_at]
+      built_at = checksum_entry[:built_at]
       db[:versions].where(id: entry[:id]).update(checksum: checksum, created_at: built_at)
     end
   end
@@ -85,17 +85,11 @@ def migrate_info_checksums(database_url)
       deps.each do |dep|
         dep[:dependencies].map! { |d| { gem: d[0], version: d[1] } }
       end
-      if entry[:name] == "uglifier"
-        puts "calculating checksum for uglifier"
-        puts Digest::MD5.hexdigest(CompactIndex.info(deps))
-        puts CompactIndex.info(deps)
-        puts "==="
-      end
-      info_checksums[entry[:name]] = Digest::MD5.hexdigest(CompactIndex.info(deps))
+      ci = CompactIndex.info(deps)
+      info_checksums[entry[:name]] = Digest::MD5.hexdigest(ci)
     end
 
-    puts "#{entry[:name]} has checksum #{info_checksums[entry[:name]]}"
-    #db[:versions].where(id: entry[:id]).update(info_checksum: info_checksums[entry[:name]])
+    db[:versions].where(id: entry[:id]).update(info_checksum: info_checksums[entry[:name]])
   end
 end
 
