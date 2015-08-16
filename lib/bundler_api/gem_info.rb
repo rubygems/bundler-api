@@ -28,7 +28,8 @@ class BundlerApi::GemInfo
             d.version_id = rv.version_id
           LEFT JOIN rubygems AS for_dep_name ON
             d.rubygem_id = for_dep_name.id
-            AND d.scope = 'runtime';
+            AND d.scope = 'runtime'
+          ORDER BY rv.created_at, rv.number;
         SQL
       else
         @conn[<<-SQL]
@@ -80,6 +81,7 @@ SQL
           WHERE v.rubygem_id = r.id AND
                 v.indexed is true AND
                 v.created_at > ?
+          ORDER BY v.created_at, v.number
     SQL
     specs_hash = dataset.each_with_object({}) do |entry, out|
       out[entry[:name]] ||= []
