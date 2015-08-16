@@ -45,9 +45,10 @@ def import(database_url, sql_file)
 end
 
 def migrate_checksums(temp_database_url, database_url)
-  puts "migrating checksum"
   temp_db = Sequel.connect temp_database_url
   db = Sequel.connect database_url
+
+  puts "migrating checksum"
 
   versions_with_nil_checksum = db[:rubygems]
     .join(:versions, rubygem_id: :id)
@@ -74,23 +75,18 @@ def migrate_info_checksums(database_url)
   gem_info = BundlerApi::GemInfo.new(db)
 
   versions_with_nil_info_checksum = db[:rubygems]
+    .select_append(:versions__id___version_id)
     .join(:versions, rubygem_id: :id)
     .where(info_checksum: nil)
 
   info_checksums = {} # table with info_checksum per gem name
+
   versions_with_nil_info_checksum.each do |entry|
-
-    # Fill table if there is no info checksum for this gem name
-    unless info_checksums[entry[:name]]
-      deps = gem_info.deps_for([entry[:name]])
-      deps.each do |dep|
-        dep[:dependencies].map! { |d| { gem: d[0], version: d[1] } }
-      end
-      ci = CompactIndex.info(deps)
-      info_checksums[entry[:name]] = Digest::MD5.hexdigest(ci)
+    name = entry[:name]
+    unless info_checksums[name]
+      info_checksums[name] = Digest::MD5.hexdigest(gem_info.info(name))
     end
-
-    db[:versions].where(id: entry[:id]).update(info_checksum: info_checksums[entry[:name]])
+    db[:versions].where(id: entry[:version_id]).update(info_checksum: info_checksums[name])
   end
 end
 
