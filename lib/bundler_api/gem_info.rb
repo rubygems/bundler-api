@@ -4,7 +4,7 @@ require 'compact_index'
 # Return data about all the gems: all gem names, all versions of all gems, all dependencies for all versions of a gem
 class BundlerApi::GemInfo
   VERSIONS_FILE_PATH = "./versions.list"
-  DepKey = Struct.new(:name, :number, :platform, :required_ruby_version, :rubygems_version, :checksum)
+  DepKey = Struct.new(:name, :number, :platform, :required_ruby_version, :rubygems_version, :checksum, :created_at)
 
   def initialize(connection)
     @conn = connection
@@ -16,19 +16,21 @@ class BundlerApi::GemInfo
       if gems.any?
         @conn[<<-SQL, Sequel.value_list(gems)]
           SELECT rv.name, rv.number, rv.platform, rv.required_ruby_version, rv.checksum,
-                 rv.rubygems_version, d.requirements, for_dep_name.name dep_name
+                 rv.rubygems_version, d.requirements, rv.created_at, for_dep_name.name dep_name
           FROM
             (SELECT r.name, v.number, v.platform,v.rubygems_version, v.checksum,
-                    v.required_ruby_version, v.id AS version_id
+                    v.required_ruby_version, v.created_at, v.id AS version_id
             FROM rubygems AS r, versions AS v
             WHERE v.rubygem_id = r.id
               AND v.indexed is true
-              AND r.name IN ?) AS rv
+              AND r.name IN ?
+              ORDER BY v.created_at, v.number, v.platform) AS rv
           LEFT JOIN dependencies AS d ON
             d.version_id = rv.version_id
           LEFT JOIN rubygems AS for_dep_name ON
             d.rubygem_id = for_dep_name.id
-            AND d.scope = 'runtime';
+            AND d.scope = 'runtime'
+          ORDER BY rv.created_at, rv.number, rv.platform, for_dep_name.name;
         SQL
       else
         @conn[<<-SQL]
@@ -49,7 +51,7 @@ SQL
     deps = {}
 
     dataset.each do |row|
-      key = DepKey.new(row[:name], row[:number], row[:platform], row[:required_ruby_version], row[:rubygems_version], row[:checksum])
+      key = DepKey.new(row[:name], row[:number], row[:platform], row[:required_ruby_version], row[:rubygems_version], row[:checksum], row[:created_at])
       deps[key] = [] unless deps[key]
       deps[key] << [row[:dep_name], row[:requirements]] if row[:dep_name]
     end
@@ -62,6 +64,7 @@ SQL
         rubygems_version:      dep_key.rubygems_version,
         ruby_version:          dep_key.required_ruby_version,
         checksum:              dep_key.checksum,
+        created_at:            dep_key.created_at,
         dependencies:          gem_deps
       }
     end
@@ -79,14 +82,16 @@ SQL
           WHERE v.rubygem_id = r.id AND
                 v.indexed is true AND
                 v.created_at > ?
+          ORDER BY v.created_at, v.number, v.platform
     SQL
-    specs_hash = dataset.each_with_object({}) do |entry, out|
-      out[entry[:name]] ||= []
-      out[entry[:name]] << {
-        number: entry[:number],
-        platform: entry[:platform],
-        created_at: entry[:created_at],
-        checksum: entry[:info_checksum]
+    specs_hash = dataset.map do |entry|
+      {
+        name: entry[:name],
+        versions: [
+          number: entry[:number],
+          platform: entry[:platform],
+          checksum: entry[:info_checksum]
+        ]
       }
     end
   end
