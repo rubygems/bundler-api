@@ -23,13 +23,14 @@ class BundlerApi::GemInfo
             FROM rubygems AS r, versions AS v
             WHERE v.rubygem_id = r.id
               AND v.indexed is true
-              AND r.name IN ?) AS rv
+              AND r.name IN ?
+              ORDER BY v.created_at, v.number, v.platform) AS rv
           LEFT JOIN dependencies AS d ON
             d.version_id = rv.version_id
           LEFT JOIN rubygems AS for_dep_name ON
             d.rubygem_id = for_dep_name.id
             AND d.scope = 'runtime'
-          ORDER BY rv.created_at, rv.number;
+          ORDER BY rv.created_at, rv.number, rv.platform;
         SQL
       else
         @conn[<<-SQL]
@@ -47,7 +48,7 @@ class BundlerApi::GemInfo
 SQL
       end
 
-    deps = {}
+    deps = {} # this needs to be an ordered hash
 
     dataset.each do |row|
       key = DepKey.new(row[:name], row[:number], row[:platform], row[:required_ruby_version], row[:rubygems_version], row[:checksum], row[:created_at])
@@ -81,15 +82,18 @@ SQL
           WHERE v.rubygem_id = r.id AND
                 v.indexed is true AND
                 v.created_at > ?
-          ORDER BY v.created_at, v.number
+          ORDER BY v.created_at, v.number, v.platform
     SQL
-    specs_hash = dataset.each_with_object({}) do |entry, out|
-      out[entry[:name]] ||= []
-      out[entry[:name]] << {
-        number: entry[:number],
-        platform: entry[:platform],
-        created_at: entry[:created_at],
-        checksum: entry[:info_checksum]
+
+    last_created_at = nil
+    specs_hash = dataset.inject([]) do |list, entry|
+      list << {
+        name: entry[:name],
+        versions: [
+          number: entry[:number],
+          platform: entry[:platform],
+          checksum: entry[:info_checksum]
+        ]
       }
     end
   end
