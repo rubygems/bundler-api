@@ -76,6 +76,17 @@ class BundlerApi::GemDBHelper
     else
       insert     = true
       indexed    = true if indexed.nil?
+
+      spec_rubygems = spec.required_rubygems_version
+      if spec_rubygems && !spec_rubygems.to_s.empty?
+        rubygems_version = spec_rubygems.to_s
+      end
+
+      spec_ruby = spec.required_ruby_version
+      if spec_ruby && !spec_ruby.to_s.empty?
+        ruby_version = spec_ruby.to_s
+      end
+
       version_id = @db[:versions].insert(
         number:      spec.version.version,
         rubygem_id:  rubygem_id,
@@ -84,8 +95,8 @@ class BundlerApi::GemDBHelper
         indexed:     indexed,
         prerelease:  !spec.version.prerelease?.nil?,
         full_name:   spec.full_name,
-        rubygems_version: spec.required_rubygems_version.none? ? nil : spec.required_rubygems_version.to_s,
-        required_ruby_version: spec.required_ruby_version.none? ? nil : spec.required_ruby_version.to_s,
+        rubygems_version: rubygems_version,
+        required_ruby_version: ruby_version,
         checksum:    checksum,
         created_at:  Time.now
       )
