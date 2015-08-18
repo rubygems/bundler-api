@@ -24,7 +24,8 @@ module BundlerApi
   class CacheInvalidator
 
     def initialize(memcached: nil, cdn: nil)
-      @memcached_client, @cdn_client = memcached, cdn
+      @memcached_client = memcached
+      @cdn_client = cdn
     end
 
     def purge_specs
