@@ -22,24 +22,26 @@ describe BundlerApi::GemInfo do
       end
 
       it "should return rack" do
-        result = [{
+        result = {
           name:         'rack',
           number:       '1.0.0',
-          platform:     'ruby',
-          rubygems_version: nil,
-          ruby_version: nil,
-          checksum: nil,
-          dependencies: []
-        }]
+          platform:     'ruby'
+        }
 
-        expect(gem_info.deps_for(['rack'])).to eq(result)
+        result.each_pair do |k, v|
+          expect(gem_info.deps_for(['rack']).first[k]).to eq(v)
+        end
       end
     end
 
     context "has one dependency" do
       before do
+        tomorrow = Time.at(Time.now.to_i + 86400)
+
         rack_id         = builder.create_rubygem('rack')
         rack_version_id = builder.create_version(rack_id, 'rack')
+        rack_version_id2 = builder.create_version(rack_id, 'rack', '1.1.9', 'ruby', time: tomorrow)
+        rack_version_id2 = builder.create_version(rack_id, 'rack', '1.2.0', 'ruby', time: tomorrow)
 
         foo_id = builder.create_rubygem('foo')
         builder.create_version(foo_id, 'foo')
@@ -47,17 +49,21 @@ describe BundlerApi::GemInfo do
       end
 
       it "should return foo as a dep of rack" do
-        result = [{
+        result = {
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
-          rubygems_version: nil,
-          ruby_version: nil,
-          checksum: nil,
           dependencies: [['foo', '= 1.0.0']]
-        }]
+        }
 
-        expect(gem_info.deps_for(['rack'])).to eq(result)
+        result.each_pair do |k,v|
+          expect(gem_info.deps_for(['rack']).first[k]).to eq(v)
+        end
+      end
+
+      it "order by created_at and version number" do
+        result = %W(1.0.0 1.1.9 1.2.0)
+        expect(gem_info.deps_for(['rack']).map { |x| x[:number] }).to eq(result)
       end
     end
 
@@ -68,17 +74,15 @@ describe BundlerApi::GemInfo do
       end
 
       it "should return rack" do
-        result = [{
+        result = {
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
-          rubygems_version: nil,
-          ruby_version: nil,
-          checksum: nil,
-          dependencies: []
-        }]
+        }
 
-        expect(gem_info.deps_for).to eq(result)
+        result.each do |k,v|
+          expect(gem_info.deps_for.first[k]).to eq(v)
+        end
       end
     end
 
@@ -95,17 +99,16 @@ describe BundlerApi::GemInfo do
       end
 
       it "should not return nonindexed gems" do
-        result = [{
+        result = {
           name:         'rack',
           number:       '1.1.0',
           platform:     'ruby',
-          rubygems_version: nil,
-          ruby_version: nil,
-          checksum: nil,
           dependencies: [['foo', '= 1.0.0']]
-        }]
+        }
 
-        expect(gem_info.deps_for(['rack'])).to eq(result)
+        result.each_pair do |k,v|
+          expect(gem_info.deps_for(['rack']).first[k]).to eq(v)
+        end
       end
     end
   end
@@ -124,4 +127,5 @@ describe BundlerApi::GemInfo do
   end
 
   pending "#versions"
+  pending "#info"
 end
