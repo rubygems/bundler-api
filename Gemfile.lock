@@ -7,9 +7,9 @@ GEM
       thread_safe
     artifice (0.6)
       rack-test
-    ast (2.0.0)
-    astrolabe (1.3.0)
-      parser (>= 2.2.0.pre.3, < 3.0)
+    ast (2.1.0)
+    astrolabe (1.3.1)
+      parser (~> 2.2)
     atomic (1.1.16)
     avl_tree (1.2.1)
       atomic (~> 1.1)
@@ -37,7 +37,7 @@ GEM
       metriks (~> 0.9.9)
     multi_json (1.10.1)
     multipart-post (2.0.0)
-    parser (2.2.2.2)
+    parser (2.2.2.6)
       ast (>= 1.1, < 3.0)
     pg (0.18.1)
     powerpack (0.1.1)
@@ -59,9 +59,9 @@ GEM
     rspec-mocks (3.1.3)
       rspec-support (~> 3.1.0)
     rspec-support (3.1.2)
-    rubocop (0.31.0)
+    rubocop (0.33.0)
       astrolabe (~> 1.3)
-      parser (>= 2.2.2.1, < 3.0)
+      parser (>= 2.2.2.5, < 3.0)
       powerpack (~> 0.1)
       rainbow (>= 1.99.1, < 3.0)
       ruby-progressbar (~> 1.4)
@@ -103,6 +103,3 @@ DEPENDENCIES
   sequel
   sequel_pg
   sinatra
-
-BUNDLED WITH
-   1.10.5

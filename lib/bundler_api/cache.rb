@@ -53,7 +53,7 @@ module BundlerApi
           FastlyClient.new(ENV['FASTLY_SERVICE_ID'],
                            ENV['FASTLY_BASE_URL'],
                            ENV['FASTLY_API_KEY'])
-        else
+      else
           # Create a mock fastly client
           Class.new do
             def purge_key(key); end
@@ -73,7 +73,7 @@ module BundlerApi
                              socket_failure_delay: 0.2,
                              expires_in: 15 * 60
                             })
-        else
+      else
           Dalli::Client.new
         end
     end

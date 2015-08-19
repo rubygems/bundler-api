@@ -99,7 +99,7 @@ class BundlerApi::GemDBHelper
       else
         rubygem_name, requirements = dep
         # assume runtime for legacy deps
-        scope                     = "runtime"
+        scope = "runtime"
       end
 
       dep_rubygem = @db[:rubygems].filter(name: rubygem_name).select(:id).first

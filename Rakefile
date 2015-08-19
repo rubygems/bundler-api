@@ -85,7 +85,7 @@ def get_local_gems(db)
 end
 
 def update(db, thread_count)
-  specs         = get_specs
+  specs = get_specs
   return 60 unless specs
 
   add_gem_count = BundlerApi::AtomicCounter.new
@@ -129,7 +129,7 @@ def update(db, thread_count)
 end
 
 def fix_deps(db, thread_count)
-  specs         = get_specs
+  specs = get_specs
   return 60 unless specs
   counter       = BundlerApi::AtomicCounter.new
   mutex         = nil
