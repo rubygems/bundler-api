@@ -6,7 +6,7 @@ describe BundlerApi::GemHelper do
   let(:name)    { "foo" }
   let(:version) { "1.0" }
   let(:platform) { "ruby" }
-  let(:helper)  { BundlerApi::GemHelper.new(name, version, platform) }
+  let(:helper) { BundlerApi::GemHelper.new(name, version, platform) }
 
   describe "#full_name" do
     context "when the platform is not ruby" do
