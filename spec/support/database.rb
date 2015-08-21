@@ -6,8 +6,7 @@ RSpec.configure do |config|
     fail 'TEST_DATABASE_URL is required' if db_url.nil? || db_url.empty?
 
     # Drop and recreate the database
-    postgres_uri = URI.parse(db_url) + "/postgres"
-    Sequel.connect(postgres_uri.to_s) do |db|
+    Sequel.connect(ENV["TEST_DATABASE_ADMIN_URL"]) do |db|
       db_name = URI.parse(ENV["TEST_DATABASE_URL"]).path[1..-1]
       db.run("DROP DATABASE IF EXISTS #{db_name.inspect}")
       db.run("CREATE DATABASE #{db_name.inspect}")

@@ -38,7 +38,13 @@ class BundlerApi::Job
 
     @db.transaction do
       rubygem_insert, rubygem_id = @db_helper.find_or_insert_rubygem(spec)
-      version_insert, version_id = @db_helper.find_or_insert_version(spec, rubygem_id, @payload.platform, @payload.checksum, true)
+      version_insert, version_id = @db_helper.find_or_insert_version(
+        spec,
+        rubygem_id,
+        @payload.platform,
+        @payload.checksum,
+        true
+      )
       info_checksum = Digest::MD5.hexdigest(@gem_info.info(spec.name))
       @db_helper.update_info_checksum(version_id, info_checksum)
       @db_helper.insert_dependencies(spec, version_id)

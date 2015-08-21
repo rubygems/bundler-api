@@ -1,11 +1,12 @@
 require 'spec_helper'
-require 'bundler_api/cdn'
+require 'bundler_api/cache'
 
-describe BundlerApi::Cdn do
+describe BundlerApi::CacheInvalidator do
   let(:client) { double(:client, purge_path: nil, purge_key: nil) }
+  let(:cache) { BundlerApi::CacheInvalidator.new(cdn: client) }
 
   describe '.purge_specs' do
-    subject { BundlerApi::Cdn.purge_specs(client) }
+    subject { cache.purge_specs }
 
     it 'purges dependencies key' do
       expect(client).to receive(:purge_key).with('dependencies')
@@ -36,42 +37,9 @@ describe BundlerApi::Cdn do
     end
   end
 
-  describe '.purge_versions_list' do
-    subject { BundlerApi::Cdn.purge_versions_list(client) }
-    it 'purges versions' do
-      expect(client).to receive(:purge_path).with("/versions")
-      subject
-    end
-  end
-
-  describe '.purge_gem_by_name' do
-    let(:name) { 'bundler-1.0.0' }
-    subject { BundlerApi::Cdn.purge_gem_by_name(name, client) }
-
-    it 'purges gemspec' do
-      expect(client).to receive(:purge_path)
-        .with('/quick/Marshal.4.8/bundler-1.0.0.gemspec.rz')
-      subject
-    end
-
-    it 'purges gem' do
-      expect(client).to receive(:purge_path)
-        .with('/gems/bundler-1.0.0.gem')
-      subject
-    end
-
-    context 'with a nil client' do
-      let(:client) { nil }
-
-      it 'does nothing' do
-        expect { subject }.to_not raise_error
-      end
-    end
-  end
-
   describe '.purge_gem' do
-    let(:gem) { double(:gem, full_name: 'bundler-1.0.0') }
-    subject { BundlerApi::Cdn.purge_gem(gem, client) }
+    let(:name) { 'bundler-1.0.0' }
+    subject { cache.purge_gem(name) }
 
     it 'purges gemspec' do
       expect(client).to receive(:purge_path)
@@ -85,12 +53,31 @@ describe BundlerApi::Cdn do
       subject
     end
 
+    it "purges memcached gem" do
+      cache.memcached_client.set("deps/v1/#{name}", "omg!")
+      expect(cache.memcached_client.get("deps/v1/#{name}")).to_not be_nil
+      subject
+      expect(cache.memcached_client.get("deps/v1/#{name}")).to be_nil
+    end
+
     context 'with a nil client' do
       let(:client) { nil }
 
       it 'does nothing' do
         expect { subject }.to_not raise_error
       end
+    end
+  end
+
+  describe '.purge_memory_cache' do
+    let(:name) { 'bundler-1.0.0' }
+    subject { cache.purge_memory_cache(name) }
+
+    it 'purge memcached gem' do
+      cache.memcached_client.set("deps/v1/#{name}", "omg!")
+      expect(cache.memcached_client.get("deps/v1/#{name}")).to_not be_nil
+      subject
+      expect(cache.memcached_client.get("deps/v1/#{name}")).to be_nil
     end
   end
 end

@@ -19,25 +19,24 @@ def get_temp_database_url
   database_url = ENV['DATABASE_URL']
   abort 'DATABASE_URL environment variable required' unless database_url
   database_url + Time.now.to_i.to_s
-  "postgres://localhost/bundler-api1439488720"
 end
 
 ## main commands
 
 def drop_database(database_url)
   puts 'Dropping database'
-  puts %x{dropdb --if-exists #{database_name(database_url)}}
+  puts `dropdb --if-exists #{database_name(database_url)}`
 end
 
 def create_database(database_url)
   puts 'Creating database'
-  puts %x{createdb --no-password #{database_name(database_url)}}
+  puts `createdb --no-password #{database_name(database_url)}`
 end
 
 def import(database_url, sql_file)
   puts "Importing #{sql_file} data"
-  puts %x{psql -d #{database_name(database_url)} -c "CREATE EXTENSION hstore"}
-  puts %x{psql -d #{database_name(database_url)} < #{sql_file}}
+  puts `psql -d #{database_name(database_url)} -c "CREATE EXTENSION hstore"`
+  puts `psql -d #{database_name(database_url)} < #{sql_file}`
 end
 
 def migrate_checksums(temp_database_url, database_url)

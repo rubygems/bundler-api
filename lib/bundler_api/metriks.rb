@@ -4,7 +4,7 @@ require 'metriks/middleware'
 user  = ENV['LIBRATO_METRICS_USER']
 token = ENV['LIBRATO_METRICS_TOKEN']
 if user && token
-  require 'metriks/reporter/librato_metrics'
+  require 'metriks-librato_metrics'
 
   prefix = ENV.fetch('LIBRATO_METRICS_PREFIX') do
     ENV['RACK_ENV'] unless ENV['RACK_ENV'] == 'production'
@@ -16,10 +16,14 @@ if user && token
     Socket.gethostname
   end
 
-  on_error = ->(e) do STDOUT.puts("LibratoMetrics: #{ e.message }") end
-  opts     = { on_error: on_error, source: app_name }
+  on_error = ->(e) do
+    STDOUT.puts("LibratoMetrics: #{ e.message }")
+    STDOUT.puts(e.backtrace)
+  end
+
+  opts = { on_error: on_error, source: app_name }
   opts[:prefix] = prefix if prefix && !prefix.empty?
 
-  Metriks::Reporter::LibratoMetrics.new(user, token, opts).start
+  Metriks::LibratoMetricsReporter.new(user, token, opts).start
 end
 

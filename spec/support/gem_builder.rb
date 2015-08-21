@@ -38,7 +38,7 @@ class GemBuilder
     )
   end
 
-  def create_dependency(rubygem_id, version_id, requirements,  scope = 'runtime')
+  def create_dependency(rubygem_id, version_id, requirements, scope = 'runtime')
     @conn[:dependencies].insert(
       requirements: requirements,
       rubygem_id:   rubygem_id,
