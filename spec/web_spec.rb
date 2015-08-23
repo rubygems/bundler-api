@@ -76,6 +76,17 @@ describe BundlerApi::Web do
         end
       end
     end
+
+    context "there are too many gems" do
+      let(:gems) { 201.times.map { |i| "gem-#{ i }" }.join(',') }
+
+      it "returns a 422" do
+        get "#{request}?gems=#{ gems }"
+
+        expect(last_response).not_to be_ok
+        expect(last_response.body).to eq("Too many gems (use --full-index instead)")
+      end
+    end
   end
 
 
@@ -105,6 +116,22 @@ describe BundlerApi::Web do
         result.each do |k,v|
           expect(JSON.parse(last_response.body).first[k]).to eq(v)
         end
+      end
+    end
+
+    context "there are too many gems" do
+      let(:gems) { 201.times.map { |i| "gem-#{ i }" }.join(',') }
+
+      it "returns a 422" do
+        error = {
+          "error" => "Too many gems (use --full-index instead)",
+          "code"  => 422
+        }.to_json
+
+        get "#{request}?gems=#{ gems }"
+
+        expect(last_response).not_to be_ok
+        expect(last_response.body).to eq(error)
       end
     end
   end
@@ -235,7 +262,16 @@ describe BundlerApi::Web do
 
     end
 
-    let(:data) { versions_file.contents + "rack 1.0.0 racksum\na 1.0.0 a100\na 1.0.1 a101\nb 1.0.0 b100\nc 1.0.0-java c100\na 2.0.0-java a200\na 2.0.1 a201\n" }
+    let(:data) do
+      versions_file.contents +
+        "rack 1.0.0 racksum\n" +
+        "a 1.0.0 a100\n" +
+        "a 1.0.1 a101\n" +
+        "b 1.0.0 b100\n" +
+        "c 1.0.0-java c100\n" +
+        "a 2.0.0-java a200\n" +
+        "a 2.0.1 a201\n"
+    end
 
     let(:expected_etag) { Digest::MD5.hexdigest(data) }
 

@@ -6,7 +6,7 @@ describe BundlerApi::GemHelper do
   let(:name)    { "foo" }
   let(:version) { "1.0" }
   let(:platform) { "ruby" }
-  let(:helper)  { BundlerApi::GemHelper.new(name, version, platform) }
+  let(:helper) { BundlerApi::GemHelper.new(name, version, platform) }
 
   describe "#full_name" do
     context "when the platform is not ruby" do
@@ -102,7 +102,7 @@ GEMSPEC
 
     context "when it's always throwing an error" do
       before do
-        BundlerApi::GemHelper::TRY_LIMIT = 1
+        stub_const("BundlerApi::GemHelper::TRY_LIMIT", 1)
         Artifice.activate_with(ForeverHTTPError)
       end
 

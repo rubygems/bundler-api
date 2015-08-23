@@ -160,7 +160,7 @@ SQL
         jobs[1].run
 
         gem_exists?(db, 'foo', '1.0', 'jruby')
-        expect(db[:versions].filter(id: version_id).select(:indexed).first[:indexed]).to be_true
+        expect(db[:versions].filter(id: version_id).select(:indexed).first[:indexed]).to be true
       end
     end
   end

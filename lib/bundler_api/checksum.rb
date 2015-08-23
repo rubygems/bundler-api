@@ -2,7 +2,8 @@ class BundlerApi::Checksum
   attr_reader :checksum, :name
 
   def initialize(conn, name)
-    @conn, @name = conn, name
+    @conn = conn
+    @name = name
     row = @conn[:rubygems].where(name: @name).first
 
     if row

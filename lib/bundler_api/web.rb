@@ -4,32 +4,36 @@ require 'json'
 require 'bundler_api'
 require 'compact_index'
 require 'bundler_api/agent_reporting'
-require 'bundler_api/cdn'
 require 'bundler_api/checksum'
 require 'bundler_api/gem_info'
+require 'bundler_api/appsignal'
+require 'bundler_api/cache'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
-require 'bundler_api/honeybadger'
 require 'bundler_api/gem_helper'
 require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
 
-
 class BundlerApi::Web < Sinatra::Base
-  RUBYGEMS_URL = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
+  API_REQUEST_LIMIT    = 200
+  PG_STATEMENT_TIMEOUT = 1000
+  RUBYGEMS_URL         = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
+    use Appsignal::Rack::Listener, name: 'bundler-api'
+    use Appsignal::Rack::SinatraInstrumentation
     use Metriks::Middleware
-    use Honeybadger::Rack
     use BundlerApi::AgentReporting
   end
 
   def initialize(conn = nil, write_conn = nil)
     @rubygems_token = ENV['RUBYGEMS_TOKEN']
 
+    statement_timeout = proc {|c| c.execute("SET statement_timeout = #{PG_STATEMENT_TIMEOUT}") }
     @conn = conn || begin
       Sequel.connect(ENV['FOLLOWER_DATABASE_URL'],
-                     max_connections: ENV['MAX_THREADS'])
+                     max_connections: ENV['MAX_THREADS'],
+                     after_connect: statement_timeout)
     end
 
     @write_conn = write_conn || begin
@@ -41,6 +45,8 @@ class BundlerApi::Web < Sinatra::Base
     file_path = BundlerApi::GemInfo::VERSIONS_FILE_PATH
     @versions_file = CompactIndex::VersionsFile.new(file_path)
 
+    @cache = BundlerApi::CacheInvalidator.new
+    @dalli_client = @cache.memcached_client
     super()
   end
 
@@ -53,7 +59,8 @@ class BundlerApi::Web < Sinatra::Base
 
   def gems
     halt(200) if params[:gems].nil? || params[:gems].empty?
-    params[:gems].is_a?(Array) ? params[:gems] : params[:gems].split(',')
+    g = params[:gems].is_a?(Array) ? params[:gems] : params[:gems].split(',')
+    g.uniq
   end
 
   def get_deps
@@ -91,25 +98,30 @@ class BundlerApi::Web < Sinatra::Base
       :platform => payload.platform, :prerelease => payload.prerelease)
   end
 
-  error do |e|
-    # Honeybadger 1.3.1 only knows how to look for rack.exception :(
-    request.env['rack.exception'] = request.env['sinatra.error']
-  end
-
   get "/" do
     cache_control :public, max_age: 31536000
     redirect 'https://www.rubygems.org'
   end
 
   get "/api/v1/dependencies" do
+    halt 422, "Too many gems (use --full-index instead)" if gems.length > API_REQUEST_LIMIT
+
     content_type 'application/octet-stream'
-    deps = get_deps
-    Marshal.dump(deps)
+
+    deps = with_metriks { get_cached_dependencies }
+    ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
   end
 
   get "/api/v1/dependencies.json" do
+    halt 422, {
+      "error" => "Too many gems (use --full-index instead)",
+      "code"  => 422
+    }.to_json if gems.length > API_REQUEST_LIMIT
+
     content_type 'application/json;charset=UTF-8'
-    get_deps.to_json
+
+    deps = with_metriks { get_cached_dependencies }
+    ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
   end
 
   post "/api/v1/add_spec.json" do
@@ -118,7 +130,8 @@ class BundlerApi::Web < Sinatra::Base
       job = BundlerApi::Job.new(@write_conn, payload)
       job.run
 
-      BundlerApi::Cdn.purge_specs
+      @cache.purge_specs
+      @cache.purge_memory_cache(payload.name)
 
       json_payload(payload)
     end
@@ -128,14 +141,14 @@ class BundlerApi::Web < Sinatra::Base
     Metriks.timer('webhook.remove_spec').time do
       payload    = get_payload
       rubygem_id = @write_conn[:rubygems].filter(name: payload.name.to_s).select(:id).first[:id]
-      version    = @write_conn[:versions].where(
+      @write_conn[:versions].where(
         rubygem_id: rubygem_id,
         number:     payload.version.version,
         platform:   payload.platform
       ).update(indexed: false)
 
-      BundlerApi::Cdn.purge_specs
-      BundlerApi::Cdn.purge_gem payload
+      @cache.purge_specs
+      @cache.purge_gem(payload.name)
 
       json_payload(payload)
     end
@@ -212,25 +225,32 @@ private
     @gem_info.deps_for(Array(name))
   end
 
-  def version_line(row)
-    deps = row[:dependencies].map do |d|
-      [d.first, d.last.gsub(/, /, "&")].join(":")
+  def with_metriks
+    timer = Metriks.timer('dependencies').time
+    yield.tap do |deps|
+      Metriks.histogram('gems.size').update(gems.size)
+      Metriks.histogram('dependencies.size').update(deps.size)
     end
-
-    line = row[:number].to_s
-    line << "-#{row[:platform]}" unless row[:platform] == "ruby"
-    line << " " << deps.join(",") if deps.any?
-
-    last_part = []
-    ruby_version = row[:required_ruby_version]
-    rubygems_version = row[:rubygems_version]
-    checksum = row[:checksum]
-    last_part << "#{row[:platform]}:#{ruby_version}" if ruby_version
-    last_part << "rubygems:#{rubygems_version}" if rubygems_version
-    last_part << "checksum:#{checksum}" if checksum
-    line << "|#{last_part.join(",")}" if last_part.any?
-
-    line
+  ensure
+    timer.stop if timer
   end
 
+  def get_cached_dependencies
+    dependencies = []
+    keys = gems.map { |g| "deps/v1/#{g}" }
+    @dalli_client.get_multi(keys) do |key, value|
+      Metriks.meter('dependencies.memcached.hit').mark
+      keys.delete(key)
+      dependencies += value
+    end
+
+    keys.each do |gem|
+      Metriks.meter('dependencies.memcached.miss').mark
+      name = gem.gsub("deps/v1/", "")
+      result = @gem_info.deps_for([name])
+      @dalli_client.set(gem, result)
+      dependencies += result
+    end
+    dependencies
+  end
 end

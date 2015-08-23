@@ -11,7 +11,8 @@ require 'net/http'
 require 'time'
 require 'compact_index'
 require 'locksmith/pg'
-require 'bundler_api/cdn'
+
+require 'bundler_api/cache'
 require 'bundler_api/update/consumer_pool'
 require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
@@ -25,68 +26,42 @@ Thread.abort_on_exception = true
 
 begin
   require 'rspec/core/rake_task'
+  require 'rubocop/rake_task'
+
+  RuboCop::RakeTask.new
 
   desc "Run specs"
   RSpec::Core::RakeTask.new(:spec) do |t|
-    t.rspec_opts = %w(-fs --color)
-    #t.ruby_opts  = %w(-w)
+    t.rspec_opts = %w(--color)
   end
+  task :spec => :rubocop
   task :default => :spec
 rescue LoadError => e
   # rspec won't exist on production
 end
 
-def read_index(uri)
-  Zlib::GzipReader.open(open(uri)) {|gz| Marshal.load(gz) }
-end
+def download_index(url)
+  uri = URI(url)
 
-def modified?(uri, cache_file)
-  uri   = URI(uri)
-  file  = nil
+  Tempfile.create(uri.path) do |file|
+    file.write(open(uri.to_s).read)
+    file.rewind
 
-  file = File.stat(cache_file) if File.exists?(cache_file)
-
-  req = Net::HTTP::Get.new(uri.request_uri)
-  req['If-Modified-Since'] = file.mtime.rfc2822 if file
-
-  res = Net::HTTP.start(uri.hostname, uri.port) {|http|
-    http.request(req)
-  }
-
-  if res.response['Location']
-    modified?(res.response['Location'], cache_file)
-  elsif res.is_a?(Net::HTTPSuccess)
-    File.open(cache_file, 'w') {|file| file.write res.body }
-    true
-  else
-    false
+    Zlib::GzipReader.open(file) do |gz|
+      Marshal.load(gz)
+    end
   end
-end
-
-def specs_havent_changed(specs_threads)
-  !specs_threads[0].value && !specs_threads[1].value
 end
 
 def get_specs
-  specs_uri              = "http://rubygems.org/specs.4.8.gz"
-  prerelease_specs_uri   = "http://rubygems.org/prerelease_specs.4.8.gz"
-  specs_cache            = "./tmp/specs.4.8.gz"
-  prerelease_specs_cache = "./tmp/prerelease_specs.4.8.gz"
+  rubygems_host          = ENV.fetch("RUBYGEMS_HOST", "http://rubygems.org")
+  specs_uri              = File.join(rubygems_host, "specs.4.8.gz")
+  prerelease_specs_uri   = File.join(rubygems_host, "prerelease_specs.4.8.gz")
   specs_threads          = []
 
-  FileUtils.mkdir_p("tmp")
-  specs_threads << Thread.new { modified?(specs_uri, specs_cache) }
-  specs_threads << Thread.new { modified?(prerelease_specs_uri, prerelease_specs_cache) }
-  if specs_havent_changed(specs_threads)
-    print "HTTP 304: Specs not modified. Sleeping for 60s.\n"
-    return
-  end
-
-  specs_threads.clear
-
-  specs_threads << Thread.new { read_index(specs_cache) }
+  specs_threads << Thread.new { download_index(specs_uri) }
   specs_threads << Thread.new { [:prerelease] }
-  specs_threads << Thread.new { read_index(prerelease_specs_cache) }
+  specs_threads << Thread.new { download_index(prerelease_specs_uri) }
   specs = specs_threads.inject([]) {|sum, t| sum + t.value }
   print "# of specs from indexes: #{specs.size - 1}\n"
 
@@ -112,7 +87,7 @@ def get_local_gems(db)
 end
 
 def update(db, thread_count)
-  specs         = get_specs
+  specs = get_specs
   return 60 unless specs
 
   add_gem_count = BundlerApi::AtomicCounter.new
@@ -140,21 +115,23 @@ def update(db, thread_count)
   pool.poison
   pool.join
 
+  cache = BundlerApi::CacheInvalidator.new
+
   unless local_gems.empty?
     print "Yanking #{local_gems.size} gems\n"
     local_gems.keys.each {|name| print "Yanking: #{name}\n" }
     db[:versions].where(id: local_gems.values).update(indexed: false)
-    local_gems.keys.each {|name| BundlerApi::Cdn.purge_gem_by_name name }
+    local_gems.keys.each {|name| cache.purge_gem(name) }
   end
 
-  BundlerApi::Cdn.purge_specs if !local_gems.empty? || add_gem_count.count > 0
+  cache.purge_specs if !local_gems.empty? || add_gem_count.count > 0
 
   print "# of gem versions added: #{add_gem_count.count}\n"
   print "# of gem versions yanked: #{local_gems.size}\n"
 end
 
 def fix_deps(db, thread_count)
-  specs         = get_specs
+  specs = get_specs
   return 60 unless specs
   counter       = BundlerApi::AtomicCounter.new
   mutex         = nil
@@ -224,4 +201,20 @@ task :versions do |t, args|
     gems = gem_info.versions(last_update)
     versions_file.update_with(gems)
   end
+end
+
+desc "Yank a specific single gem from the database"
+task :yank_spec, :name, :version, :platform do |t, args|
+  args.with_defaults(:platform => 'ruby')
+  database_connection do |db|
+    gem_id = db[:rubygems].where(name: args[:name]).first[:id]
+    version = db[:versions].where(
+      rubygem_id: gem_id,
+      number: args[:version],
+      platform: args[:platform]
+    ).first
+    version.update(indexed: false)
+
+  end
+  puts "Yanked #{version}!"
 end

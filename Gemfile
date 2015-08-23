@@ -2,19 +2,21 @@ source "https://rubygems.org"
 
 ruby "2.2.2"
 
-gem 'honeybadger'
+gem 'appsignal', '0.11.6.beta.0'
 gem 'librato-metrics'
 gem 'lock-smith'
-gem 'metriks'
+gem 'metriks-librato_metrics'
 gem 'metriks-middleware'
 gem 'pg'
 gem 'puma'
 gem 'rake'
+gem 'dalli'
+gem 'redis'
 gem 'sequel'
-gem 'sequel_pg'
+gem 'sequel_pg', require: false
 gem 'sinatra'
 gem 'json'
-gem 'compact_index', '~> 0.9.0'
+gem 'compact_index', '0.9.0'
 
 group :development do
   gem 'pry-byebug'
@@ -28,4 +30,8 @@ group :test do
   gem 'rspec-mocks'
 end
 
-gem 'dotenv', require: false, groups: [:development, :test]
+group :development, :test do
+  gem 'foreman'
+  gem 'dotenv', require: false
+  gem 'rubocop', require: false
+end

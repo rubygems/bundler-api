@@ -77,15 +77,9 @@ class BundlerApi::GemDBHelper
       insert     = true
       indexed    = true if indexed.nil?
 
-      spec_rubygems = spec.required_rubygems_version
-      if spec_rubygems && !spec_rubygems.to_s.empty?
-        rubygems_version = spec_rubygems.to_s
-      end
 
-      spec_ruby = spec.required_ruby_version
-      if spec_ruby && !spec_ruby.to_s.empty?
-        ruby_version = spec_ruby.to_s
-      end
+      spec_rubygems = get_spec_rubygems(spec)
+      spec_ruby = get_spec_ruby(spec)
 
       version_id = @db[:versions].insert(
         number:      spec.version.version,
@@ -125,7 +119,7 @@ class BundlerApi::GemDBHelper
       else
         rubygem_name, requirements = dep
         # assume runtime for legacy deps
-        scope                     = "runtime"
+        scope = "runtime"
       end
 
       dep_rubygem = @db[:rubygems].filter(name: rubygem_name).select(:id).first
@@ -151,4 +145,19 @@ class BundlerApi::GemDBHelper
   def matching_requirements?(requirements1, requirements2)
     Set.new(requirements1.split(", ")) == Set.new(requirements2.split(", "))
   end
+
+  def get_spec_rubygems(spec)
+    spec_rubygems = spec.required_rubygems_version
+    if spec_rubygems && !spec_rubygems.to_s.empty?
+      spec_rubygems.to_s
+    end
+  end
+
+  def get_spec_ruby(spec)
+    spec_ruby = spec.required_ruby_version
+    if spec_ruby && !spec_ruby.to_s.empty?
+      spec_ruby.to_s
+    end
+  end
+
 end

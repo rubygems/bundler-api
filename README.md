@@ -1,5 +1,5 @@
-[![Code Climate](https://codeclimate.com/github/bundler/bundler-api.png)](https://codeclimate.com/github/bundler/bundler-api)
-[![Build Status](https://travis-ci.org/bundler/bundler-api.png?branch=master)](https://travis-ci.org/bundler/bundler-api)
+[![Code Climate](https://codeclimate.com/github/bundler/bundler-api/badges/gpa.svg)](https://codeclimate.com/github/bundler/bundler-api)
+[![Build Status](https://travis-ci.org/bundler/bundler-api.svg?branch=master)](https://travis-ci.org/bundler/bundler-api)
 
 # bundler-api
 
