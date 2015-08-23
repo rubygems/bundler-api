@@ -207,17 +207,21 @@ private
       headers "ETag" => sum.checksum
       status 304
       return ""
-    else
-      body = yield
-      sum.checksum = Digest::MD5.hexdigest(body)
-      headers "ETag" => sum.checksum
-      content_type 'text/plain'
-      ranges = Rack::Utils.byte_ranges(env, body.bytesize)
-      return body unless ranges
+    end
+
+    body = yield
+    sum.checksum = Digest::MD5.hexdigest(body)
+    headers "ETag" => sum.checksum
+    content_type "text/plain"
+
+    ranges = Rack::Utils.byte_ranges(env, body.bytesize)
+    if ranges
       status 206
       ranges.map! do |range|
         body.byteslice(range)
       end.join
+    else
+      body
     end
   end
 

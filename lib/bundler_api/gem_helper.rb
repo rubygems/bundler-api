@@ -39,6 +39,7 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
   end
 
 private
+
   def set_checksum
     # TODO: Change this to the new rubygems call when accepted
     url = "#{RUBYGEMS_URL}/api/v1/versions/#{name}.json"
