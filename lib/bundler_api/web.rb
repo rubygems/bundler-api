@@ -212,6 +212,7 @@ private
     body = yield
     sum.checksum = Digest::MD5.hexdigest(body)
     headers "ETag" => sum.checksum
+    headers "Cache-Control" => "max-age=600, stale-while-revalidate=30"
     content_type "text/plain"
 
     ranges = Rack::Utils.byte_ranges(env, body.bytesize)
