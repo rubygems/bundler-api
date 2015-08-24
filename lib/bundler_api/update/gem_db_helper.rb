@@ -97,8 +97,7 @@ class BundlerApi::GemDBHelper
     end
 
     if insert
-      @db[:rubygems].filter(id: rubygem_id).update(deps_md5: nil)
-      @db[:checksums].filter(name: "versions.list").update(md5: nil)
+      @db[:checksums].filter(name: "versions").update(md5: nil)
     end
 
     [insert, version_id]

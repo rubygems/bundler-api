@@ -112,28 +112,14 @@ describe BundlerApi::GemDBHelper do
                                                       select(:id).first[:id])
       end
 
-      context "when the deps md5 is set" do
+      context "when the versions md5 is set" do
         before do
-          $db[:rubygems].filter(id: @rubygem_id).update(deps_md5: "82f5ab51")
+          $db[:checksums].insert(name: "versions", md5: "82f5ab51")
         end
 
         it "installing a new version clears it" do
           insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, indexed)
-          rubygem = $db[:rubygems].filter(id: @rubygem_id).first
-
-          expect(rubygem[:deps_md5]).to eq(nil)
-
-        end
-      end
-
-      context "when the versions.list md5 is set" do
-        before do
-          $db[:checksums].insert(name: "versions.list", md5: "82f5ab51")
-        end
-
-        it "installing a new version clears it" do
-          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, indexed)
-          row = $db[:checksums].filter(name: "versions.list").first
+          row = $db[:checksums].filter(name: "versions").first
 
           expect(row[:md5]).to eq(nil)
         end
