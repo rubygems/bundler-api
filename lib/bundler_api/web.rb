@@ -273,7 +273,7 @@ private
   end
 
   def parse_etags(value)
-    value.split(/, ?/).select{|s| s.sub!(/"(.*)"/, '\1') }
+    value ? value.split(/, ?/).select{|s| s.sub!(/"(.*)"/, '\1') } : []
   end
 
 end
