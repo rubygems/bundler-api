@@ -202,27 +202,36 @@ private
 
   def etag_response_for(name)
     sum = BundlerApi::Checksum.new(@write_conn, name)
+    return if not_modified?(sum.checksum)
 
-    if sum.checksum && sum.checksum == request.env["HTTP_IF_NONE_MATCH"]
-      headers "ETag" => sum.checksum
-      status 304
-      return ""
-    end
+    response_body = yield
+    sum.checksum = Digest::MD5.hexdigest(response_body)
 
-    body = yield
-    sum.checksum = Digest::MD5.hexdigest(body)
-    headers "ETag" => sum.checksum
+    headers "ETag" => quote(sum.checksum)
     headers "Surrogate-Control" => "max-age=2592000, stale-while-revalidate=60"
     content_type "text/plain"
+    requested_range_for(response_body)
+  end
 
-    ranges = Rack::Utils.byte_ranges(env, body.bytesize)
+  def not_modified?(checksum)
+    etags = parse_etags(request.env["HTTP_IF_NONE_MATCH"])
+
+    if etags.include?(checksum)
+      headers "ETag" => quote(checksum)
+      status 304
+      body ""
+    end
+  end
+
+  def requested_range_for(response_body)
+    ranges = Rack::Utils.byte_ranges(env, response_body.bytesize)
+
     if ranges
       status 206
-      ranges.map! do |range|
-        body.byteslice(range)
-      end.join
+      body ranges.map! {|range| response_body.byteslice(range) }.join
     else
-      body
+      status 200
+      body response_body
     end
   end
 
@@ -258,4 +267,13 @@ private
     end
     dependencies
   end
+
+  def quote(string)
+    '"' << string << '"'
+  end
+
+  def parse_etags(value)
+    value.split(/, ?/).select{|s| s.sub!(/"(.*)"/, '\1') }
+  end
+
 end
