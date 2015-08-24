@@ -273,7 +273,7 @@ describe BundlerApi::Web do
         "a 2.0.1 a201\n"
     end
 
-    let(:expected_etag) { Digest::MD5.hexdigest(data) }
+    let(:expected_etag) { '"' << Digest::MD5.hexdigest(data) << '"' }
 
     it "returns versions.list" do
       get "/versions"
@@ -308,7 +308,7 @@ describe BundlerApi::Web do
           1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0|checksum:qwerty
         DEPS
       end
-      let(:expected_etag) { Digest::MD5.hexdigest(expected_deps) }
+      let(:expected_etag) { '"' << Digest::MD5.hexdigest(expected_deps) << '"' }
 
       it "should return the gem list" do
         get "/info/info_test"
