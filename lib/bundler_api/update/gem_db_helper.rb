@@ -77,7 +77,6 @@ class BundlerApi::GemDBHelper
       insert     = true
       indexed    = true if indexed.nil?
 
-
       spec_rubygems = get_spec_rubygems(spec)
       spec_ruby = get_spec_ruby(spec)
 
@@ -89,8 +88,8 @@ class BundlerApi::GemDBHelper
         indexed:     indexed,
         prerelease:  !spec.version.prerelease?.nil?,
         full_name:   spec.full_name,
-        rubygems_version: rubygems_version,
-        required_ruby_version: ruby_version,
+        rubygems_version: (spec.required_rubygems_version || '').to_s,
+        required_ruby_version: (spec.required_ruby_version || '').to_s,
         checksum:    checksum,
         created_at:  Time.now
       )
