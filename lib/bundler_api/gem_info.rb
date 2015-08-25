@@ -92,22 +92,33 @@ SQL
                 v.created_at > ?
           ORDER BY v.created_at, v.number, v.platform
     SQL
-    specs_hash = dataset.map do |entry|
-      {
-        name: entry[:name],
-        versions: [
-          number: entry[:number],
-          platform: entry[:platform],
-          checksum: entry[:info_checksum]
-        ]
-      }
+    dataset.map do |entry|
+      CompactIndex::Gem.new(entry[:name], [
+        CompactIndex::GemVersion.new(
+          entry[:number],
+          entry[:platform],
+          entry[:info_checksum]
+        )
+      ])
     end
   end
 
   def info(name)
     deps = deps_for([name])
-    deps.each do |dep|
-      dep[:dependencies].map! { |d| { gem: d[0], version: d[1] } }
+    deps.map! do |dep|
+      dependencies = dep[:dependencies].map do |d|
+        CompactIndex::Dependency.new(d[0], d[1])
+      end
+
+      CompactIndex::GemVersion.new(
+        dep[:number],
+        dep[:platform],
+        dep[:checksum],
+        dep[:info_checksum],
+        dependencies,
+        dep[:ruby_version],
+        dep[:rubygems_version]
+      )
     end
     CompactIndex.info(deps)
   end

@@ -17,7 +17,7 @@ GEM
       columnize (= 0.9.0)
     coderay (1.1.0)
     columnize (0.9.0)
-    compact_index (0.9.0)
+    compact_index (0.9.3)
     dalli (2.7.4)
     diff-lcs (1.2.5)
     dotenv (2.0.2)
@@ -98,7 +98,7 @@ PLATFORMS
 DEPENDENCIES
   appsignal (= 0.11.6.beta.0)
   artifice
-  compact_index (= 0.9.0)
+  compact_index (= 0.9.3)
   dalli
   dotenv
   foreman
