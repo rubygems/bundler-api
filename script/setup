@@ -40,7 +40,8 @@ end
 
 def conn_info
   uri = URI.parse database_url
-  params = ["--host", uri.host]
+  params = []
+  params.concat ["--host", uri.host] if uri.host
   params.concat ["--port", uri.port.to_s] if uri.port
   params.concat ["--username", uri.user] if uri.user
   params.concat ["--password", uri.password] if uri.password
@@ -58,8 +59,8 @@ if rebuild?
   system *["dropdb", "--if-exists", conn_info, database_name].flatten
 end
 
-puts 'Creating database'
-system *["createdb", conn_info, database_name].flatten
+puts "Creating database: #{database_url}"
+system *(p ["createdb", conn_info, database_name].flatten)
 
 puts 'Migrating database'
 system *%W{sequel --migrate-directory db/migrations #{database_url}}
