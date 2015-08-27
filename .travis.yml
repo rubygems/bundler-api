@@ -1,6 +1,8 @@
 language: ruby
 
 services: memcached
+addons:
+  postgresql: "9.3"
 
 rvm: 2.2.2
 
