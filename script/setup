@@ -60,7 +60,7 @@ if rebuild?
 end
 
 puts "Creating database: #{database_url}"
-system *(p ["createdb", conn_info, database_name].flatten)
+system *["createdb", conn_info, database_name].flatten
 
 puts 'Migrating database'
 system *%W{sequel --migrate-directory db/migrations #{database_url}}
