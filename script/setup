@@ -32,8 +32,19 @@ def print_output(output)
   puts
 end
 
+# must be a valid uri, e.g
+#   postgres://user:pass@host:80/path
 def database_url
   ENV['DATABASE_URL']
+end
+
+def conn_info
+  uri = URI.parse database_url
+  params = ["--host", uri.host]
+  params.concat ["--port", uri.port.to_s] if uri.port
+  params.concat ["--username", uri.user] if uri.user
+  params.concat ["--password", uri.password] if uri.password
+  params
 end
 
 def database_name
@@ -44,14 +55,14 @@ abort 'DATABASE_URL environment variable required' unless database_url
 
 if rebuild?
   puts 'Dropping database'
-  system %Q(dropdb --if-exists #{database_name})
+  system *["dropdb", "--if-exists", conn_info, database_name].flatten
 end
 
 puts 'Creating database'
-system %Q{createdb --no-password #{database_name}}
+system *["createdb", conn_info, database_name].flatten
 
 puts 'Migrating database'
-system %Q{sequel --migrate-directory db/migrations #{database_url}}
+system *%W{sequel --migrate-directory db/migrations #{database_url}}
 
 puts "
 Done! \
