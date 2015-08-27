@@ -15,7 +15,6 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'bundler/setup'
 require 'bundler_api/env'
-require 'open3'
 
 def rebuild?
   @rebuild ||= ARGV.delete('--rebuild')
@@ -45,18 +44,14 @@ abort 'DATABASE_URL environment variable required' unless database_url
 
 if rebuild?
   puts 'Dropping database'
-  output, _ = Open3.capture2e(*%W(dropdb --if-exists #{database_name}))
-  print_output output
+  system %Q(dropdb --if-exists #{database_name})
 end
 
 puts 'Creating database'
-output, _ = Open3.capture2e(*%W{createdb --no-password #{database_name}})
-print_output output
+system %Q{createdb --no-password #{database_name}}
 
 puts 'Migrating database'
-output, _ = Open3.capture2e(*%W{sequel --migrate-directory db/migrations
-                                       #{database_url}})
-print_output output
+system %Q{sequel --migrate-directory db/migrations #{database_url}}
 
 puts "
 Done! \
