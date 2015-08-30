@@ -17,7 +17,7 @@ if user && token
   end
 
   on_error = ->(e) do
-    STDOUT.puts("LibratoMetrics: #{ e.message }")
+    STDOUT.puts("LibratoMetrics: #{e.message} while sending data #{e.data.inspect}")
     STDOUT.puts(e.backtrace)
   end
 
