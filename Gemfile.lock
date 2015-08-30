@@ -4,6 +4,13 @@ GIT
   specs:
     dalli (2.7.4)
 
+GIT
+  remote: git://github.com/indirect/metriks-librato_metrics.git
+  revision: b4dc3fbbb51f85c2317f22911adfb0389d62e80d
+  specs:
+    metriks-librato_metrics (1.0.3)
+      metriks (>= 0.9.9.6)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -36,8 +43,6 @@ GEM
       atomic (~> 1.0)
       avl_tree (~> 1.2.0)
       hitimes (~> 1.1)
-    metriks-librato_metrics (1.0.3)
-      metriks (>= 0.9.9.6)
     metriks-middleware (2.1.1)
       metriks (~> 0.9.9)
     multi_json (1.10.1)
@@ -94,7 +99,7 @@ DEPENDENCIES
   foreman
   librato-metrics
   lock-smith
-  metriks-librato_metrics
+  metriks-librato_metrics!
   metriks-middleware
   pg
   puma
@@ -108,3 +113,6 @@ DEPENDENCIES
   sequel
   sequel_pg
   sinatra
+
+BUNDLED WITH
+   1.10.6
