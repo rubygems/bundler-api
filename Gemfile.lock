@@ -1,3 +1,9 @@
+GIT
+  remote: git://github.com/indirect/dalli.git
+  revision: 4be6be64e643eaaef76310ad6e67ffef8ce32980
+  specs:
+    dalli (2.7.4)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -84,7 +90,7 @@ PLATFORMS
 DEPENDENCIES
   appsignal (= 0.11.6.beta.0)
   artifice
-  dalli
+  dalli!
   dotenv
   foreman
   librato-metrics

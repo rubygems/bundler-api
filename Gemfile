@@ -10,7 +10,7 @@ gem 'metriks-middleware'
 gem 'pg'
 gem 'puma'
 gem 'rake'
-gem 'dalli'
+gem 'dalli', github: 'indirect/dalli'
 gem 'redis'
 gem 'sequel'
 gem 'sequel_pg', require: false
