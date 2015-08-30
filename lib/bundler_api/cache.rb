@@ -2,6 +2,7 @@ require 'net/http'
 require 'dalli'
 
 module BundlerApi
+
   FastlyClient = Struct.new(:service_id, :base_url, :api_key) do
     def purge_key(key)
       uri = URI("https://api.fastly.com/service/#{service_id}/purge/#{key}")
@@ -48,34 +49,40 @@ module BundlerApi
     end
 
     def cdn_client
-      @cdn_client ||=
-        if ENV['FASTLY_SERVICE_ID']
-          FastlyClient.new(ENV['FASTLY_SERVICE_ID'],
-                           ENV['FASTLY_BASE_URL'],
-                           ENV['FASTLY_API_KEY'])
+      return @cdn_client if @cdn_client
+
+      if ENV['FASTLY_SERVICE_ID']
+        @cdn_client = FastlyClient.new(
+          ENV['FASTLY_SERVICE_ID'],
+          ENV['FASTLY_BASE_URL'],
+          ENV['FASTLY_API_KEY']
+        )
       else
-          # Create a mock fastly client
-          Class.new do
-            def purge_key(key); end
-            def purge_path(path); end
-          end.new
-        end
+        # Create a mock Fastly client
+        @cdn_client = Class.new do
+          def purge_key(key); end
+          def purge_path(path); end
+        end.new
+      end
     end
 
     def memcached_client
-      @memcached_client ||=
-        if ENV["MEMCACHIER_SERVERS"]
-          Dalli::Client.new((ENV["MEMCACHIER_SERVERS"] || "").split(","),
-                            {username: ENV["MEMCACHIER_USERNAME"],
-                             password: ENV["MEMCACHIER_PASSWORD"],
-                             failover: true,
-                             socket_timeout: 1.5,
-                             socket_failure_delay: 0.2,
-                             expires_in: 15 * 60
-                            })
+      return @memcached_client if @memcached_client
+
+      if ENV["MEMCACHIER_SERVERS"]
+        servers = (ENV["MEMCACHIER_SERVERS"] || "").split(",")
+        @memcached_client = Dalli::Client.new(servers, {
+          username: ENV["MEMCACHIER_USERNAME"],
+          password: ENV["MEMCACHIER_PASSWORD"],
+          failover: true,
+          socket_timeout: 1.5,
+          socket_failure_delay: 0.2,
+          expires_in: 15 * 60
+        })
       else
-          Dalli::Client.new
-        end
+        @memcached_client = Dalli::Client.new
+      end
     end
+
   end
 end
