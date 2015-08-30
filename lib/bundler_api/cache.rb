@@ -2,7 +2,6 @@ require 'net/http'
 require 'dalli'
 
 module BundlerApi
-
   FastlyClient = Struct.new(:service_id, :base_url, :api_key) do
     def purge_key(key)
       uri = URI("https://api.fastly.com/service/#{service_id}/purge/#{key}")
@@ -49,17 +48,15 @@ module BundlerApi
     end
 
     def cdn_client
-      return @cdn_client if @cdn_client
-
-      if ENV['FASTLY_SERVICE_ID']
-        @cdn_client = FastlyClient.new(
+      @cdn_client ||= if ENV['FASTLY_SERVICE_ID']
+        FastlyClient.new(
           ENV['FASTLY_SERVICE_ID'],
           ENV['FASTLY_BASE_URL'],
           ENV['FASTLY_API_KEY']
         )
       else
         # Create a mock Fastly client
-        @cdn_client = Class.new do
+        Class.new do
           def purge_key(key); end
           def purge_path(path); end
         end.new
@@ -67,20 +64,20 @@ module BundlerApi
     end
 
     def memcached_client
-      return @memcached_client if @memcached_client
-
-      if ENV["MEMCACHIER_SERVERS"]
+      @memcached_client ||= if ENV["MEMCACHIER_SERVERS"]
         servers = (ENV["MEMCACHIER_SERVERS"] || "").split(",")
-        @memcached_client = Dalli::Client.new(servers, {
-          username: ENV["MEMCACHIER_USERNAME"],
-          password: ENV["MEMCACHIER_PASSWORD"],
-          failover: true,
-          socket_timeout: 1.5,
-          socket_failure_delay: 0.2,
-          expires_in: 15 * 60
-        })
+        Dalli::Client.new(
+          servers, {
+            username: ENV["MEMCACHIER_USERNAME"],
+            password: ENV["MEMCACHIER_PASSWORD"],
+            failover: true,
+            socket_timeout: 1.5,
+            socket_failure_delay: 0.2,
+            expires_in: 15 * 60
+          }
+        )
       else
-        @memcached_client = Dalli::Client.new
+        Dalli::Client.new
       end
     end
 
