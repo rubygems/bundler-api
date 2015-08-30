@@ -43,7 +43,11 @@ private
       keys += ua_match['ci'].split(",").map { |k| "cis.#{ k }" }
     end
 
-    keys.each { |metric| Metriks.meter(metric).mark }
+    keys.each do |metric|
+      # Send only ASCII metric names since Librato apparently hates UTF-8
+      metric.encode!("ASCII", invalid: :replace, undef: :replace)
+      Metriks.meter(metric).mark
+    end
   end
 
   def known_id?(id)
