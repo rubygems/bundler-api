@@ -44,9 +44,9 @@ private
     end
 
     keys.each do |metric|
-      # Send only ASCII metric names since Librato apparently hates UTF-8
-      metric.encode!("ASCII", invalid: :replace, undef: :replace)
-      Metriks.meter(metric).mark
+      # Librato metric keys are limited to these characters, and 255 chars total
+      metric.gsub!(/[^A-Za-z0-9.:-_]/, '?')
+      Metriks.meter(metric[0...255]).mark
     end
   end
 
