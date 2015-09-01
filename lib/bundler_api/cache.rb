@@ -14,6 +14,8 @@ module BundlerApi
     end
 
     def http(uri)
+      return unless ENV['RACK_ENV'] == "production"
+
       Net::HTTP.new(uri.host, uri.port).tap do |http|
         http.use_ssl     = true
         http.verify_mode = OpenSSL::SSL::VERIFY_PEER
