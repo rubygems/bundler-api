@@ -45,7 +45,7 @@ private
 
     keys.each do |metric|
       # Librato metric keys are limited to these characters, and 255 chars total
-      metric.gsub!(/[^A-Za-z0-9.:-_]/, '?')
+      metric.gsub!(/[^.:_\-0-9a-zA-Z]/, '?')
       Metriks.meter(metric[0...255]).mark
     end
   end
