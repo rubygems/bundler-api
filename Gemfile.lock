@@ -6,7 +6,7 @@ GIT
 
 GIT
   remote: git://github.com/indirect/metriks-librato_metrics.git
-  revision: b4dc3fbbb51f85c2317f22911adfb0389d62e80d
+  revision: 7adc20603e4cf9c9e936ac5f2644ef27d42af5a2
   specs:
     metriks-librato_metrics (1.0.3)
       metriks (>= 0.9.9.6)
@@ -23,7 +23,7 @@ GEM
     ast (2.1.0)
     astrolabe (1.3.1)
       parser (~> 2.2)
-    atomic (1.1.16)
+    atomic (1.1.99)
     avl_tree (1.2.1)
       atomic (~> 1.1)
     diff-lcs (1.2.5)
