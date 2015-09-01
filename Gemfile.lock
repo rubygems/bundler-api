@@ -6,7 +6,7 @@ GIT
 
 GIT
   remote: git://github.com/indirect/metriks-librato_metrics.git
-  revision: 7adc20603e4cf9c9e936ac5f2644ef27d42af5a2
+  revision: b4dc3fbbb51f85c2317f22911adfb0389d62e80d
   specs:
     metriks-librato_metrics (1.0.3)
       metriks (>= 0.9.9.6)
