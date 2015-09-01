@@ -36,7 +36,6 @@ module BundlerApi
     def self.token
       ENV['LIBRATO_METRICS_TOKEN']
     end
-
   end
 end
 
