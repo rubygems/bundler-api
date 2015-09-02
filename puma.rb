@@ -5,6 +5,6 @@ workers ENV.fetch('WORKER_COUNT', 1)
 require 'bundler_api/metriks'
 BundlerApi::Metriks.start
 
-on_worker_boot do
-  BundlerApi::Metriks.start
+on_worker_boot do |index|
+  BundlerApi::Metriks.start(index)
 end
