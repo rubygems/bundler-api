@@ -17,13 +17,13 @@ module BundlerApi
         Socket.gethostname
       end
 
-      on_error = ->(e) do
-        begin
-          STDOUT.puts("[Metriks][Librato] Error while submitting metrics: #{e.message}")
-          STDOUT.puts("  #{e.res.body}")
+      on_error = -> (e) do
+        STDOUT.puts("[Metriks][Librato] #{e.class} raised during metric submission: #{e.message}")
+
+        if e.is_a?(::Metriks::LibratoMetricsReporter::RequestFailedError)
+          STDOUT.puts("  Response body: #{e.res.body}")
           STDOUT.puts("  Submitted data: #{e.data.inspect}")
-        rescue => e
-          STDOUT.puts "#{e.class}: #{e.message}"
+        else
           STDOUT.puts e.backtrace.join("\n  ")
         end
       end
