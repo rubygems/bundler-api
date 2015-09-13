@@ -3,9 +3,9 @@ require 'metriks/middleware'
 require 'metriks-librato_metrics'
 
 module BundlerApi
-  module Metriks
+  class Metriks
     def self.start(worker_index = nil)
-      new(ENV['LIBRATO_METRICS_USER'], ENV['LIBRATO_METRICS_TOKEN'], worker_index).start
+      new(ENV['LIBRATO_METRICS_USER'], ENV['LIBRATO_METRICS_TOKEN'], worker_index)
     end
 
     def initialize(user, token, worker_index = nil)
