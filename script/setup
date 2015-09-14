@@ -2,7 +2,7 @@
 # Create and migrate the database specified in the $DATABASE_URL environment
 # variable.
 #
-# Usage: script/rebuild [--verbose] [--rebuild]
+# Usage: script/setup [--verbose] [--rebuild]
 #
 # Options:
 #   --rebuild: drop the database before creating it
@@ -15,6 +15,8 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'bundler/setup'
 require 'bundler_api/env'
+require 'bundler_api/cache'
+require 'bundler_api/redis'
 require 'open3'
 
 def rebuild?
@@ -41,7 +43,39 @@ def database_name
   File.basename(database_url)
 end
 
+def postgres_installed?
+  !`which psql`.strip.empty?
+end
+
+def redis_ready?
+  BundlerApi.redis.ping
+  true
+rescue
+  false
+end
+
+def memcached_ready?
+  BundlerApi::CacheInvalidator.new.memcached_client.alive!
+  true
+rescue
+  false
+end
+
+def verify_dependencies
+  puts 'Checking dependencies'
+  unmet = []
+  unmet << '  * postgres' unless postgres_installed?
+  unmet << '  * redis' unless redis_ready?
+  unmet << '  * memcached' unless memcached_ready?
+
+  unless unmet.empty?
+    abort "You have dependencies that are unmet or are not available:\n#{unmet.join("\n")}"
+  end
+end
+
 abort 'DATABASE_URL environment variable required' unless database_url
+
+verify_dependencies
 
 if rebuild?
   puts 'Dropping database'
