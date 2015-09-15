@@ -141,27 +141,27 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/quick/Marshal.4.8/:id" do
-    @gem_strategy.get_marshal(params[:id], self)
+    @gem_strategy.serve_marshal(params[:id], self)
   end
 
   get "/fetch/actual/gem/:id" do
-    @gem_strategy.get_actual_gem(params[:id], self)
+    @gem_strategy.serve_actual_gem(params[:id], self)
   end
 
   get "/gems/:id" do
-    @gem_strategy.get_gem(params[:id], self)
+    @gem_strategy.serve_gem(params[:id], self)
   end
 
   get "/latest_specs.4.8.gz" do
-    @gem_strategy.get_latest_specs(self)
+    @gem_strategy.serve_latest_specs(self)
   end
 
   get "/specs.4.8.gz" do
-    @gem_strategy.get_specs(self)
+    @gem_strategy.serve_specs(self)
   end
 
   get "/prerelease_specs.4.8.gz" do
-    @gem_strategy.get_prerelease_specs(self)
+    @gem_strategy.serve_prerelease_specs(self)
   end
 
   private
