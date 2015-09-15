@@ -1,3 +1,4 @@
+require 'open-uri'
 require 'sinatra/base'
 require 'sequel'
 require 'json'
@@ -183,13 +184,43 @@ class BundlerApi::Web < Sinatra::Base
       dependencies += value
     end
 
-    keys.each do |gem|
+    keys.delete_if do |gem|
       Metriks.meter('dependencies.memcached.miss').mark
       name = gem.gsub("deps/v1/", "")
       result = BundlerApi::DepCalc.fetch_dependency(@conn, name)
+      # TODO: This should only get set in the next block
+      # TODO: But what if the gem doesn't exist?
+      # TODO: If the server goes down before the next block is done, memcached will be missing gems
       @dalli_client.set(gem, result)
-      dependencies += result
+
+      unless result.empty?
+        dependencies += result
+        true
+      end
     end
+
+    unless keys.empty?
+      Metriks.meter('dependencies.database.miss').mark
+      keys.map! { |gem| gem.gsub("deps/v1/", "") }
+      external_dependencies = fetch_external_dependencies(keys)
+      BundlerApi::DepCalc.store_dependencies(@conn, external_dependencies)
+
+      external_dependencies.group_by do |dep|
+        dep[:name]
+      end.each do |gem, dep|
+        # TODO: I think this is inserting the right data into memcached...?
+        @dalli_client.set("deps/v1/#{gem}", dep)
+      end
+
+      dependencies += external_dependencies
+    end
+
     dependencies
+  end
+
+  def fetch_external_dependencies(gems)
+    puts "Fetching dependencies: #{gems.join ', '}"
+    escaped_gems = gems.map { |gem| CGI.escape(gem) }
+    Marshal.load open("#{RUBYGEMS_URL}/api/v1/dependencies?gems=#{escaped_gems.join ','}").read
   end
 end
