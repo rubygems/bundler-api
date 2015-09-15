@@ -17,6 +17,7 @@ require 'bundler/setup'
 require 'bundler_api/env'
 require 'bundler_api/cache'
 require 'bundler_api/redis'
+require 'sequel'
 require 'open3'
 
 def rebuild?
@@ -35,6 +36,15 @@ def print_output(output)
   puts
 end
 
+def print_error(title, error)
+  return unless verbose?
+  $stderr.puts "#{title}: #{error}"
+
+  error.backtrace.each do |line|
+    $stderr.puts "  #{line}"
+  end
+end
+
 def database_url
   ENV['DATABASE_URL']
 end
@@ -47,35 +57,54 @@ def postgres_installed?
   !`which psql`.strip.empty?
 end
 
+def postgres_ready?
+  Sequel.connect(database_url) do |db|
+    db[:versions].first
+  end
+
+  true
+rescue => e
+  print_error "Postgres error", e
+  false
+end
+
 def redis_ready?
   BundlerApi.redis.ping
   true
-rescue
+rescue => e
+  print_error "Redis error", e
   false
 end
 
 def memcached_ready?
   BundlerApi::CacheInvalidator.new.memcached_client.alive!
   true
-rescue
+rescue => e
+  print_error "Memcached error", e
   false
 end
 
 def verify_dependencies
   puts 'Checking dependencies'
   unmet = []
-  unmet << '  * postgres' unless postgres_installed?
-  unmet << '  * redis' unless redis_ready?
-  unmet << '  * memcached' unless memcached_ready?
+  unmet << 'postgres' unless postgres_ready?
+  unmet << 'redis' unless redis_ready?
+  unmet << 'memcached' unless memcached_ready?
 
   unless unmet.empty?
-    abort "You have dependencies that are unmet or are not available:\n#{unmet.join("\n")}"
+    $stderr.puts 'You have dependencies that are unmet or are not available:'
+
+    unmet.each do |dependency|
+      $stderr.puts "  * #{dependency}"
+    end
   end
 end
 
 abort 'DATABASE_URL environment variable required' unless database_url
 
-verify_dependencies
+unless postgres_installed?
+  abort 'Please install postgresql first'
+end
 
 if rebuild?
   puts 'Dropping database'
@@ -91,6 +120,8 @@ puts 'Migrating database'
 output, _ = Open3.capture2e(*%W{sequel --migrate-directory db/migrations
                                        #{database_url}})
 print_output output
+
+verify_dependencies
 
 puts "
 Done! \
