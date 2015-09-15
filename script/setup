@@ -28,6 +28,19 @@ def verbose?
   @verbose ||= (ARGV.delete('-v') || ARGV.delete('--verbose'))
 end
 
+def run_command(*args)
+  output, status = Open3.capture2e(*args)
+  print_output output
+
+  unless status.success?
+    if verbose?
+      abort
+    else
+      abort 'Error! Please rerun with --verbose for more details'
+    end
+  end
+end
+
 def print_output(output)
   return if !verbose? || output.empty?
   output.lines.each do |line|
@@ -55,6 +68,16 @@ end
 
 def postgres_installed?
   !`which psql`.strip.empty?
+end
+
+def database_exists?
+  Sequel.connect(database_url) do |db|
+    db.test_connection
+  end
+
+  true
+rescue
+  false
 end
 
 def postgres_ready?
@@ -102,24 +125,23 @@ end
 
 abort 'DATABASE_URL environment variable required' unless database_url
 
-unless postgres_installed?
-  abort 'Please install postgresql first'
-end
-
 if rebuild?
   puts 'Dropping database'
-  output, _ = Open3.capture2e(*%W(dropdb --if-exists #{database_name}))
-  print_output output
+  run_command(*%W(dropdb --if-exists #{database_name}))
 end
 
-puts 'Creating database'
-output, _ = Open3.capture2e(*%W{createdb --no-password #{database_name}})
-print_output output
+unless database_exists?
+  unless postgres_installed?
+    abort 'Please install postgresql or specify a connection to an existing database in .env.local'
+  end
+
+  puts 'Creating database'
+  run_command(*%W{createdb --no-password #{database_name}})
+end
 
 puts 'Migrating database'
-output, _ = Open3.capture2e(*%W{sequel --migrate-directory db/migrations
-                                       #{database_url}})
-print_output output
+run_command(*%W{sequel --migrate-directory db/migrations
+                       #{database_url}})
 
 verify_dependencies
 
