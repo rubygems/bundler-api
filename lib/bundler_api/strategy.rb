@@ -1,38 +1,31 @@
 module BundlerApi
   class RedirectionStrategy
-    def initialize(rubygems_url, server)
+    def initialize(rubygems_url)
       @rubygems_url = rubygems_url
-      @server = server
     end
 
-    def get_marshal(id)
-      redirect "/quick/Marshal.4.8/#{id}"
+    def get_marshal(id, app)
+      app.redirect "#{@rubygems_url}/quick/Marshal.4.8/#{id}"
     end
 
-    def get_actual_gem(id)
-      redirect "/fetch/actual/gem/#{:id}"
+    def get_actual_gem(id, app)
+      app.redirect "#{@rubygems_url}/fetch/actual/gem/#{:id}"
     end
 
-    def get_gem(id)
-      redirect "/gems/#{:id}"
+    def get_gem(id, app)
+      app.redirect "#{@rubygems_url}/gems/#{:id}"
     end
 
-    def get_latest_specs
-      redirect "/latest_specs.4.8.gz"
+    def get_latest_specs(app)
+      app.redirect "#{@rubygems_url}/latest_specs.4.8.gz"
     end
 
-    def get_specs
-      redirect "/specs.4.8.gz"
+    def get_specs(app)
+      app.redirect "#{@rubygems_url}/specs.4.8.gz"
     end
 
-    def get_prerelease_specs
-      redirect "/prerelease_specs.4.8.gz"
-    end
-
-    private
-
-    def redirect(path)
-      @server.redirect "#{@rubygems_url}#{path}"
+    def get_prerelease_specs(app)
+      app.redirect "#{@rubygems_url}/prerelease_specs.4.8.gz"
     end
 
   end
