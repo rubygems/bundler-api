@@ -5,10 +5,11 @@ class BundlerApi::DepCalc
 
   # TODO: These 2 methods may not really belong here
   # TODO: There are a lot more queries than are probably needed
-  # TODO: Should this stuff be wrapped in a transaction?
   def self.store_dependencies(connection, dependencies)
-    dependencies.each do |dep|
-      store_dependency(connection, dep)
+    connection.transaction do
+      dependencies.each do |dep|
+        store_dependency(connection, dep)
+      end
     end
   end
 
