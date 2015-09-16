@@ -1,6 +1,7 @@
 require 'open-uri'
 require 'sinatra/base'
 require 'sequel'
+require 'set'
 require 'json'
 require 'bundler_api'
 require 'bundler_api/agent_reporting'
@@ -203,7 +204,7 @@ class BundlerApi::Web < Sinatra::Base
       Metriks.meter('dependencies.database.miss').mark
       keys.map! { |gem| gem.gsub("deps/v1/", "") }
       external_dependencies = fetch_external_dependencies(keys)
-      BundlerApi::DepCalc.store_dependencies(@conn, external_dependencies)
+      store_dependencies(external_dependencies)
 
       external_dependencies.group_by do |dep|
         dep[:name]
@@ -222,5 +223,43 @@ class BundlerApi::Web < Sinatra::Base
     puts "Fetching dependencies: #{gems.join ', '}"
     escaped_gems = gems.map { |gem| CGI.escape(gem) }
     Marshal.load open("#{RUBYGEMS_URL}/api/v1/dependencies?gems=#{escaped_gems.join ','}").read
+  end
+
+  # TODO: This could probably do fewer queries if desired
+  def store_dependencies(dependencies)
+    payloads = dependencies.map do |dep|
+      version = Gem::Version.new(dep[:number])
+      payload = BundlerApi::GemHelper.new(dep[:name], version, dep[:platform], version.prerelease?)
+
+      spec = Gem::Specification.new do |s|
+        s.name = dep[:name]
+        s.version = dep[:number]
+        s.platform = dep[:platform]
+
+        dep[:dependencies].each do |d|
+          d.last.split(',').each do |requirement|
+            s.add_runtime_dependency(d.first, requirement.strip)
+          end
+        end
+      end
+
+      # TODO: Remove this temporary hack
+      payload.instance_variable_set(:@gemspec, spec)
+      payload
+    end
+
+    names = Set.new
+
+    # TODO: I don't really like this transaction, but otherwise concurrent /api/v1/dependencies will be wrong
+    @write_conn.transaction do
+      payloads.each do |payload|
+        job = BundlerApi::Job.new(@write_conn, payload)
+        job.run
+        names << payload.name
+      end
+    end
+
+    @cache.purge_specs
+    names.each { |name| @cache.purge_memory_cache(name) }
   end
 end
