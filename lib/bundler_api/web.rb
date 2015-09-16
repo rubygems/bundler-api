@@ -1,4 +1,3 @@
-require 'open-uri'
 require 'sinatra/base'
 require 'sequel'
 require 'set'
@@ -7,7 +6,7 @@ require 'bundler_api'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/appsignal'
 require 'bundler_api/cache'
-require 'bundler_api/dep_calc'
+require 'bundler_api/dep_fetcher'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
 require 'bundler_api/gem_helper'
@@ -42,7 +41,10 @@ class BundlerApi::Web < Sinatra::Base
     end
 
     @cache = BundlerApi::CacheInvalidator.new
-    @dalli_client = @cache.memcached_client
+    @dep_fetcher = BundlerApi::DepFetcher.new(@cache.memcached_client)
+    @dep_fetcher << BundlerApi::DepFetcher::Memcached.new(@cache.memcached_client)
+    @dep_fetcher << BundlerApi::DepFetcher::Database.new(@conn)
+    @dep_fetcher << BundlerApi::DepFetcher::GemServer.new(@cache, @write_conn, RUBYGEMS_URL)
     super()
   end
 
@@ -94,7 +96,7 @@ class BundlerApi::Web < Sinatra::Base
 
     content_type 'application/octet-stream'
 
-    deps = with_metriks { get_cached_dependencies }
+    deps = with_metriks { @dep_fetcher.fetch(gems) }
     ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
   end
 
@@ -106,7 +108,7 @@ class BundlerApi::Web < Sinatra::Base
 
     content_type 'application/json;charset=UTF-8'
 
-    deps = with_metriks { get_cached_dependencies }
+    deps = with_metriks { @dep_fetcher.fetch(gems) }
     ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
   end
 
@@ -174,95 +176,5 @@ class BundlerApi::Web < Sinatra::Base
     end
   ensure
     timer.stop if timer
-  end
-
-  def get_cached_dependencies
-    dependencies = []
-    keys = gems.map { |g| "deps/v1/#{g}" }
-    @dalli_client.get_multi(keys) do |key, value|
-      Metriks.meter('dependencies.memcached.hit').mark
-      keys.delete(key)
-      dependencies += value
-    end
-
-    keys.delete_if do |gem|
-      Metriks.meter('dependencies.memcached.miss').mark
-      name = gem.gsub("deps/v1/", "")
-      result = BundlerApi::DepCalc.fetch_dependency(@conn, name)
-
-      unless result.empty?
-        @dalli_client.set(gem, result)
-        dependencies += result
-        true
-      end
-    end
-
-    unless keys.empty?
-      Metriks.meter('dependencies.database.miss').mark
-      gems_to_fetch = keys.map { |gem| gem.gsub("deps/v1/", "") }
-      external_dependencies = fetch_external_dependencies(gems_to_fetch)
-      store_dependencies(external_dependencies)
-
-      external_dependencies.group_by do |dep|
-        dep[:name]
-      end.each do |gem, dep|
-        key = "deps/v1/#{gem}"
-        keys.delete(key)
-        # TODO: I think this is inserting the right data into memcached...?
-        @dalli_client.set(key, dep)
-      end
-
-      keys.each do |key|
-        @dalli_client.set(key, [])
-      end
-
-      dependencies += external_dependencies
-    end
-
-    dependencies
-  end
-
-  def fetch_external_dependencies(gems)
-    puts "Fetching dependencies: #{gems.join ', '}"
-    escaped_gems = gems.map { |gem| CGI.escape(gem) }
-    Marshal.load open("#{RUBYGEMS_URL}/api/v1/dependencies?gems=#{escaped_gems.join ','}").read
-  end
-
-  # TODO: This could probably do fewer queries if desired
-  def store_dependencies(dependencies)
-    payloads = dependencies.map do |dep|
-      version = Gem::Version.new(dep[:number])
-      payload = BundlerApi::GemHelper.new(dep[:name], version, dep[:platform], version.prerelease?)
-
-      spec = Gem::Specification.new do |s|
-        s.name = dep[:name]
-        s.version = dep[:number]
-        s.platform = dep[:platform]
-
-        dep[:dependencies].each do |d|
-          d.last.split(',').each do |requirement|
-            s.add_runtime_dependency(d.first, requirement.strip)
-          end
-        end
-      end
-
-      # TODO: Remove this temporary hack
-      payload.instance_variable_set(:@gemspec, spec)
-      payload
-    end
-
-    names = Set.new
-
-    # TODO: I don't really like this transaction, but otherwise concurrent /api/v1/dependencies will be wrong
-    @write_conn.transaction do
-      payloads.each do |payload|
-        job = BundlerApi::Job.new(@write_conn, payload)
-        job.run
-        names << payload.name
-      end
-    end
-
-    @cache.purge_specs
-    names.each { |name| @cache.purge_memory_cache(name) }
   end
 end
