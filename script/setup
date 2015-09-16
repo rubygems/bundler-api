@@ -30,19 +30,12 @@ end
 
 def run_command(*args)
   output, status = Open3.capture2e(*args)
-  print_output output
-
-  unless status.success?
-    if verbose?
-      abort
-    else
-      abort 'Error! Please rerun with --verbose for more details'
-    end
-  end
+  print_output(output, !status.success? || verbose?)
+  abort unless status.success?
 end
 
-def print_output(output)
-  return if !verbose? || output.empty?
+def print_output(output, verbose)
+  return if !verbose || output.empty?
   output.lines.each do |line|
     puts "  #{line}"
   end
