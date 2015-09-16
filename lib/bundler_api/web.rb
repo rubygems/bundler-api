@@ -189,12 +189,9 @@ class BundlerApi::Web < Sinatra::Base
       Metriks.meter('dependencies.memcached.miss').mark
       name = gem.gsub("deps/v1/", "")
       result = BundlerApi::DepCalc.fetch_dependency(@conn, name)
-      # TODO: This should only get set in the next block
-      # TODO: But what if the gem doesn't exist?
-      # TODO: If the server goes down before the next block is done, memcached will be missing gems
-      @dalli_client.set(gem, result)
 
       unless result.empty?
+        @dalli_client.set(gem, result)
         dependencies += result
         true
       end
@@ -202,15 +199,21 @@ class BundlerApi::Web < Sinatra::Base
 
     unless keys.empty?
       Metriks.meter('dependencies.database.miss').mark
-      keys.map! { |gem| gem.gsub("deps/v1/", "") }
-      external_dependencies = fetch_external_dependencies(keys)
+      gems_to_fetch = keys.map { |gem| gem.gsub("deps/v1/", "") }
+      external_dependencies = fetch_external_dependencies(gems_to_fetch)
       store_dependencies(external_dependencies)
 
       external_dependencies.group_by do |dep|
         dep[:name]
       end.each do |gem, dep|
+        key = "deps/v1/#{gem}"
+        keys.delete(key)
         # TODO: I think this is inserting the right data into memcached...?
-        @dalli_client.set("deps/v1/#{gem}", dep)
+        @dalli_client.set(key, dep)
+      end
+
+      keys.each do |key|
+        @dalli_client.set(key, [])
       end
 
       dependencies += external_dependencies
