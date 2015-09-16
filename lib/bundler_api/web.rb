@@ -11,6 +11,7 @@ require 'bundler_api/runtime_instrumentation'
 require 'bundler_api/gem_helper'
 require 'bundler_api/update/job'
 require 'bundler_api/update/yank_job'
+require 'bundler_api/strategy'
 
 class BundlerApi::Web < Sinatra::Base
   API_REQUEST_LIMIT    = 200
@@ -24,7 +25,7 @@ class BundlerApi::Web < Sinatra::Base
     use BundlerApi::AgentReporting
   end
 
-  def initialize(conn = nil, write_conn = nil)
+  def initialize(conn = nil, write_conn = nil, gem_strategy = nil)
     @rubygems_token = ENV['RUBYGEMS_TOKEN']
 
     statement_timeout = proc {|c| c.execute("SET statement_timeout = #{PG_STATEMENT_TIMEOUT}") }
@@ -42,6 +43,7 @@ class BundlerApi::Web < Sinatra::Base
     @cache = BundlerApi::CacheInvalidator.new
     @dalli_client = @cache.memcached_client
     super()
+    @gem_strategy = gem_strategy || BundlerApi::RedirectionStrategy.new(RUBYGEMS_URL)
   end
 
   set :root, File.join(File.dirname(__FILE__), '..', '..')
@@ -139,27 +141,27 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/quick/Marshal.4.8/:id" do
-    redirect "#{RUBYGEMS_URL}/quick/Marshal.4.8/#{params[:id]}"
+    @gem_strategy.serve_marshal(params[:id], self)
   end
 
   get "/fetch/actual/gem/:id" do
-    redirect "#{RUBYGEMS_URL}/fetch/actual/gem/#{params[:id]}"
+    @gem_strategy.serve_actual_gem(params[:id], self)
   end
 
   get "/gems/:id" do
-    redirect "#{RUBYGEMS_URL}/gems/#{params[:id]}"
+    @gem_strategy.serve_gem(params[:id], self)
   end
 
   get "/latest_specs.4.8.gz" do
-    redirect "#{RUBYGEMS_URL}/latest_specs.4.8.gz"
+    @gem_strategy.serve_latest_specs(self)
   end
 
   get "/specs.4.8.gz" do
-    redirect "#{RUBYGEMS_URL}/specs.4.8.gz"
+    @gem_strategy.serve_specs(self)
   end
 
   get "/prerelease_specs.4.8.gz" do
-    redirect "#{RUBYGEMS_URL}/prerelease_specs.4.8.gz"
+    @gem_strategy.serve_prerelease_specs(self)
   end
 
   private
