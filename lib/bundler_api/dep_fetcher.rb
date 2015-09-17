@@ -119,7 +119,9 @@ class BundlerApi::DepFetcher
     def fetch_external(gems)
       puts "Fetching dependencies: #{gems.to_a.join(', ')}"
       escaped_gems = gems.map { |gem| CGI.escape(gem) }
-      Marshal.load open("#{@rubygems_url}/api/v1/dependencies?gems=#{escaped_gems.join(',')}").read
+      open("#{@rubygems_url}/api/v1/dependencies?gems=#{escaped_gems.join(',')}") { |io|
+        Marshal.load(io.read)
+      }
     end
 
     # TODO: Should this do bulk inserts?
