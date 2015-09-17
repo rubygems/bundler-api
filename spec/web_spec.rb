@@ -1,6 +1,8 @@
 require 'rack/test'
 require 'spec_helper'
+require 'support/gem_builder'
 require 'bundler_api/web'
+require 'stringio'
 
 describe BundlerApi::Web do
   include Rack::Test::Methods
@@ -73,6 +75,33 @@ describe BundlerApi::Web do
       end
     end
 
+    context "there are missing gems" do
+      it "fetches from rubygems.org" do
+        rack = {
+          name:         'rack',
+          number:       '1.0.0',
+          platform:     'ruby',
+          dependencies: []
+        }
+
+        missing = {
+          name:         'missing',
+          number:       '0.1.0',
+          platform:     'ruby',
+          dependencies: []
+        }
+
+        expect_any_instance_of(BundlerApi::DepFetcher::GemServer).to receive(:open).
+          with("https://www.rubygems.org/api/v1/dependencies?gems=missing").
+          and_yield(StringIO.new(Marshal.dump([missing])))
+
+        get "#{request}?gems=rack,missing"
+
+        expect(last_response).to be_ok
+        expect(Marshal.load(last_response.body)).to contain_exactly(rack, missing)
+      end
+    end
+
     context "there are too many gems" do
       let(:gems) { 201.times.map { |i| "gem-#{ i }" }.join(',') }
 
@@ -111,6 +140,38 @@ describe BundlerApi::Web do
 
         expect(last_response).to be_ok
         expect(JSON.parse(last_response.body)).to eq(result)
+      end
+    end
+
+    context "there are missing gems" do
+      it "fetches from rubygems.org" do
+        missing = {
+          name:         'missing',
+          number:       '0.1.0',
+          platform:     'ruby',
+          dependencies: []
+        }
+
+        result = [{
+          "name"         => 'rack',
+          "number"       => '1.0.0',
+          "platform"     => 'ruby',
+          "dependencies" => []
+        }, {
+          "name"         => 'missing',
+          "number"       => '0.1.0',
+          "platform"     => 'ruby',
+          "dependencies" => []
+        }]
+
+        expect_any_instance_of(BundlerApi::DepFetcher::GemServer).to receive(:open).
+          with("https://www.rubygems.org/api/v1/dependencies?gems=missing").
+          and_yield(StringIO.new(Marshal.dump([missing])))
+
+        get "#{request}?gems=rack,missing"
+
+        expect(last_response).to be_ok
+        expect(JSON.parse(last_response.body)).to match_array(result)
       end
     end
 

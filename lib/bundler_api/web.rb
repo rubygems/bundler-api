@@ -1,11 +1,12 @@
 require 'sinatra/base'
 require 'sequel'
+require 'set'
 require 'json'
 require 'bundler_api'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/appsignal'
 require 'bundler_api/cache'
-require 'bundler_api/dep_calc'
+require 'bundler_api/dep_fetcher'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
 require 'bundler_api/gem_helper'
@@ -41,7 +42,10 @@ class BundlerApi::Web < Sinatra::Base
     end
 
     @cache = BundlerApi::CacheInvalidator.new
-    @dalli_client = @cache.memcached_client
+    @dep_fetcher = BundlerApi::DepFetcher.new(@cache.memcached_client)
+    @dep_fetcher << BundlerApi::DepFetcher::Memcached.new(@cache.memcached_client)
+    @dep_fetcher << BundlerApi::DepFetcher::Database.new(@conn)
+    @dep_fetcher << BundlerApi::DepFetcher::GemServer.new(@cache, @write_conn, RUBYGEMS_URL)
     super()
     @gem_strategy = gem_strategy || BundlerApi::RedirectionStrategy.new(RUBYGEMS_URL)
   end
@@ -94,7 +98,7 @@ class BundlerApi::Web < Sinatra::Base
 
     content_type 'application/octet-stream'
 
-    deps = with_metriks { get_cached_dependencies }
+    deps = with_metriks { @dep_fetcher.fetch(gems) }
     ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
   end
 
@@ -106,7 +110,7 @@ class BundlerApi::Web < Sinatra::Base
 
     content_type 'application/json;charset=UTF-8'
 
-    deps = with_metriks { get_cached_dependencies }
+    deps = with_metriks { @dep_fetcher.fetch(gems) }
     ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
   end
 
@@ -174,24 +178,5 @@ class BundlerApi::Web < Sinatra::Base
     end
   ensure
     timer.stop if timer
-  end
-
-  def get_cached_dependencies
-    dependencies = []
-    keys = gems.map { |g| "deps/v1/#{g}" }
-    @dalli_client.get_multi(keys) do |key, value|
-      Metriks.meter('dependencies.memcached.hit').mark
-      keys.delete(key)
-      dependencies += value
-    end
-
-    keys.each do |gem|
-      Metriks.meter('dependencies.memcached.miss').mark
-      name = gem.gsub("deps/v1/", "")
-      result = BundlerApi::DepCalc.fetch_dependency(@conn, name)
-      @dalli_client.set(gem, result)
-      dependencies += result
-    end
-    dependencies
   end
 end
