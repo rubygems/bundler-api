@@ -16,7 +16,6 @@ require 'bundler_api/strategy'
 class BundlerApi::Web < Sinatra::Base
   API_REQUEST_LIMIT    = 200
   PG_STATEMENT_TIMEOUT = 1000
-  RUBYGEMS_URL         = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
     use Appsignal::Rack::Listener, name: 'bundler-api'
@@ -42,8 +41,8 @@ class BundlerApi::Web < Sinatra::Base
 
     @cache = BundlerApi::CacheInvalidator.new
     @dalli_client = @cache.memcached_client
+    @gem_strategy = gem_strategy || BundlerApi::RedirectionStrategy.new
     super()
-    @gem_strategy = gem_strategy || BundlerApi::RedirectionStrategy.new(RUBYGEMS_URL)
   end
 
   set :root, File.join(File.dirname(__FILE__), '..', '..')
