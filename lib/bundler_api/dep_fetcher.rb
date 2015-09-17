@@ -18,18 +18,12 @@ class BundlerApi::DepFetcher
   end
 
   def fetch(gems)
-    results = Results.new(@memcached_client, gems)
-
-    @fetchers.each do |fetcher|
-      break if results.done?
-      fetcher.fetch(results)
-    end
-
-    results.remaining_keys.each do |key|
-      @memcached_client.set(key, [])
-    end
-
-    results.dependencies
+    Results.new(@memcached_client, gems) { |results|
+      @fetchers.each do |fetcher|
+        break if results.done?
+        fetcher.fetch(results)
+      end
+    }.dependencies
   end
 
   class Results
@@ -39,6 +33,10 @@ class BundlerApi::DepFetcher
       @memcached_client = memcached_client
       @remaining_gems = Set.new(gems)
       @dependencies = []
+      yield(self)
+      remaining_keys.each do |key|
+        @memcached_client.set(key, [])
+      end
     end
 
     def done?
