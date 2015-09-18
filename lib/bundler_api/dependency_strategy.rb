@@ -5,9 +5,10 @@ require 'bundler_api/web_helper'
 
 module BundlerApi::DependencyStrategy
   class Database
-    def initialize(memcached_client, connection)
+    def initialize(memcached_client, connection, dep_calc = nil)
       @memcached_client = memcached_client
       @conn = connection
+      @dep_calc = dep_calc || BundlerApi::DepCalc
     end
 
     def fetch(gems)
@@ -22,7 +23,7 @@ module BundlerApi::DependencyStrategy
       keys.each do |gem|
         Metriks.meter('dependencies.memcached.miss').mark
         name = gem.gsub('deps/v1/', '')
-        result = BundlerApi::DepCalc.fetch_dependency(@conn, name)
+        result = @dep_calc.fetch_dependency(@conn, name)
         @memcached_client.set(gem, result)
         dependencies += result
       end
@@ -57,8 +58,14 @@ module BundlerApi::DependencyStrategy
         results.group_by { |result|
           result[:name]
         }.each do |gem, result|
-          @memcached_client.set("deps/v1/#{gem}", result, EXPIRY)
+          key = "deps/v1/#{gem}"
+          keys.delete(key)
+          @memcached_client.set(key, result, EXPIRY)
           dependencies += result
+        end
+
+        keys.each do |key|
+          @memcached_client.set(key, [], EXPIRY)
         end
       end
 
