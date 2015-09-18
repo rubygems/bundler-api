@@ -1,3 +1,5 @@
+require 'bundler_api/dependency_strategy'
+
 module BundlerApi
   class RedirectionStrategy
     def initialize(rubygems_url)
