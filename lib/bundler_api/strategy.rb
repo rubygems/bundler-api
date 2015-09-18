@@ -11,7 +11,7 @@ module BundlerApi
     end
 
     def serve_gem(id, app)
-      app.redirect "#{RUBYGEMS_URL}/gems/#{:id}"
+      app.redirect "#{RUBYGEMS_URL}/gems/#{id}"
     end
 
     def serve_latest_specs(app)
@@ -30,7 +30,7 @@ module BundlerApi
   class CachingStrategy < RedirectionStrategy
     def initialize(storage, gem_fetcher: nil)
       @storage = storage
-      @gem_fetcher = GemFetcher.new || gem_fetcher
+      @gem_fetcher =  gem_fetcher ||GemFetcher.new
     end
 
     def serve_gem(id, app)
