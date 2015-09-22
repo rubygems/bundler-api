@@ -166,6 +166,7 @@ describe BundlerApi::Web do
       get "/quick/Marshal.4.8/rack"
 
       expect(last_response).to be_redirect
+      expect(last_response.location).to end_with("/quick/Marshal.4.8/rack")
     end
   end
 
@@ -174,6 +175,7 @@ describe BundlerApi::Web do
       get "/fetch/actual/gem/rack"
 
       expect(last_response).to be_redirect
+      expect(last_response.location).to end_with("/fetch/actual/gem/rack")
     end
   end
 
@@ -182,6 +184,7 @@ describe BundlerApi::Web do
       get "/gems/rack"
 
       expect(last_response).to be_redirect
+      expect(last_response.location).to end_with("/gems/rack")
     end
   end
 
@@ -190,6 +193,7 @@ describe BundlerApi::Web do
       get "/latest_specs.4.8.gz"
 
       expect(last_response).to be_redirect
+      expect(last_response.location).to end_with("/latest_specs.4.8.gz")
     end
   end
 
@@ -198,6 +202,7 @@ describe BundlerApi::Web do
       get "/specs.4.8.gz"
 
       expect(last_response).to be_redirect
+      expect(last_response.location).to end_with("/specs.4.8.gz")
     end
   end
 
@@ -206,6 +211,7 @@ describe BundlerApi::Web do
       get "/prerelease_specs.4.8.gz"
 
       expect(last_response).to be_redirect
+      expect(last_response.location).to end_with("/prerelease_specs.4.8.gz")
     end
   end
 end
