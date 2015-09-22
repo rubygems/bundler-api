@@ -9,11 +9,11 @@ module BundlerApi
     end
 
     def serve_actual_gem(id, app)
-      app.redirect "#{@rubygems_url}/fetch/actual/gem/#{:id}"
+      app.redirect "#{@rubygems_url}/fetch/actual/gem/#{id}"
     end
 
     def serve_gem(id, app)
-      app.redirect "#{@rubygems_url}/gems/#{:id}"
+      app.redirect "#{@rubygems_url}/gems/#{id}"
     end
 
     def serve_latest_specs(app)
