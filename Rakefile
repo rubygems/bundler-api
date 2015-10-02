@@ -97,6 +97,11 @@ def update(db, thread_count)
   prerelease    = false
   pool          = BundlerApi::ConsumerPool.new(thread_count)
 
+  if (specs.size - 1) == local_gems.size
+    puts "Gem counts match, seems like we're already up to date!"
+    return
+  end
+
   pool.start
   specs.each do |spec|
     if spec == :prerelease
