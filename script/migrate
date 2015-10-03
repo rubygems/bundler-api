@@ -26,7 +26,7 @@ end
 abort 'DATABASE_URL environment variable required' unless database_url
 
 puts 'Migrating database'
-command = *%W{sequel --migrate-directory db/migrations}
+command = *%w{sequel --migrate-directory db/migrations}
 command += %W{--migrate-version #{version}} if version
 command << database_url
 system *command
