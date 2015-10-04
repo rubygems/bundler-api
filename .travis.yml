@@ -2,7 +2,7 @@ language: ruby
 
 services: memcached
 
-rvm: 2.2.2
+rvm: 2.2.3
 
 bundler_args: --binstubs --jobs=3 --retry=3 --deployment
 
