@@ -10,6 +10,10 @@ sudo: false
 
 cache: bundler
 
+branches:
+  only:
+    - master
+
 before_script:
   - psql -c 'create database "bundler-api";' -U postgres
   - ./script/setup --verbose
