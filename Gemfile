@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "2.2.2"
+ruby File.read(File.expand_path('../.ruby-version', __FILE__)).strip
 
 gem 'appsignal', '0.11.6.beta.0'
 gem 'librato-metrics'
