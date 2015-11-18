@@ -126,6 +126,53 @@ describe BundlerApi::GemInfo do
     end
   end
 
-  pending "#versions"
+  describe "#versions" do
+    let(:gems) do
+      [
+        CompactIndex::Gem.new(
+          'a', 
+          [CompactIndex::GemVersion.new('1.0.0', 'ruby', 'a100')]
+        ),
+        CompactIndex::Gem.new(
+          'a', 
+          [CompactIndex::GemVersion.new('1.0.1', 'ruby', 'a101')]
+        ),
+        CompactIndex::Gem.new(
+          'b', 
+          [CompactIndex::GemVersion.new('1.0.0', 'ruby', 'b100')]
+        ),
+        CompactIndex::Gem.new(
+          'c', 
+          [CompactIndex::GemVersion.new('1.0.0', 'java', 'c100')]
+        ),
+        CompactIndex::Gem.new(
+          'a', 
+          [CompactIndex::GemVersion.new('2.0.0', 'java', 'a200')]
+        ),
+        CompactIndex::Gem.new(
+          'a', 
+          [CompactIndex::GemVersion.new('2.0.1', 'ruby', 'a201')]
+        )
+      ]
+    end
+
+    before do
+      @time = Time.now
+      a = builder.create_rubygem("a")
+      builder.create_version(a, 'a', '1.0.0', 'ruby', info_checksum: 'a100')
+      builder.create_version(a, 'a', '1.0.1', 'ruby', info_checksum: 'a101')
+      b = builder.create_rubygem("b")
+      builder.create_version(b, 'b', '1.0.0', 'ruby', info_checksum: 'b100')
+      c = builder.create_rubygem("c")
+      builder.create_version(c, 'c', '1.0.0', 'java', info_checksum: 'c100')
+      builder.create_version(a, 'a', '2.0.0', 'java', info_checksum: 'a200')
+      builder.create_version(a, 'a', '2.0.1', 'ruby', info_checksum: 'a201')
+    end
+
+    it "should return gems on compact index format" do
+      expect(gem_info.versions(@time)).to eq(gems)
+    end
+
+  end
   pending "#info"
 end
