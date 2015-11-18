@@ -11,6 +11,10 @@ class GemBuilder
     @conn[:rubygems].select(:id).where(name: name)
   end
 
+  def yank(version_id)
+    @conn[:versions].where(id: version_id).update(indexed: false, yanked_at: Time.now)
+  end
+
   def create_version(rubygem_id, name, version = '1.0.0', platform = 'ruby', extra_args = {})
     args = {
       indexed: true,

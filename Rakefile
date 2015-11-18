@@ -125,7 +125,7 @@ def update(db, thread_count)
   unless local_gems.empty?
     print "Yanking #{local_gems.size} gems\n"
     local_gems.keys.each {|name| print "Yanking: #{name}\n" }
-    db[:versions].where(id: local_gems.values).update(indexed: false)
+    db[:versions].where(id: local_gems.values).update(indexed: false, yanked_at: Time.now)
     local_gems.keys.each {|name| cache.purge_gem(name) }
   end
 
@@ -218,7 +218,7 @@ task :yank_spec, :name, :version, :platform do |t, args|
       number: args[:version],
       platform: args[:platform]
     ).first
-    version.update(indexed: false)
+    version.update(indexed: false, yanked_at: Time.now)
 
   end
   puts "Yanked #{version}!"

@@ -163,7 +163,7 @@ class BundlerApi::Web < Sinatra::Base
   get "/versions" do
     etag_response_for("versions") do
       from_date = @versions_file.updated_at
-      extra_gems = @gem_info.versions(from_date)
+      extra_gems = @gem_info.versions(from_date, true)
       CompactIndex.versions(@versions_file, extra_gems)
     end
   end

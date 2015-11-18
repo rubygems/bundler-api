@@ -254,12 +254,12 @@ describe BundlerApi::Web do
       builder.create_version(a, 'a', '1.0.0', 'ruby', info_checksum: 'a100')
       builder.create_version(a, 'a', '1.0.1', 'ruby', info_checksum: 'a101')
       b = builder.create_rubygem("b")
-      builder.create_version(b, 'b', '1.0.0', 'ruby', info_checksum: 'b100')
+      builder.create_version(b, 'b', '1.0.0', 'ruby', info_checksum: 'b100', indexed: false)
       c = builder.create_rubygem("c")
       builder.create_version(c, 'c', '1.0.0-java', 'ruby', info_checksum: 'c100')
-      builder.create_version(a, 'a', '2.0.0', 'java', info_checksum: 'a200')
+      a200 = builder.create_version(a, 'a', '2.0.0', 'java', info_checksum: 'a200')
       builder.create_version(a, 'a', '2.0.1', 'ruby', info_checksum: 'a201')
-
+      builder.yank(a200)
     end
 
     let(:data) do
@@ -270,7 +270,8 @@ describe BundlerApi::Web do
         "b 1.0.0 b100\n" +
         "c 1.0.0-java c100\n" +
         "a 2.0.0-java a200\n" +
-        "a 2.0.1 a201\n"
+        "a 2.0.1 a201\n" +
+        "a -2.0.0-java a200\n"
     end
 
     let(:expected_etag) { '"' << Digest::MD5.hexdigest(data) << '"' }
