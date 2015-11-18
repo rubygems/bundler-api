@@ -172,7 +172,23 @@ describe BundlerApi::GemInfo do
     it "should return gems on compact index format" do
       expect(gem_info.versions(@time)).to eq(gems)
     end
-
   end
-  pending "#info"
+
+  describe "#info" do
+    before do
+      info_test = builder.create_rubygem('info_test')
+      builder.create_version(info_test, 'info_test', '1.0.0', 'ruby', checksum: 'abc123')
+
+      info_test101= builder.create_version(info_test, 'info_test', '1.0.1', 'ruby', checksum: 'qwerty')
+      [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']].each do |dep, requirements|
+        dep_id = builder.create_rubygem(dep)
+        builder.create_dependency(dep_id, info_test101, requirements)
+      end
+    end
+
+    it "return compact index info for a gem" do
+      expected = "---\n1.0.0 |checksum:abc123\n1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0|checksum:qwerty\n"
+      expect(gem_info.info('info_test')).to eq(expected)
+    end
+  end
 end
