@@ -83,15 +83,31 @@ SQL
     @conn[:rubygems].select(:name).order(:name).all.map {|r| r[:name] }
   end
 
-  def versions(date)
-    dataset = @conn[<<-SQL, date]
-          SELECT r.name, v.created_at, v.info_checksum, v.number, v.platform
-          FROM rubygems AS r, versions AS v
-          WHERE v.rubygem_id = r.id AND
-                v.indexed is true AND
-                v.created_at > ?
-          ORDER BY v.created_at, v.number, v.platform
-    SQL
+  def versions(date,include_yanks = false)
+    if include_yanks
+      dataset = @conn[<<-SQL, date,date]
+            (SELECT r.name, v.created_at as date, v.info_checksum, v.number, v.platform
+            FROM rubygems AS r, versions AS v
+            WHERE v.rubygem_id = r.id AND
+                  v.created_at > ?)
+            UNION
+            (SELECT r.name, v.yanked_at as date, v.info_checksum, '-'||v.number, v.platform
+            FROM rubygems AS r, versions AS v
+            WHERE v.rubygem_id = r.id AND
+                  v.indexed is false AND
+                  v.yanked_at > ?)
+            ORDER BY date, number, platform
+      SQL
+    else
+      dataset = @conn[<<-SQL, date]
+            SELECT r.name, v.created_at, v.info_checksum, v.number, v.platform
+            FROM rubygems AS r, versions AS v
+            WHERE v.rubygem_id = r.id AND
+                  v.indexed is true AND
+                  v.created_at > ?
+            ORDER BY v.created_at, v.number, v.platform
+      SQL
+    end
     dataset.map do |entry|
       CompactIndex::Gem.new(entry[:name], [
         CompactIndex::GemVersion.new(
