@@ -2,10 +2,12 @@ require 'sinatra/base'
 require 'sequel'
 require 'json'
 require 'bundler_api'
+require 'compact_index'
 require 'bundler_api/agent_reporting'
+require 'bundler_api/checksum'
+require 'bundler_api/gem_info'
 require 'bundler_api/appsignal'
 require 'bundler_api/cache'
-require 'bundler_api/dep_calc'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
 require 'bundler_api/gem_helper'
@@ -40,6 +42,10 @@ class BundlerApi::Web < Sinatra::Base
                      max_connections: ENV['MAX_THREADS'])
     end
 
+    @gem_info = BundlerApi::GemInfo.new(@conn)
+    file_path = BundlerApi::GemInfo::VERSIONS_FILE_PATH
+    @versions_file = CompactIndex::VersionsFile.new(file_path)
+
     @cache = BundlerApi::CacheInvalidator.new
     @dalli_client = @cache.memcached_client
     super()
@@ -57,6 +63,16 @@ class BundlerApi::Web < Sinatra::Base
     halt(200) if params[:gems].nil? || params[:gems].empty?
     g = params[:gems].is_a?(Array) ? params[:gems] : params[:gems].split(',')
     g.uniq
+  end
+
+  def get_deps
+    timer = Metriks.timer('dependencies').time
+    deps  = @gem_info.deps_for(gems)
+    Metriks.histogram('gems.size').update(gems.size)
+    Metriks.histogram('dependencies.size').update(deps.size)
+    deps
+  ensure
+    timer.stop if timer
   end
 
   def get_payload
@@ -140,6 +156,26 @@ class BundlerApi::Web < Sinatra::Base
     end
   end
 
+  get "/names" do
+    etag_response_for("names") do
+     CompactIndex.names(@gem_info.names)
+    end
+  end
+
+  get "/versions" do
+    etag_response_for("versions") do
+      from_date = @versions_file.updated_at
+      extra_gems = @gem_info.versions(from_date, true)
+      CompactIndex.versions(@versions_file, extra_gems)
+    end
+  end
+
+  get "/info/:name" do
+    etag_response_for(params[:name]) do
+      @gem_info.info(params[:name])
+    end
+  end
+
   get "/quick/Marshal.4.8/:id" do
     @gem_strategy.serve_marshal(params[:id], self)
   end
@@ -164,7 +200,46 @@ class BundlerApi::Web < Sinatra::Base
     @gem_strategy.serve_prerelease_specs(self)
   end
 
-  private
+private
+
+  def etag_response_for(name)
+    sum = BundlerApi::Checksum.new(@write_conn, name)
+    return if not_modified?(sum.checksum)
+
+    response_body = yield
+    sum.checksum = Digest::MD5.hexdigest(response_body)
+
+    headers "ETag" => quote(sum.checksum)
+    headers "Surrogate-Control" => "max-age=2592000, stale-while-revalidate=60"
+    content_type "text/plain"
+    requested_range_for(response_body)
+  end
+
+  def not_modified?(checksum)
+    etags = parse_etags(request.env["HTTP_IF_NONE_MATCH"])
+
+    if etags.include?(checksum)
+      headers "ETag" => quote(checksum)
+      status 304
+      body ""
+    end
+  end
+
+  def requested_range_for(response_body)
+    ranges = Rack::Utils.byte_ranges(env, response_body.bytesize)
+
+    if ranges
+      status 206
+      body ranges.map! {|range| response_body.byteslice(range) }.join
+    else
+      status 200
+      body response_body
+    end
+  end
+
+  def deps_for(name)
+    @gem_info.deps_for(Array(name))
+  end
 
   def with_metriks
     timer = Metriks.timer('dependencies').time
@@ -188,10 +263,19 @@ class BundlerApi::Web < Sinatra::Base
     keys.each do |gem|
       Metriks.meter('dependencies.memcached.miss').mark
       name = gem.gsub("deps/v1/", "")
-      result = BundlerApi::DepCalc.fetch_dependency(@conn, name)
+      result = @gem_info.deps_for([name])
       @dalli_client.set(gem, result)
       dependencies += result
     end
     dependencies
   end
+
+  def quote(string)
+    '"' << string << '"'
+  end
+
+  def parse_etags(value)
+    value ? value.split(/, ?/).select{|s| s.sub!(/"(.*)"/, '\1') } : []
+  end
+
 end

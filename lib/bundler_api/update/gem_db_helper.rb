@@ -51,16 +51,22 @@ class BundlerApi::GemDBHelper
       rubygem_id = @db[:rubygems].insert(name: spec.name)
     end
 
+    @db[:checksums].filter(name: "names.list").update(md5: nil) if insert
+
     [insert, rubygem_id]
   end
 
-  def find_or_insert_version(spec, rubygem_id, platform = 'ruby', indexed = nil)
+  def update_info_checksum(version_id, info_checksum)
+    @db[:versions].where(id: version_id).update(info_checksum: info_checksum)
+  end
+
+  def find_or_insert_version(spec, rubygem_id, platform = 'ruby', checksum = nil, indexed = nil)
     insert     = nil
     version_id = nil
     version    = @db[:versions].filter(
       rubygem_id: rubygem_id,
       number:     spec.version.version,
-      platform:   platform
+      platform:   platform,
     ).select(:id, :indexed).first
 
     if version
@@ -70,6 +76,10 @@ class BundlerApi::GemDBHelper
     else
       insert     = true
       indexed    = true if indexed.nil?
+
+      spec_rubygems = get_spec_rubygems(spec)
+      spec_ruby = get_spec_ruby(spec)
+
       version_id = @db[:versions].insert(
         number:      spec.version.version,
         rubygem_id:  rubygem_id,
@@ -77,8 +87,16 @@ class BundlerApi::GemDBHelper
         platform:    platform,
         indexed:     indexed,
         prerelease:  !spec.version.prerelease?.nil?,
-        full_name:   spec.full_name
+        full_name:   spec.full_name,
+        rubygems_version: (spec.required_rubygems_version || '').to_s,
+        required_ruby_version: (spec.required_ruby_version || '').to_s,
+        checksum:    checksum,
+        created_at:  Time.now
       )
+    end
+
+    if insert
+      @db[:checksums].filter(name: "versions").update(md5: nil)
     end
 
     [insert, version_id]
@@ -125,4 +143,19 @@ class BundlerApi::GemDBHelper
   def matching_requirements?(requirements1, requirements2)
     Set.new(requirements1.split(", ")) == Set.new(requirements2.split(", "))
   end
+
+  def get_spec_rubygems(spec)
+    spec_rubygems = spec.required_rubygems_version
+    if spec_rubygems && !spec_rubygems.to_s.empty?
+      spec_rubygems.to_s
+    end
+  end
+
+  def get_spec_ruby(spec)
+    spec_ruby = spec.required_ruby_version
+    if spec_ruby && !spec_ruby.to_s.empty?
+      spec_ruby.to_s
+    end
+  end
+
 end

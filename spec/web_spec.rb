@@ -1,14 +1,17 @@
 require 'rack/test'
 require 'spec_helper'
 require 'bundler_api/web'
+require 'support/gem_builder'
+require 'support/etag'
 
 describe BundlerApi::Web do
   include Rack::Test::Methods
 
+  let(:builder) { GemBuilder.new($db) }
+  let(:rack_id) { builder.create_rubygem("rack") }
+
   before do
-    builder = GemBuilder.new($db)
-    rack_id = builder.create_rubygem("rack")
-    builder.create_version(rack_id, "rack")
+    builder.create_version(rack_id, "rack", "1.0.0", "ruby", info_checksum: 'racksum')
   end
 
   def app
@@ -59,17 +62,18 @@ describe BundlerApi::Web do
 
     context "there are gems" do
       it "returns a marshal dump" do
-        result = [{
+        result = {
           name:         'rack',
           number:       '1.0.0',
           platform:     'ruby',
-          dependencies: []
-        }]
+        }
 
         get "#{request}?gems=rack"
 
         expect(last_response).to be_ok
-        expect(Marshal.load(last_response.body)).to eq(result)
+        result.each do |k,v|
+          expect(Marshal.load(last_response.body).first[k]).to eq(v)
+        end
       end
     end
 
@@ -100,17 +104,18 @@ describe BundlerApi::Web do
 
     context "there are gems" do
       it "returns a marshal dump" do
-        result = [{
-          "name"         => 'rack',
-          "number"       => '1.0.0',
-          "platform"     => 'ruby',
-          "dependencies" => []
-        }]
+        result = {
+          "name"             => 'rack',
+          "number"           => '1.0.0',
+          "platform"         => 'ruby'
+        }
 
         get "#{request}?gems=rack"
 
         expect(last_response).to be_ok
-        expect(JSON.parse(last_response.body)).to eq(result)
+        result.each do |k,v|
+          expect(JSON.parse(last_response.body).first[k]).to eq(v)
+        end
       end
     end
 
@@ -212,6 +217,138 @@ describe BundlerApi::Web do
 
       expect(last_response).to be_redirect
       expect(last_response.location).to end_with("/prerelease_specs.4.8.gz")
+    end
+  end
+
+  context "/names" do
+    it_behaves_like "return 304 on second hit" do
+      let(:url) { "/names" }
+    end
+
+    before do
+      %w(a b c d).each {|gem_name| builder.create_rubygem(gem_name) }
+    end
+
+    it "returns an array" do
+      get "/names"
+      expect(last_response).to be_ok
+      expect(last_response.body).to eq(<<-NAMES.chomp.gsub(/^        /, ''))
+        ---
+        a
+        b
+        c
+        d
+        rack
+
+      NAMES
+    end
+  end
+
+  context "/versions" do
+    it_behaves_like "return 304 on second hit" do
+      let(:url) { "/versions" }
+    end
+
+    let :versions_file do
+      gem_info = BundlerApi::GemInfo.new($db)
+      file_path = BundlerApi::GemInfo::VERSIONS_FILE_PATH
+      CompactIndex::VersionsFile.new(file_path)
+    end
+
+    before do
+      a = builder.create_rubygem("a")
+      builder.create_version(a, 'a', '1.0.0', 'ruby', info_checksum: 'a100')
+      builder.create_version(a, 'a', '1.0.1', 'ruby', info_checksum: 'a101')
+      b = builder.create_rubygem("b")
+      builder.create_version(b, 'b', '1.0.0', 'ruby', info_checksum: 'b100', indexed: false)
+      c = builder.create_rubygem("c")
+      builder.create_version(c, 'c', '1.0.0-java', 'ruby', info_checksum: 'c100')
+      a200 = builder.create_version(a, 'a', '2.0.0', 'java', info_checksum: 'a200')
+      builder.create_version(a, 'a', '2.0.1', 'ruby', info_checksum: 'a201')
+      builder.yank(a200)
+    end
+
+    let(:data) do
+      versions_file.contents +
+        "rack 1.0.0 racksum\n" +
+        "a 1.0.0 a100\n" +
+        "a 1.0.1 a101\n" +
+        "b 1.0.0 b100\n" +
+        "c 1.0.0-java c100\n" +
+        "a 2.0.0-java a200\n" +
+        "a 2.0.1 a201\n" +
+        "a -2.0.0-java a200\n"
+    end
+
+    let(:expected_etag) { '"' << Digest::MD5.hexdigest(data) << '"' }
+
+    it "returns versions.list" do
+      get "/versions"
+
+      expect(last_response).to be_ok
+      expect(last_response.body).to eq(data)
+      expect(last_response.header["ETag"]).to eq(expected_etag)
+    end
+  end
+
+  context "/info/:gem" do
+    it_behaves_like "return 304 on second hit" do
+      let(:url) { "/info/rack" }
+    end
+
+    context "when has no required ruby version" do
+      before do
+        info_test = builder.create_rubygem('info_test')
+        builder.create_version(info_test, 'info_test', '1.0.0', 'ruby', checksum: 'abc123')
+
+        info_test101= builder.create_version(info_test, 'info_test', '1.0.1', 'ruby', checksum: 'qwerty')
+        [['foo', '= 1.0.0'], ['bar', '>= 2.1, < 3.0']].each do |dep, requirements|
+          dep_id = builder.create_rubygem(dep)
+          builder.create_dependency(dep_id, info_test101, requirements)
+        end
+      end
+
+      let(:expected_deps) do
+        <<-DEPS.gsub(/^          /, '')
+          ---
+          1.0.0 |checksum:abc123
+          1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0|checksum:qwerty
+        DEPS
+      end
+      let(:expected_etag) { '"' << Digest::MD5.hexdigest(expected_deps) << '"' }
+
+      it "should return the gem list" do
+        get "/info/info_test"
+
+        expect(last_response).to be_ok
+        expect(last_response.body).to eq(expected_deps)
+        expect(last_response.header["ETag"]).to eq(expected_etag)
+      end
+    end
+
+    context "when has a required ruby version" do
+      before do
+        a = builder.create_rubygem("a")
+        builder_args = { checksum: "abc123", required_ruby: ">1.9", rubygems_version: ">2.0" }
+        a_version = builder.create_version(a, 'a', '1.0.1', 'ruby', builder_args )
+        [['a_foo', '= 1.0.0'], ['a_bar', '>= 2.1, < 3.0']].each do |dep, requirements|
+          dep_id = builder.create_rubygem(dep)
+          builder.create_dependency(dep_id, a_version, requirements)
+        end
+      end
+
+      let(:expected_deps) do
+        <<-DEPS.gsub(/^          /, '')
+          ---
+          1.0.1 a_bar:>= 2.1&< 3.0,a_foo:= 1.0.0|checksum:abc123,ruby:>1.9,rubygems:>2.0
+        DEPS
+      end
+
+      it "should return the gem list with the required ruby version" do
+        get "/info/a"
+        expect(last_response).to be_ok
+        expect(last_response.body).to eq(expected_deps)
+      end
     end
   end
 end

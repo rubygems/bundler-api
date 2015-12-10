@@ -25,6 +25,12 @@ RSpec.configure do |config|
   end
 
   config.before(:each) do
+    BundlerApi::GemHelper.any_instance.stub(:set_checksum) do
+      @checksum = "abc123"
+    end
+  end
+
+  config.before(:each) do
     Dalli::Client.new.flush
   end
 

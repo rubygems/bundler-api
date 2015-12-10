@@ -9,6 +9,7 @@ require 'zlib'
 require 'tmpdir'
 require 'net/http'
 require 'time'
+require 'compact_index'
 require 'locksmith/pg'
 
 require 'bundler_api/cache'
@@ -18,6 +19,7 @@ require 'bundler_api/update/yank_job'
 require 'bundler_api/update/fix_dep_job'
 require 'bundler_api/update/atomic_counter'
 require 'bundler_api/gem_helper'
+require 'bundler_api/gem_info'
 
 $stdout.sync = true
 Thread.abort_on_exception = true
@@ -95,6 +97,11 @@ def update(db, thread_count)
   prerelease    = false
   pool          = BundlerApi::ConsumerPool.new(thread_count)
 
+  if (specs.size - 1) == local_gems.size
+    puts "Gem counts match, seems like we're already up to date!"
+    return
+  end
+
   pool.start
   specs.each do |spec|
     if spec == :prerelease
@@ -118,7 +125,7 @@ def update(db, thread_count)
   unless local_gems.empty?
     print "Yanking #{local_gems.size} gems\n"
     local_gems.keys.each {|name| print "Yanking: #{name}\n" }
-    db[:versions].where(id: local_gems.values).update(indexed: false)
+    db[:versions].where(id: local_gems.values).update(indexed: false, yanked_at: Time.now)
     local_gems.keys.each {|name| cache.purge_gem(name) }
   end
 
@@ -188,6 +195,19 @@ task :add_spec, :name, :version, :platform, :prerelease do |t, args|
   end
 end
 
+desc "Generate/update the versions.list file"
+task :versions do |t, args|
+  database_connection do |db|
+    file_path = BundlerApi::GemInfo::VERSIONS_FILE_PATH
+    versions_file = CompactIndex::VersionsFile.new(file_path)
+    gem_info = BundlerApi::GemInfo.new(db)
+
+    last_update = versions_file.updated_at
+    gems = gem_info.versions(last_update)
+    versions_file.update_with(gems)
+  end
+end
+
 desc "Yank a specific single gem from the database"
 task :yank_spec, :name, :version, :platform do |t, args|
   args.with_defaults(:platform => 'ruby')
@@ -198,7 +218,7 @@ task :yank_spec, :name, :version, :platform do |t, args|
       number: args[:version],
       platform: args[:platform]
     ).first
-    version.update(indexed: false)
+    version.update(indexed: false, yanked_at: Time.now)
 
   end
   puts "Yanked #{version}!"

@@ -1,11 +1,14 @@
 require 'uri'
 require 'net/http'
 require 'bundler_api'
+require 'json'
 
 class BundlerApi::HTTPError < RuntimeError
 end
 
 class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease)
+  RUBYGEMS_URL = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
+
   REDIRECT_LIMIT = 5
   TRY_LIMIT      = 4
 
@@ -22,16 +25,30 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     full_name
   end
 
+  def checksum
+    @checksum
+  end
+
   def download_spec(base = nil)
     base ||= ENV.fetch("DOWNLOAD_BASE", "http://production.s3.rubygems.org")
     url = "#{base}/quick/Marshal.4.8/#{full_name}.gemspec.rz"
-
+    set_checksum
     @mutex.synchronize do
       @gemspec ||= Marshal.load(Gem.inflate(fetch(url)))
     end
   end
 
 private
+
+  def set_checksum
+    # TODO: Change this to the new rubygems call when accepted
+    url = "#{RUBYGEMS_URL}/api/v1/versions/#{name}.json"
+    resp = JSON.parse(fetch(url))
+    version_info = resp.find { |e| e['number'] == version.to_s }
+    raise "Can't find a version info!" unless version_info
+    raise "This version has no checksum!" unless version_info['sha']
+    @checksum = version_info['sha']
+  end
 
   def fetch(url, redirects = 0, tries = 0)
     raise BundlerApi::HTTPError, "Too many redirects #{url}" if redirects >= REDIRECT_LIMIT

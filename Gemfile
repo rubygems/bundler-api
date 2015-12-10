@@ -15,6 +15,12 @@ gem 'redis'
 gem 'sequel'
 gem 'sequel_pg', require: false
 gem 'sinatra'
+gem 'json'
+gem 'compact_index', '0.9.3'
+
+group :development do
+  gem 'pry-byebug'
+end
 
 group :test do
   gem 'artifice'

@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+lib = File.expand_path(File.join('..', '..', 'lib'), __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+require 'bundler/setup'
+require 'bundler_api/env'
+
+def database_url
+  ENV['DATABASE_URL']
+end
+
+def db
+  @db ||= Sequel.connect(ENV['DATABASE_URL'])
+end
+
+require 'sequel'
+require 'json'
+require 'bundler_api'
+require 'compact_index'
+require 'bundler_api/checksum'
+require 'bundler_api/gem_info'
+
+require 'pry'
+Pry.start
