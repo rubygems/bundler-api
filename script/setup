@@ -2,7 +2,7 @@
 # Create and migrate the database specified in the $DATABASE_URL environment
 # variable.
 #
-# Usage: script/rebuild [--verbose] [--rebuild]
+# Usage: script/setup [--verbose] [--rebuild]
 #
 # Options:
 #   --rebuild: drop the database before creating it
@@ -15,6 +15,9 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'bundler/setup'
 require 'bundler_api/env'
+require 'bundler_api/cache'
+require 'bundler_api/redis'
+require 'sequel'
 require 'open3'
 
 def rebuild?
@@ -25,12 +28,27 @@ def verbose?
   @verbose ||= (ARGV.delete('-v') || ARGV.delete('--verbose'))
 end
 
-def print_output(output)
-  return if !verbose? || output.empty?
+def run_command(*args)
+  output, status = Open3.capture2e(*args)
+  print_output(output, !status.success? || verbose?)
+  abort unless status.success?
+end
+
+def print_output(output, verbose)
+  return if !verbose || output.empty?
   output.lines.each do |line|
     puts "  #{line}"
   end
   puts
+end
+
+def print_error(title, error)
+  return unless verbose?
+  $stderr.puts "#{title}: #{error}"
+
+  error.backtrace.each do |line|
+    $stderr.puts "  #{line}"
+  end
 end
 
 def database_url
@@ -41,22 +59,84 @@ def database_name
   File.basename(database_url)
 end
 
+def postgres_installed?
+  !`which psql`.strip.empty?
+end
+
+def database_exists?
+  Sequel.connect(database_url) do |db|
+    db.test_connection
+  end
+
+  true
+rescue
+  false
+end
+
+def postgres_ready?
+  Sequel.connect(database_url) do |db|
+    db[:versions].first
+  end
+
+  true
+rescue => e
+  print_error "Postgres error", e
+  false
+end
+
+def redis_ready?
+  BundlerApi.redis.ping
+  true
+rescue => e
+  print_error "Redis error", e
+  false
+end
+
+def memcached_ready?
+  BundlerApi::CacheInvalidator.new.memcached_client.alive!
+  true
+rescue => e
+  print_error "Memcached error", e
+  false
+end
+
+def verify_dependencies
+  puts 'Checking dependencies'
+  unmet = []
+  unmet << 'postgres' unless postgres_ready?
+  unmet << 'redis' unless redis_ready?
+  unmet << 'memcached' unless memcached_ready?
+
+  unless unmet.empty?
+    $stderr.puts 'You have dependencies that are unmet or are not available:'
+
+    unmet.each do |dependency|
+      $stderr.puts "  * #{dependency}"
+    end
+  end
+end
+
 abort 'DATABASE_URL environment variable required' unless database_url
 
 if rebuild?
   puts 'Dropping database'
-  output, _ = Open3.capture2e(*%W(dropdb --if-exists #{database_name}))
-  print_output output
+  run_command(*%W(dropdb --if-exists #{database_name}))
 end
 
-puts 'Creating database'
-output, _ = Open3.capture2e(*%W{createdb --no-password #{database_name}})
-print_output output
+unless database_exists?
+  unless postgres_installed?
+    abort 'Please install postgresql or specify a connection to an existing database in .env.local'
+  end
+
+  puts 'Creating database'
+  run_command(*%W{createdb --no-password #{database_name}})
+end
 
 puts 'Migrating database'
-output, _ = Open3.capture2e(*%W{sequel --migrate-directory db/migrations
-                                       #{database_url}})
-print_output output
+run_command(*%W{sequel --migrate-directory db/migrations
+                       #{database_url}})
+
+verify_dependencies
 
 puts "
 Done! \
