@@ -51,8 +51,20 @@ def print_error(title, error)
   end
 end
 
+# must be a valid uri, e.g
+#   postgres://user:pass@host:80/path
 def database_url
   ENV['DATABASE_URL']
+end
+
+def conn_info
+  uri = URI.parse database_url
+  params = []
+  params.concat ["--host", uri.host] if uri.host
+  params.concat ["--port", uri.port.to_s] if uri.port
+  params.concat ["--username", uri.user] if uri.user
+  params.concat ["--password", uri.password] if uri.password
+  params
 end
 
 def database_name
@@ -120,7 +132,7 @@ abort 'DATABASE_URL environment variable required' unless database_url
 
 if rebuild?
   puts 'Dropping database'
-  run_command(*%W(dropdb --if-exists #{database_name}))
+  run_command(*['dropdb', '--if-exists', conn_info, database_name].flatten)
 end
 
 unless database_exists?
@@ -128,13 +140,12 @@ unless database_exists?
     abort 'Please install postgresql or specify a connection to an existing database in .env.local'
   end
 
-  puts 'Creating database'
-  run_command(*%W{createdb --no-password #{database_name}})
+  puts 'Creating database: #{database_url}'
+  run_command(*['createdb', conn_info, database_name].flatten)
 end
 
 puts 'Migrating database'
-run_command(*%W{sequel --migrate-directory db/migrations
-                       #{database_url}})
+run_command(*%W{sequel --migrate-directory db/migrations #{database_url}})
 
 verify_dependencies
 
