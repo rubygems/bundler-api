@@ -17,7 +17,7 @@ require 'bundler_api/strategy'
 
 class BundlerApi::Web < Sinatra::Base
   API_REQUEST_LIMIT    = 200
-  PG_STATEMENT_TIMEOUT = 1000
+  PG_STATEMENT_TIMEOUT = ENV['PG_STATEMENT_TIMEOUT'] || 1000
   RUBYGEMS_URL         = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
 
   unless ENV['RACK_ENV'] == 'test'
