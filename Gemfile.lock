@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/bundler/compact_index.git
-  revision: dd5abc6fe1709f7b1be6a4b51babd74d54363e05
+  revision: d49bb495ef1b6cfae6de02e0638b49a5ca9a482f
   branch: master
   specs:
     compact_index (0.9.3)
