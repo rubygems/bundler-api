@@ -1,15 +1,14 @@
-require 'bundler/setup'
-
 ENV['RACK_ENV'] = 'test'
 require 'bundler_api/env'
 
+require 'dalli'
 require 'rspec/core'
 require 'rspec/mocks'
+
+require 'bundler_api/gem_helper'
 require 'support/database'
 require 'support/latch'
 require 'support/matchers'
-
-require 'dalli'
 
 RSpec.configure do |config|
   config.filter_run :focused => true
