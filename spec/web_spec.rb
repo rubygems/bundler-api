@@ -312,7 +312,7 @@ describe BundlerApi::Web do
         <<-DEPS.gsub(/^          /, '')
           ---
           1.0.0 |checksum:abc123
-          1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0|checksum:qwerty
+          1.0.1 bar:< 3.0&>= 2.1,foo:= 1.0.0|checksum:qwerty
         DEPS
       end
       let(:expected_etag) { '"' << Digest::MD5.hexdigest(expected_deps) << '"' }
@@ -340,7 +340,7 @@ describe BundlerApi::Web do
       let(:expected_deps) do
         <<-DEPS.gsub(/^          /, '')
           ---
-          1.0.1 a_bar:>= 2.1&< 3.0,a_foo:= 1.0.0|checksum:abc123,ruby:>1.9,rubygems:>2.0
+          1.0.1 a_bar:< 3.0&>= 2.1,a_foo:= 1.0.0|checksum:abc123,ruby:>1.9,rubygems:>2.0
         DEPS
       end
 

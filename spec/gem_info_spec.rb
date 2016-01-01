@@ -212,7 +212,7 @@ describe BundlerApi::GemInfo do
     end
 
     it "return compact index info for a gem" do
-      expected = "---\n1.0.0 |checksum:abc123\n1.0.1 bar:>= 2.1&< 3.0,foo:= 1.0.0|checksum:qwerty\n"
+      expected = "---\n1.0.0 |checksum:abc123\n1.0.1 bar:< 3.0&>= 2.1,foo:= 1.0.0|checksum:qwerty\n"
       expect(gem_info.info('info_test')).to eq(expected)
     end
   end
