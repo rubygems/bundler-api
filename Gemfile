@@ -16,7 +16,7 @@ gem 'sequel'
 gem 'sequel_pg', require: false
 gem 'sinatra'
 gem 'json'
-gem 'compact_index', github: 'bundler/compact_index', branch: 'master'
+gem 'compact_index'
 
 group :development do
   gem 'pry-byebug'
