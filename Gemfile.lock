@@ -1,11 +1,4 @@
 GIT
-  remote: git://github.com/bundler/compact_index.git
-  revision: d49bb495ef1b6cfae6de02e0638b49a5ca9a482f
-  branch: master
-  specs:
-    compact_index (0.9.3)
-
-GIT
   remote: git://github.com/indirect/dalli.git
   revision: 4be6be64e643eaaef76310ad6e67ffef8ce32980
   specs:
@@ -37,6 +30,7 @@ GEM
       columnize (= 0.9.0)
     coderay (1.1.0)
     columnize (0.9.0)
+    compact_index (0.9.4)
     diff-lcs (1.2.5)
     dotenv (1.0.2)
     faraday (0.9.1)
@@ -114,7 +108,7 @@ PLATFORMS
 DEPENDENCIES
   appsignal (= 0.11.6.beta.0)
   artifice
-  compact_index!
+  compact_index
   dalli!
   dotenv
   foreman
