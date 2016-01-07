@@ -47,10 +47,10 @@ private
     version_info = resp.find { |e| e['number'] == version.to_s }
 
     if version_info
-      puts "WARNING: Gem #{name}-#{version} has no checksum!" unless version_info['sha']
+      warn "WARNING: Gem #{name}-#{version} has no checksum!" unless version_info['sha']
       @checksum = version_info['sha']
     else
-      puts "WARNING: Can't find gem #{name}-#{version} in JSON from #{url}" unless version_info
+      warn "WARNING: Can't find gem #{name}-#{version} in JSON from #{url}" unless version_info
     end
   end
 
