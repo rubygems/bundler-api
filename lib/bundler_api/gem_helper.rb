@@ -45,9 +45,13 @@ private
     url = "#{RUBYGEMS_URL}/api/v1/versions/#{name}.json"
     resp = JSON.parse(fetch(url))
     version_info = resp.find { |e| e['number'] == version.to_s }
-    raise "Can't find a version info!" unless version_info
-    raise "This version has no checksum!" unless version_info['sha']
-    @checksum = version_info['sha']
+
+    if version_info
+      puts "WARNING: Gem #{name}-#{version} has no checksum!" unless version_info['sha']
+      @checksum = version_info['sha']
+    else
+      puts "WARNING: Can't find gem #{name}-#{version} in JSON from #{url}" unless version_info
+    end
   end
 
   def fetch(url, redirects = 0, tries = 0)
