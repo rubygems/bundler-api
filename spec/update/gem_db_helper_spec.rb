@@ -93,6 +93,7 @@ describe BundlerApi::GemDBHelper do
     let(:name)     { "foo" }
     let(:version)  { "1.0" }
     let(:platform) { "ruby" }
+    let(:checksum) { "checksum" }
     let(:indexed)  { true }
     let(:spec)     { generate_gemspec(name, version, platform) }
 
@@ -102,14 +103,15 @@ describe BundlerApi::GemDBHelper do
 
     context "when there is no existing version" do
       it "should insert the version" do
-        insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, indexed)
+        insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, checksum, indexed)
 
         expect(insert).to eq(true)
-        expect(version_id).to eq(db[:versions].filter(rubygem_id: @rubygem_id,
-                                                      number:     version,
-                                                      platform:   platform,
-                                                      indexed:    indexed).
-                                                      select(:id).first[:id])
+        inserted_version = db[:versions].filter(rubygem_id: @rubygem_id,
+                                                number:     version,
+                                                platform:   platform,
+                                                indexed:    indexed).first
+        expect(version_id).to eq(inserted_version[:id])
+        expect(inserted_version[:created_at]).to be_kind_of(Time)
       end
 
       context "when the versions md5 is set" do
@@ -118,7 +120,7 @@ describe BundlerApi::GemDBHelper do
         end
 
         it "installing a new version clears it" do
-          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, indexed)
+          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, checksum, indexed)
           row = $db[:checksums].filter(name: "versions").first
 
           expect(row[:md5]).to eq(nil)
@@ -130,7 +132,7 @@ describe BundlerApi::GemDBHelper do
         let(:spec)     { generate_gemspec(name, version, "java") }
 
         it "inserts the platform from the index and not the spec" do
-          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, indexed)
+          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform,checksum, indexed)
 
           expect(insert).to eq(true)
           expect(version_id).to eq(db[:versions].filter(rubygem_id: @rubygem_id,
@@ -146,7 +148,7 @@ describe BundlerApi::GemDBHelper do
         let(:indexed) { nil }
 
         it "automatically indexes it" do
-          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, indexed)
+          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, checksum, indexed)
 
           expect(insert).to eq(true)
           expect(version_id).to eq(db[:versions].filter(rubygem_id: @rubygem_id,
@@ -161,7 +163,7 @@ describe BundlerApi::GemDBHelper do
         let(:version) { "1.1.pre" }
 
         it "should insert the version" do
-          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, indexed)
+          insert, version_id = helper.find_or_insert_version(spec, @rubygem_id, platform, checksum, indexed)
 
           expect(insert).to eq(true)
           expect(version_id).to eq(db[:versions].filter(rubygem_id: @rubygem_id,
