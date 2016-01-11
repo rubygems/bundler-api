@@ -136,7 +136,8 @@ describe BundlerApi::GemDBHelper do
           expect(version_id).to eq(db[:versions].filter(rubygem_id: @rubygem_id,
                                                         number:     version,
                                                         platform:   platform,
-                                                        indexed:    indexed).
+                                                        indexed:    indexed,
+                                                        prerelease: Gem::Version.create(version).prerelease?).
                                                         select(:id).first[:id])
         end
       end
