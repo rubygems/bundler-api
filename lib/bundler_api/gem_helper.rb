@@ -54,16 +54,15 @@ private
     end
   end
 
-  def fetch(url, redirects = 0, tries = 0)
+  def fetch(url, redirects = 0, tries = [])
     raise BundlerApi::HTTPError, "Too many redirects #{url}" if redirects >= REDIRECT_LIMIT
-    raise BundlerApi::HTTPError, "Could not download #{url}" if tries >= TRY_LIMIT
+    raise BundlerApi::HTTPError, "Could not download #{url} (#{tries.join(", ")})" if tries.size >= TRY_LIMIT
 
     uri      = URI.parse(url)
-    response = nil
-    begin
-      response = Net::HTTP.get_response(uri)
-    rescue StandardError => e
-      puts "#{e} #{url}"
+    response = begin
+      Net::HTTP.get_response(uri)
+    rescue => e
+      "(#{url}) #{e}"
     end
 
     case response
@@ -72,9 +71,10 @@ private
     when Net::HTTPSuccess
       response.body
     else
-      exp = tries - 1
+      tries << response
+      exp = tries.size - 1
       sleep(2 ** exp) if exp > 0
-      fetch(url, redirects, tries + 1)
+      fetch(url, redirects, tries)
     end
   end
 end
