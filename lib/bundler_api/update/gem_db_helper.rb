@@ -86,7 +86,7 @@ class BundlerApi::GemDBHelper
         # rubygems.org actually uses the platform from the index and not from the spec
         platform:    platform,
         indexed:     indexed,
-        prerelease:  !spec.version.prerelease?.nil?,
+        prerelease:  spec.version.prerelease?,
         full_name:   spec.full_name,
         rubygems_version: (spec.required_rubygems_version || '').to_s,
         required_ruby_version: (spec.required_ruby_version || '').to_s,

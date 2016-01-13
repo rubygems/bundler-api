@@ -38,7 +38,7 @@ class BundlerApi::FixDepJob
 
     @db.transaction do
       _, rubygem_id = @db_helper.find_or_insert_rubygem(spec)
-      _, version_id = @db_helper.find_or_insert_version(spec, rubygem_id, @payload.platform, true)
+      _, version_id = @db_helper.find_or_insert_version(spec, rubygem_id, @payload.platform, nil, true)
       deps_added    = @db_helper.insert_dependencies(spec, version_id)
     end
 
