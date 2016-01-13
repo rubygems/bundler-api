@@ -2,6 +2,11 @@ source "https://rubygems.org"
 
 ruby File.read(File.expand_path('../.ruby-version', __FILE__)).strip
 
+git_source(:github) do |repo|
+  repo = "#{repo}/#{repo}" unless repo.include?("/")
+  "https://github.com/#{repo}.git"
+end
+
 gem 'appsignal', '0.11.6.beta.0'
 gem 'librato-metrics'
 gem 'lock-smith'
