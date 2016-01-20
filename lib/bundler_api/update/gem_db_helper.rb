@@ -13,7 +13,7 @@ class BundlerApi::GemDBHelper
 
     if @mutex
       @mutex.synchronize do
-        return @gem_cache[key] if @gem_cache[key]
+        return true if @gem_cache[key]
       end
     end
 
@@ -35,7 +35,7 @@ class BundlerApi::GemDBHelper
       end
     end
 
-    result
+    !result.nil?
   end
 
   def find_or_insert_rubygem(spec)

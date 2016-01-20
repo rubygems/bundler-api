@@ -11,7 +11,8 @@ describe BundlerApi::FixDepJob do
 
     let(:db)        { $db }
     let(:gem_cache) { Hash.new }
-    let(:mutex)     { nil }
+    let(:counter)   { nil }
+    let(:mutex)     { Mutex.new }
     let(:helper)    { BundlerApi::GemDBHelper.new(db, gem_cache, mutex) }
     let(:name)      { "foo" }
     let(:version)   { "1.0" }
@@ -19,7 +20,7 @@ describe BundlerApi::FixDepJob do
     let(:foo_spec)  { generate_gemspec(name, version, platform) }
     let(:bar_spec)  { generate_gemspec('bar', '1.0', 'ruby') }
     let(:payload)   { BundlerApi::GemHelper.new(name, Gem::Version.new(version), platform) }
-    let(:job)       { BundlerApi::FixDepJob.new(db, payload) }
+    let(:job)       { BundlerApi::FixDepJob.new(db, payload, counter, mutex) }
 
     before do
       Artifice.activate_with(GemspecGenerator)
@@ -27,7 +28,7 @@ describe BundlerApi::FixDepJob do
       rubygem_id      = helper.find_or_insert_rubygem(foo_spec).last
       @foo_version_id = helper.find_or_insert_version(foo_spec, rubygem_id, platform).last
     end
-    
+
     after do
       Artifice.deactivate
     end

@@ -5,23 +5,24 @@ class BundlerApi::Job
   attr_reader :payload
   @@gem_cache = {}
 
-  def initialize(db, payload, mutex = Mutex.new, gem_count = nil)
+  def initialize(db, payload, mutex = Mutex.new, gem_count = nil, fix_deps: false)
     @db        = db
     @payload   = payload
     @mutex     = mutex
     @gem_count = gem_count
     @db_helper = BundlerApi::GemDBHelper.new(@db, @@gem_cache, @mutex)
-    @gem_info = BundlerApi::GemInfo.new(@db)
+    @gem_info  = BundlerApi::GemInfo.new(@db)
+    @fix_deps  = fix_deps
   end
 
   def run
-    unless @db_helper.exists?(@payload)
-      @gem_count.increment if @gem_count
-      spec = @payload.download_spec
-      print "Adding: #{@payload.full_name}\n"
-      @mutex.synchronize do
-        insert_spec(spec)
-      end
+    return if @db_helper.exists?(@payload) && !@fix_deps
+    return if !@db_helper.exists?(@payload) && @fix_deps
+    spec = @payload.download_spec
+    print "Adding: #{@payload.full_name}\n"
+    @mutex.synchronize do
+      deps_added = insert_spec(spec)
+      @gem_count.increment if @gem_count && (!deps_added.empty? || !@fix_deps)
     end
   rescue BundlerApi::HTTPError => e
     puts "BundlerApi::Job#run gem=#{@payload.full_name.inspect} " +
