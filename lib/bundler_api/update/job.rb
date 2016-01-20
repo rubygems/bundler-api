@@ -2,13 +2,19 @@ require 'bundler_api'
 require 'bundler_api/update/gem_db_helper'
 
 class BundlerApi::Job
+  class MockMutex
+    def synchronize
+      yield if block_given?
+    end
+  end
+
   attr_reader :payload
   @@gem_cache = {}
 
   def initialize(db, payload, mutex = Mutex.new, gem_count = nil, fix_deps: false)
     @db        = db
     @payload   = payload
-    @mutex     = mutex
+    @mutex     = mutex || MockMutex.new
     @gem_count = gem_count
     @db_helper = BundlerApi::GemDBHelper.new(@db, @@gem_cache, @mutex)
     @gem_info  = BundlerApi::GemInfo.new(@db)
