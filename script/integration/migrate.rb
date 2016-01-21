@@ -85,6 +85,44 @@ def migrate_info_checksums(database_url)
   end
 end
 
+def migrate_created_at(database_url)
+  puts "migrating created_at"
+  db = Sequel.connect database_url
+
+  gem_info = BundlerApi::GemInfo.new(db)
+
+  versions_with_nil_created_at = db[:rubygems]
+    .select_append(:versions__id___version_id)
+    .join(:versions, rubygem_id: :id)
+    .where(created_at: nil, indexed: true)
+
+  require 'open-uri'
+  require 'json'
+  by_name = Hash.new do |h, name|
+    json = JSON.load open("https://rubygems.org/api/v1/versions/#{name}.json")
+    h[name] = json
+  end
+
+  now = Time.now
+  versions_with_nil_created_at.each do |entry|
+    id, name, version = entry.fetch_values(:id, :name, :number)
+    versions = by_name[name]
+    created_at = versions.find { |v| v["number"] == version }["created_at"]
+    created_at = created_at ? Time.parse(created_at) : now
+    created_at = now if now < created_at
+    db[:versions].where(id: entry[:version_id]).update(created_at: created_at)
+  end
+end
+
+def migrate_prerelease(database_url)
+  puts "migrating prerelease"
+  db = Sequel.connect database_url
+  pre_release_versions = db[:versions].where(number: /[a-zA-Z]/)
+  pre_release_versions.update(prerelease: true)
+  non_pre_release_versions = db[:versions].exclude(number: /[a-zA-Z]/)
+  non_pre_release_versions.update(prerelease: false)
+end
+
 ## main
 
 sql_file = ARGV.first
@@ -97,6 +135,8 @@ begin
   import(temp_database_url,sql_file)
   migrate_checksums(temp_database_url, database_url)
   migrate_info_checksums(database_url)
+  migrate_created_at(database_url)
+  migrate_prerelease(database_url)
 ensure
   drop_database(temp_database_url)
 end
