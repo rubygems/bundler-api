@@ -18,29 +18,23 @@ describe BundlerApi::GemDBHelper do
         version = db[:versions].insert(rubygem_id: rubygem, number: "1.0", platform: "ruby", indexed: true)
       end
 
-      it "returns the rubygems and versions id" do
-        result = helper.exists?(payload)
-
-        expect(result[:rubygem_id]).not_to be_nil
-        expect(result[:version_id]).not_to be_nil
+      it "returns true" do
+        expect(helper.exists?(payload)).to be_truthy
       end
 
       context "when using a mutex" do
         let(:mutex) { Mutex.new }
 
         it "returns the rubygems and versions id from the cache when called twice" do
-          helper.exists?(payload)
-          result = helper.exists?(payload)
-
-          expect(result[:rubygem_id]).not_to be_nil
-          expect(result[:version_id]).not_to be_nil
+          expect(helper.exists?(payload)).to be_truthy
+          expect(helper.exists?(payload)).to be_truthy
         end
       end
     end
 
     context "if the gem does not exst" do
       it "returns nil" do
-        expect(helper.exists?(payload)).to be_nil
+        expect(helper.exists?(payload)).to be_falsey
       end
     end
   end

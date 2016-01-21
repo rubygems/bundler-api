@@ -139,7 +139,7 @@ def fix_deps(db, thread_count)
   specs = get_specs
   return 60 unless specs
   counter       = BundlerApi::AtomicCounter.new
-  mutex         = nil
+  mutex         = Mutex.new
   prerelease    = false
   pool          = BundlerApi::ConsumerPool.new(thread_count)
 
