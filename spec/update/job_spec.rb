@@ -2,8 +2,9 @@ require 'sinatra/base'
 require 'spec_helper'
 require 'support/artifice_apps'
 require 'bundler_api/gem_helper'
-require 'bundler_api/update/job'
 require 'bundler_api/update/atomic_counter'
+require 'bundler_api/update/job'
+require 'bundler_api/web'
 
 describe BundlerApi::Job do
   include Rack::Test::Methods
@@ -88,16 +89,24 @@ SQL
       gem_exists?(db, 'foo', '1.0', 'java')
     end
 
-
     it "saves checksum for info endpoint content" do
-      payload = BundlerApi::GemHelper.new("foo1", Gem::Version.new("1.0"), 'ruby')
-      job = BundlerApi::Job.new(db, payload, mutex, counter)
-      job.run
+      versions = %w(1.0 1.2 1.1)
+      versions.each do |version|
+        payload = BundlerApi::GemHelper.new("foo1", Gem::Version.new(version), 'ruby')
+        job = BundlerApi::Job.new(db, payload, mutex, counter)
+        job.run
 
-      get '/info/foo1'
-      checksum = Digest::MD5.hexdigest(last_response.body)
-      gem = get_gem(:info_checksum, db, 'foo1')
-      expect(gem[:info_checksum]).to eq(checksum)
+        get '/info/foo1'
+        last_response.body
+        checksum = Digest::MD5.hexdigest(last_response.body)
+
+        database_checksum = get_gem(:info_checksum, db, 'foo1', version)[:info_checksum]
+        expect(database_checksum).to eq(checksum)
+      end
+
+      expect(db[:rubygems]
+        .join(:versions, rubygem_id: :id)
+        .where(name: "foo1").order_by(:created_at).map { |v| v[:number] }).to eq(versions)
     end
 
     context "with gem dependencies" do

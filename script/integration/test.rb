@@ -7,7 +7,7 @@ require 'digest'
 names = Set.new
 
 #url = "bundler-api-staging.herokuapp.com"
-url = "localhost:9292"
+url = "localhost:5000"
 open("http://#{url}/versions").readlines.reverse_each do |line|
   name, *_, sum = line.split(' ')
   next unless names.add?(name)
