@@ -1,4 +1,5 @@
 require 'bundler_api'
+require 'bundler_api/gem_info'
 require 'bundler_api/update/gem_db_helper'
 
 class BundlerApi::Job

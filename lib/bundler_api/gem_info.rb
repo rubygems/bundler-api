@@ -100,7 +100,7 @@ class BundlerApi::GemInfo
       SQL
     else
       dataset = @conn[<<-SQL, date]
-            SELECT r.name, v.created_at, v.info_checksum, v.number, v.platform
+            SELECT r.name, v.created_at, v.checksum, v.info_checksum, v.number, v.platform
             FROM rubygems AS r, versions AS v
             WHERE v.rubygem_id = r.id AND
                   v.indexed is true AND
@@ -113,6 +113,7 @@ class BundlerApi::GemInfo
         CompactIndex::GemVersion.new(
           entry[:number],
           entry[:platform],
+          entry[:checksum],
           entry[:info_checksum]
         )
       ])

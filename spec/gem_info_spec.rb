@@ -131,27 +131,27 @@ describe BundlerApi::GemInfo do
       [
         CompactIndex::Gem.new(
           'a',
-          [CompactIndex::GemVersion.new('1.0.0', 'ruby', 'a100')]
+          [CompactIndex::GemVersion.new('1.0.0', 'ruby', nil, 'a100')]
         ),
         CompactIndex::Gem.new(
           'a',
-          [CompactIndex::GemVersion.new('1.0.1', 'ruby', 'a101')]
+          [CompactIndex::GemVersion.new('1.0.1', 'ruby', nil, 'a101')]
         ),
         CompactIndex::Gem.new(
           'b',
-          [CompactIndex::GemVersion.new('1.0.0', 'ruby', 'b100')]
+          [CompactIndex::GemVersion.new('1.0.0', 'ruby', nil, 'b100')]
         ),
         CompactIndex::Gem.new(
           'c',
-          [CompactIndex::GemVersion.new('1.0.0', 'java', 'c100')]
+          [CompactIndex::GemVersion.new('1.0.0', 'java', nil, 'c100')]
         ),
         CompactIndex::Gem.new(
           'a',
-          [CompactIndex::GemVersion.new('2.0.0', 'java', 'a200')]
+          [CompactIndex::GemVersion.new('2.0.0', 'java', nil, 'a200')]
         ),
         CompactIndex::Gem.new(
           'a',
-          [CompactIndex::GemVersion.new('2.0.1', 'ruby', 'a201')]
+          [CompactIndex::GemVersion.new('2.0.1', 'ruby', nil, 'a201')]
         )
       ]
     end
@@ -184,11 +184,11 @@ describe BundlerApi::GemInfo do
         gems + [
           CompactIndex::Gem.new(
             'a',
-            [CompactIndex::GemVersion.new('-2.0.0', 'java', 'a200')]
+            [CompactIndex::GemVersion.new('-2.0.0', 'java', nil, 'a200')]
           ),
           CompactIndex::Gem.new(
             'a',
-            [CompactIndex::GemVersion.new('2.2.2', 'ruby', 'a222')]
+            [CompactIndex::GemVersion.new('2.2.2', 'ruby', nil, 'a222')]
           )
         ]
       end
