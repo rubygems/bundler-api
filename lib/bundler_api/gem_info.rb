@@ -96,7 +96,7 @@ class BundlerApi::GemInfo
             WHERE v.rubygem_id = r.id AND
                   v.indexed is false AND
                   v.yanked_at > ?)
-            ORDER BY date, number, platform
+            ORDER BY date, number, platform, name
       SQL
     else
       dataset = @conn[<<-SQL, date]
@@ -105,7 +105,7 @@ class BundlerApi::GemInfo
             WHERE v.rubygem_id = r.id AND
                   v.indexed is true AND
                   v.created_at > ?
-            ORDER BY v.created_at, v.number, v.platform
+            ORDER BY v.created_at, v.number, v.platform, r.name
       SQL
     end
     dataset.map do |entry|
