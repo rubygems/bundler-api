@@ -30,7 +30,7 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
   end
 
   def download_spec(base = nil)
-    base ||= ENV.fetch("DOWNLOAD_BASE", "http://production.s3.rubygems.org")
+    base ||= ENV.fetch("DOWNLOAD_BASE", "https://rubygems.global.ssl.fastly.net")
     url = "#{base}/quick/Marshal.4.8/#{full_name}.gemspec.rz"
     set_checksum
     @mutex.synchronize do
