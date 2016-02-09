@@ -11,10 +11,8 @@ class BundlerApi::GemDBHelper
   def exists?(payload)
     key = payload.full_name
 
-    if @mutex
-      @mutex.synchronize do
-        return true if @gem_cache[key]
-      end
+    synchronize do
+      return true if @gem_cache[key]
     end
 
     dataset = @db[<<-SQL, payload.name, payload.version.version, payload.platform]
@@ -29,10 +27,8 @@ class BundlerApi::GemDBHelper
 
     result = dataset.first
 
-    if @mutex
-      @mutex.synchronize do
-        @gem_cache[key] = result if result
-      end
+    synchronize do
+      @gem_cache[key] = result if result
     end
 
     !result.nil?
@@ -155,6 +151,14 @@ class BundlerApi::GemDBHelper
     spec_ruby = spec.required_ruby_version
     if spec_ruby && !spec_ruby.to_s.empty?
       spec_ruby.to_s
+    end
+  end
+
+  def synchronize
+    return yield unless @mutex
+
+    @mutex.synchronize do
+      yield
     end
   end
 
