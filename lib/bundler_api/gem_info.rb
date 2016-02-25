@@ -84,8 +84,8 @@ class BundlerApi::GemInfo
   end
 
   def versions(date,include_yanks = false)
-    if include_yanks
-      dataset = @conn[<<-SQL, date,date]
+    dataset = if include_yanks
+      @conn[<<-SQL, date,date]
             (SELECT r.name, v.created_at as date, v.info_checksum, v.number, v.platform
             FROM rubygems AS r, versions AS v
             WHERE v.rubygem_id = r.id AND
@@ -99,7 +99,7 @@ class BundlerApi::GemInfo
             ORDER BY date, number, platform, name
       SQL
     else
-      dataset = @conn[<<-SQL, date]
+      @conn[<<-SQL, date]
             SELECT r.name, v.created_at, v.checksum, v.info_checksum, v.number, v.platform
             FROM rubygems AS r, versions AS v
             WHERE v.rubygem_id = r.id AND

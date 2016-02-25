@@ -218,11 +218,10 @@ private
   def not_modified?(checksum)
     etags = parse_etags(request.env["HTTP_IF_NONE_MATCH"])
 
-    if etags.include?(checksum)
-      headers "ETag" => quote(checksum)
-      status 304
-      body ""
-    end
+    return unless etags.include?(checksum)
+    headers "ETag" => quote(checksum)
+    status 304
+    body ""
   end
 
   def requested_range_for(response_body)
