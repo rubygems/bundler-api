@@ -5,3 +5,4 @@ AllCops:
     - bin/**/*
     - vendor/**/*
   DisplayCopNames: true
+  TargetRubyVersion: 2.3
