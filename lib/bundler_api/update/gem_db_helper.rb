@@ -25,7 +25,15 @@ class BundlerApi::GemDBHelper
       AND versions.indexed = true
     SQL
 
-    result = dataset.first
+    tries = 2 # Retry two times if there is db connection error
+    begin
+      result = dataset.first
+    rescue Sequel::DatabaseConnectionError => e
+      puts "Database connection Error, retrying in 30 secs..."
+      sleep 30
+      retry unless (tries -= 1).zero?
+      raise e
+    end
 
     synchronize do
       @gem_cache[key] = result if result
