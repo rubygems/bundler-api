@@ -133,7 +133,7 @@ class BundlerApi::Web < Sinatra::Base
       job.run
 
       @cache.purge_specs
-      @cache.purge_memory_cache(payload.name)
+      @cache.purge_gem(payload.name)
 
       json_payload(payload)
     end
