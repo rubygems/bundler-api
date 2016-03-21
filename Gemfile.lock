@@ -11,6 +11,12 @@ GIT
     metriks-librato_metrics (1.0.3)
       metriks (>= 0.9.9.6)
 
+GIT
+  remote: https://github.com/indirect/rack-timeout.git
+  revision: 96c78a76bb6f1b45990e40ccd26df652e6202db8
+  specs:
+    rack-timeout (0.4.0.beta.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -33,6 +39,7 @@ GEM
       multipart-post (>= 1.2, < 3)
     foreman (0.78.0)
       thor (~> 0.19.1)
+    get_process_mem (0.2.0)
     hitimes (1.2.3)
     json (1.8.3)
     librato-metrics (1.6.0)
@@ -61,6 +68,9 @@ GEM
       byebug (~> 8.0)
       pry (~> 0.10)
     puma (3.0.0)
+    puma_worker_killer (0.0.5)
+      get_process_mem (~> 0.2)
+      puma (>= 2.7, < 4)
     rack (1.6.4)
     rack-protection (1.5.3)
       rack
@@ -117,7 +127,9 @@ DEPENDENCIES
   pg
   pry-byebug
   puma
+  puma_worker_killer
   rack-test
+  rack-timeout (= 0.4.0.beta.1)!
   rake
   redis
   rspec-core
@@ -132,4 +144,4 @@ RUBY VERSION
    ruby 2.3.0p0
 
 BUNDLED WITH
-   1.12.0.pre.1
+   1.12.0.rc

@@ -1,4 +1,5 @@
 source "https://rubygems.org"
+# source "https://bundler-api-staging.herokuapp.com"
 
 ruby File.read(File.expand_path('../.ruby-version', __FILE__)).strip
 
@@ -14,6 +15,8 @@ gem 'metriks-librato_metrics', github: 'indirect/metriks-librato_metrics'
 gem 'metriks-middleware'
 gem 'pg'
 gem 'puma'
+gem 'puma_worker_killer'
+gem 'rack-timeout', '0.4.0.beta.1', github: 'indirect/rack-timeout'
 gem 'rake'
 gem 'dalli', github: 'indirect/dalli'
 gem 'redis'
