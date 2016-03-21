@@ -18,7 +18,7 @@ GIT
     rack-timeout (0.4.0.beta.1)
 
 GEM
-  remote: https://bundler-api-staging.herokuapp.com/
+  remote: https://rubygems.org/
   specs:
     aggregate (0.2.2)
     appsignal (0.11.6.beta.0)
