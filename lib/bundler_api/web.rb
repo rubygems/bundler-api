@@ -171,9 +171,12 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/info/:name" do
-    etag_response_for(params[:name]) do
-      @gem_info.info(params[:name])
-    end
+    # Disable for now this endpoint
+    # Testing some performance.
+    status 404
+    #    etag_response_for(params[:name]) do
+    #      @gem_info.info(params[:name])
+    #    end
   end
 
   get "/quick/Marshal.4.8/:id" do
