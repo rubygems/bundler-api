@@ -5,6 +5,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require 'bundler_api/web'
 require 'rack-timeout'
+require 'newrelic_rpm'
 
 use Rack::Timeout, service_timeout: 5.5
 use Rack::Deflater
