@@ -7,6 +7,6 @@ require 'bundler_api/web'
 require 'rack-timeout'
 require 'newrelic_rpm'
 
-use Rack::Timeout, service_timeout: 5.5
+use Rack::Timeout, service_timeout: ENV.fetch('RACK_TIMEOUT', 5)
 use Rack::Deflater
 run BundlerApi::Web.new
