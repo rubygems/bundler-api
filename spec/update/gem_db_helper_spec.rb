@@ -12,27 +12,6 @@ describe BundlerApi::GemDBHelper do
   describe "#exists?" do
     let(:payload) { BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), "ruby", false) }
 
-    context "if the database connection timed out" do
-      before do
-        allow(helper).to receive(:sleep)
-      end
-      it "should retry two times" do
-        counter = 0
-        Sequel::Dataset.any_instance.stub(:first) {
-          counter += 1
-          raise Sequel::DatabaseConnectionError if counter == 1
-        }
-        expect(helper.exists?(payload)).to be_falsey
-      end
-
-      it "should raise exception if still time out" do
-        Sequel::Dataset.any_instance.stub(:first) do
-          raise Sequel::DatabaseConnectionError
-        end
-        expect {helper.exists?(payload)}.to raise_error(Sequel::DatabaseConnectionError)
-      end
-    end
-
     context "if the gem exists" do
       before do
         rubygem = db[:rubygems].insert(name: "foo")
