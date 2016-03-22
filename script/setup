@@ -140,7 +140,7 @@ unless database_exists?
     abort 'Please install postgresql or specify a connection to an existing database in .env.local'
   end
 
-  puts 'Creating database: #{database_url}'
+  puts "Creating database: #{database_url}"
   run_command(*['createdb', conn_info, database_name].flatten)
 end
 
