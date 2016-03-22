@@ -19,6 +19,7 @@ class BundlerApi::Web < Sinatra::Base
   API_REQUEST_LIMIT    = 200
   PG_STATEMENT_TIMEOUT = ENV['PG_STATEMENT_TIMEOUT'] || 1000
   RUBYGEMS_URL         = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
+  NEW_INDEX_ENABLED    = ENV['NEW_INDEX_DISABLED'].nil?
 
   unless ENV['RACK_ENV'] == 'test'
     use Appsignal::Rack::Listener, name: 'bundler-api'
@@ -157,12 +158,14 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/names" do
+    status 404 unless NEW_INDEX_ENABLED
     etag_response_for("names") do
      CompactIndex.names(@gem_info.names)
     end
   end
 
   get "/versions" do
+    status 404 unless NEW_INDEX_ENABLED
     etag_response_for("versions") do
       from_date = @versions_file.updated_at
       extra_gems = @gem_info.versions(from_date, true)
@@ -171,6 +174,7 @@ class BundlerApi::Web < Sinatra::Base
   end
 
   get "/info/:name" do
+    status 404 unless NEW_INDEX_ENABLED
     etag_response_for(params[:name]) do
       @gem_info.info(params[:name])
     end
