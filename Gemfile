@@ -25,6 +25,7 @@ gem 'sequel_pg', require: false
 gem 'sinatra'
 gem 'json'
 gem 'compact_index'
+gem 'newrelic_rpm'
 
 group :development do
   gem 'pry-byebug'
