@@ -79,12 +79,12 @@ module BundlerApi
     end
 
     def memcached_client
-      @memcached_client ||= if ENV["MEMCACHIER_SERVERS"]
-        servers = (ENV["MEMCACHIER_SERVERS"] || "").split(",")
+      @memcached_client ||= if ENV["MEMCACHEDCLOUD_SERVERS"]
+        servers = (ENV["MEMCACHEDCLOUD_SERVERS"] || "").split(",")
         Dalli::Client.new(
           servers, {
-            username: ENV["MEMCACHIER_USERNAME"],
-            password: ENV["MEMCACHIER_PASSWORD"],
+            username: ENV["MEMCACHEDCLOUD_USERNAME"],
+            password: ENV["MEMCACHEDCLOUD_PASSWORD"],
             failover: true,
             socket_timeout: 1.5,
             socket_failure_delay: 0.2,
