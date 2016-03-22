@@ -31,31 +31,18 @@ module BundlerApi
     end
 
     def purge_specs
-      keys = %w(dependencies)
-      paths = %w(
-        /latest_specs.4.8.gz
-        /specs.4.8.gz
-        /prerelease_specs.4.8.gz
-        /versions
-        /names
-      )
-      puts "Purging #{(keys + paths) * ', '}"
-      keys.each {|k| cdn_client.purge_key(k) }
-      paths.each {|k| cdn_client.purge_path(k) }
+      cdn_client.purge_key  'dependencies'
+      cdn_client.purge_path '/latest_specs.4.8.gz'
+      cdn_client.purge_path '/specs.4.8.gz'
+      cdn_client.purge_path '/prerelease_specs.4.8.gz'
+      puts "Purging dependencies /latest_specs.4.8.gz /specs.4.8.gz /prerelease_specs.4.8.gz"
     end
 
     def purge_gem(name)
-      keys = %w()
-      paths = %W(
-        /quick/Marshal.4.8/#{name}.gemspec.rz
-        /gems/#{name}.gem
-        /info/#{name}
-      )
-      puts "Purging #{(keys + paths) * ', '}"
-      keys.each {|k| cdn_client.purge_key(k) }
-      paths.each {|k| cdn_client.purge_path(k) }
-
+      cdn_client.purge_path "/quick/Marshal.4.8/#{name}.gemspec.rz"
+      cdn_client.purge_path "/gems/#{name}.gem"
       purge_memory_cache(name)
+      puts "Purging /quick/Marshal.4.8/#{name}.gemspec.rz /gems/#{name}.gem"
     end
 
     def purge_memory_cache(name)
