@@ -74,8 +74,7 @@ module BundlerApi
             password: ENV["MEMCACHEDCLOUD_PASSWORD"],
             failover: true,
             socket_timeout: 1.5,
-            socket_failure_delay: 0.2,
-            expires_in: 15 * 60
+            socket_failure_delay: 0.2
           }
         )
       else
