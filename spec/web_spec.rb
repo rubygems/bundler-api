@@ -33,16 +33,17 @@ describe BundlerApi::Web do
   context "GET static files" do
     let(:request) { "/robots.txt" }
 
-    it "redirects to rubygems.org" do
+    it "returns disallow root" do
       get request
       expect(last_response).to be_ok
+      expect(last_response.body).to eq("Disallow: /\n")
     end
   end
 
   context "GET nonexistent files'" do
     let(:request) { "/nonexistent" }
 
-    it "redirects to rubygems.org" do
+    it "returns a 404" do
       get request
       expect(last_response).to be_not_found
     end
@@ -84,6 +85,7 @@ describe BundlerApi::Web do
         get "#{request}?gems=#{ gems }"
 
         expect(last_response).not_to be_ok
+        expect(last_response.status).to be 422
         expect(last_response.body).to eq("Too many gems (use --full-index instead)")
       end
     end
