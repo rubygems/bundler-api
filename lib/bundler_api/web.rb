@@ -252,7 +252,7 @@ private
     keys.each do |gem|
       Metriks.meter('dependencies.memcached.miss').mark
       name = gem.gsub("deps/v1/", "")
-      result = @gem_info.deps_for([name])
+      result = @gem_info.deps_for(name)
       @dalli_client.set(gem, result)
       dependencies += result
     end

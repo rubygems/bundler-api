@@ -10,43 +10,26 @@ class BundlerApi::GemInfo
     @conn = connection
   end
 
-  # @param [String] array of strings with the gem names
-  def deps_for(gems = [])
-    dataset =
-      if gems.any?
-        @conn[<<-SQL, Sequel.value_list(gems)]
-          SELECT rv.name, rv.number, rv.platform, rv.required_ruby_version, rv.checksum,
-                 rv.rubygems_version, d.requirements, rv.created_at, for_dep_name.name dep_name
-          FROM
-            (SELECT r.name, v.number, v.platform,v.rubygems_version, v.checksum,
-                    v.required_ruby_version, v.created_at, v.id AS version_id
-            FROM rubygems AS r, versions AS v
-            WHERE v.rubygem_id = r.id
-              AND v.indexed is true
-              AND r.name IN ?
-              ORDER BY v.created_at, v.number, v.platform) AS rv
-          LEFT JOIN dependencies AS d ON
-            d.version_id = rv.version_id
-          LEFT JOIN rubygems AS for_dep_name ON
-            d.rubygem_id = for_dep_name.id
-            AND d.scope = 'runtime'
-          ORDER BY rv.created_at, rv.number, rv.platform, for_dep_name.name;
-        SQL
-      else
-        @conn[<<-SQL]
-          SELECT rv.name, rv.number, rv.platform, d.requirements, for_dep_name.name dep_name
-          FROM
-            (SELECT r.name, v.number, v.platform, v.id AS version_id
-            FROM rubygems AS r, versions AS v
-            WHERE v.rubygem_id = r.id
-              AND v.indexed is true) AS rv
-          LEFT JOIN dependencies AS d ON
-            d.version_id = rv.version_id
-          LEFT JOIN rubygems AS for_dep_name ON
-            d.rubygem_id = for_dep_name.id
-            AND d.scope = 'runtime';
-        SQL
-      end
+  # @param [String] the gem name
+  def deps_for(gem_name)
+    dataset = @conn[<<-SQL, gem_name]
+      SELECT rv.name, rv.number, rv.platform, rv.required_ruby_version, rv.checksum,
+             rv.rubygems_version, d.requirements, rv.created_at, for_dep_name.name dep_name
+      FROM
+        (SELECT r.name, v.number, v.platform,v.rubygems_version, v.checksum,
+                v.required_ruby_version, v.created_at, v.id AS version_id
+        FROM rubygems AS r, versions AS v
+        WHERE v.rubygem_id = r.id
+          AND v.indexed is true
+          AND r.name = ?
+          ORDER BY v.created_at, v.number, v.platform) AS rv
+      LEFT JOIN dependencies AS d ON
+        d.version_id = rv.version_id
+      LEFT JOIN rubygems AS for_dep_name ON
+        d.rubygem_id = for_dep_name.id
+        AND d.scope = 'runtime'
+      ORDER BY rv.created_at, rv.number, rv.platform, for_dep_name.name;
+    SQL
 
     deps = {}
 
@@ -121,7 +104,7 @@ class BundlerApi::GemInfo
   end
 
   def info(name)
-    deps = deps_for([name])
+    deps = deps_for(name)
     deps.map! do |dep|
       dependencies = dep[:dependencies].map do |d|
         CompactIndex::Dependency.new(d[0], d[1])
