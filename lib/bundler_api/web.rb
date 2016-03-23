@@ -66,16 +66,6 @@ class BundlerApi::Web < Sinatra::Base
     g.uniq
   end
 
-  def get_deps
-    timer = Metriks.timer('dependencies').time
-    deps  = @gem_info.deps_for(gems)
-    Metriks.histogram('gems.size').update(gems.size)
-    Metriks.histogram('dependencies.size').update(deps.size)
-    deps
-  ensure
-    timer.stop if timer
-  end
-
   def get_payload
     params = JSON.parse(request.body.read)
     puts "webhook request: #{params.inspect}"
@@ -238,10 +228,6 @@ private
       status 200
       body response_body
     end
-  end
-
-  def deps_for(name)
-    @gem_info.deps_for(Array(name))
   end
 
   def with_metriks
