@@ -73,11 +73,25 @@ describe BundlerApi::CacheInvalidator do
     let(:name) { 'bundler-1.0.0' }
     subject { cache.purge_memory_cache(name) }
 
-    it 'purge memcached gem' do
+    it 'purge memcached gem api' do
       cache.memcached_client.set("deps/v1/#{name}", "omg!")
       expect(cache.memcached_client.get("deps/v1/#{name}")).to_not be_nil
       subject
       expect(cache.memcached_client.get("deps/v1/#{name}")).to be_nil
+    end
+
+    it 'purge memcached gem info' do
+      cache.memcached_client.set("info/#{name}", "omg!")
+      expect(cache.memcached_client.get("info/#{name}")).to_not be_nil
+      subject
+      expect(cache.memcached_client.get("info/#{name}")).to be_nil
+    end
+
+    it 'purge memcached gem names' do
+      cache.memcached_client.set("names", "omg!")
+      expect(cache.memcached_client.get("names")).to_not be_nil
+      subject
+      expect(cache.memcached_client.get("names")).to be_nil
     end
   end
 end

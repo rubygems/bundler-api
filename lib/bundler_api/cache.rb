@@ -47,6 +47,8 @@ module BundlerApi
 
     def purge_memory_cache(name)
       memcached_client.delete "deps/v1/#{name}"
+      memcached_client.delete "info/#{name}"
+      memcached_client.delete "names"
     end
 
     def cdn_client

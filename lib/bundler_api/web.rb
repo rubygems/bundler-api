@@ -160,7 +160,7 @@ class BundlerApi::Web < Sinatra::Base
   get "/names" do
     status 404 unless NEW_INDEX_ENABLED
     etag_response_for("names") do
-     CompactIndex.names(@gem_info.names)
+      @dalli_client.fetch('names') { CompactIndex.names(@gem_info.names) }
     end
   end
 
@@ -176,7 +176,7 @@ class BundlerApi::Web < Sinatra::Base
   get "/info/:name" do
     status 404 unless NEW_INDEX_ENABLED
     etag_response_for(params[:name]) do
-      @gem_info.info(params[:name])
+      @dalli_client.fetch("info/#{params[:name]}") { @gem_info.info(params[:name]) }
     end
   end
 
