@@ -1,4 +1,10 @@
 GIT
+  remote: https://github.com/arthurnn/memcached.git
+  revision: 3a5ba7fc46510b0bf1528ac2a145ecc740f02709
+  specs:
+    memcached (2.0.0.alpha)
+
+GIT
   remote: https://github.com/indirect/metriks-librato_metrics.git
   revision: 15bcaf51dad18b4e7d6f29fb7f7adc7eaf215c5d
   specs:
@@ -27,7 +33,6 @@ GEM
     byebug (8.2.1)
     coderay (1.1.0)
     compact_index (0.10.0)
-    dalli (2.7.6)
     diff-lcs (1.2.5)
     dotenv (2.0.2)
     faraday (0.9.2)
@@ -112,12 +117,12 @@ DEPENDENCIES
   appsignal (= 0.11.6.beta.0)
   artifice
   compact_index
-  dalli
   dotenv
   foreman
   json
   librato-metrics
   lock-smith
+  memcached!
   metriks-librato_metrics!
   metriks-middleware
   newrelic_rpm
@@ -136,9 +141,6 @@ DEPENDENCIES
   sequel
   sequel_pg
   sinatra
-
-RUBY VERSION
-   ruby 2.3.0p0
 
 BUNDLED WITH
    1.12.0.rc

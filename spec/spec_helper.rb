@@ -1,7 +1,7 @@
 ENV['RACK_ENV'] = 'test'
 require 'bundler_api/env'
 
-require 'dalli'
+require 'memcached'
 require 'rspec/core'
 require 'rspec/mocks'
 
@@ -30,7 +30,7 @@ RSpec.configure do |config|
   end
 
   config.before(:each) do
-    Dalli::Client.new.flush
+    Memcached::Client.new.flush
   end
 
   config.raise_errors_for_deprecations!

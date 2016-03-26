@@ -18,7 +18,7 @@ gem 'puma'
 gem 'puma_worker_killer'
 gem 'rack-timeout', '0.4.0.beta.1', github: 'indirect/rack-timeout'
 gem 'rake'
-gem 'dalli'
+gem 'memcached', github: 'arthurnn/memcached'
 gem 'redis'
 gem 'sequel'
 gem 'sequel_pg', require: false
