@@ -66,16 +66,6 @@ class BundlerApi::Web < Sinatra::Base
     g.uniq
   end
 
-  def get_deps
-    timer = Metriks.timer('dependencies').time
-    deps  = @gem_info.deps_for(gems)
-    Metriks.histogram('gems.size').update(gems.size)
-    Metriks.histogram('dependencies.size').update(deps.size)
-    deps
-  ensure
-    timer.stop if timer
-  end
-
   def get_payload
     params = JSON.parse(request.body.read)
     puts "webhook request: #{params.inspect}"
@@ -240,10 +230,6 @@ private
     end
   end
 
-  def deps_for(name)
-    @gem_info.deps_for(Array(name))
-  end
-
   def with_metriks
     timer = Metriks.timer('dependencies').time
     yield.tap do |deps|
@@ -266,7 +252,7 @@ private
     keys.each do |gem|
       Metriks.meter('dependencies.memcached.miss').mark
       name = gem.gsub("deps/v1/", "")
-      result = @gem_info.deps_for([name])
+      result = @gem_info.deps_for(name)
       @dalli_client.set(gem, result)
       dependencies += result
     end

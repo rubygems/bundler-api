@@ -11,7 +11,7 @@ describe BundlerApi::GemInfo do
   describe "#deps_for" do
     context "no gems" do
       it "should find the deps" do
-        expect(gem_info.deps_for(['rack'])).to eq([])
+        expect(gem_info.deps_for('rack')).to eq([])
       end
     end
 
@@ -29,7 +29,7 @@ describe BundlerApi::GemInfo do
         }
 
         result.each_pair do |k, v|
-          expect(gem_info.deps_for(['rack']).first[k]).to eq(v)
+          expect(gem_info.deps_for('rack').first[k]).to eq(v)
         end
       end
     end
@@ -57,32 +57,13 @@ describe BundlerApi::GemInfo do
         }
 
         result.each_pair do |k,v|
-          expect(gem_info.deps_for(['rack']).first[k]).to eq(v)
+          expect(gem_info.deps_for('rack').first[k]).to eq(v)
         end
       end
 
       it "order by created_at and version number" do
         result = %w(1.0.0 1.1.9 1.2.0)
-        expect(gem_info.deps_for(['rack']).map { |x| x[:number] }).to eq(result)
-      end
-    end
-
-    context "all gems" do
-      before do
-        rack_id = builder.create_rubygem('rack')
-        builder.create_version(rack_id, 'rack')
-      end
-
-      it "should return rack" do
-        result = {
-          name:         'rack',
-          number:       '1.0.0',
-          platform:     'ruby',
-        }
-
-        result.each do |k,v|
-          expect(gem_info.deps_for.first[k]).to eq(v)
-        end
+        expect(gem_info.deps_for('rack').map { |x| x[:number] }).to eq(result)
       end
     end
 
@@ -107,7 +88,7 @@ describe BundlerApi::GemInfo do
         }
 
         result.each_pair do |k,v|
-          expect(gem_info.deps_for(['rack']).first[k]).to eq(v)
+          expect(gem_info.deps_for('rack').first[k]).to eq(v)
         end
       end
     end
