@@ -1,5 +1,5 @@
 require 'net/http'
-require 'dalli'
+require 'memcached'
 
 module BundlerApi
   FastlyClient = Struct.new(:service_id, :base_url, :api_key) do
@@ -68,17 +68,14 @@ module BundlerApi
     def memcached_client
       @memcached_client ||= if ENV["MEMCACHEDCLOUD_SERVERS"]
         servers = (ENV["MEMCACHEDCLOUD_SERVERS"] || "").split(",")
-        Dalli::Client.new(
+        Memcached::Client.new(
           servers, {
-            username: ENV["MEMCACHEDCLOUD_USERNAME"],
-            password: ENV["MEMCACHEDCLOUD_PASSWORD"],
-            failover: true,
-            socket_timeout: 1.5,
-            socket_failure_delay: 0.2
+            prefix_key: 'v2',
+            credentials: [ENV["MEMCACHEDCLOUD_USERNAME"], ENV["MEMCACHEDCLOUD_PASSWORD"]]
           }
         )
       else
-        Dalli::Client.new
+        Memcached::Client.new
       end
     end
 
