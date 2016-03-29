@@ -41,7 +41,6 @@ GEM
       aggregate (~> 0.2.2)
       faraday (~> 0.7)
       multi_json
-    lock-smith (1.0.0)
     method_source (0.8.2)
     metriks (0.9.9.7)
       atomic (~> 1.0)
@@ -117,7 +116,6 @@ DEPENDENCIES
   foreman
   json
   librato-metrics
-  lock-smith
   metriks-librato_metrics!
   metriks-middleware
   newrelic_rpm

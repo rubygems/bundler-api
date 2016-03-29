@@ -10,7 +10,6 @@ require 'tmpdir'
 require 'net/http'
 require 'time'
 require 'compact_index'
-require 'locksmith/pg'
 
 require 'bundler_api/cache'
 require 'bundler_api/update/consumer_pool'
