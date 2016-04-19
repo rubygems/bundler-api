@@ -123,7 +123,7 @@ class BundlerApi::Web < Sinatra::Base
       job = BundlerApi::Job.new(@write_conn, payload)
       job.run
 
-      Thread.new do
+      in_background do
         @cache.purge_specs
         @cache.purge_gem(payload.name)
       end
@@ -142,7 +142,7 @@ class BundlerApi::Web < Sinatra::Base
         platform:   payload.platform
       ).update(indexed: false)
 
-      Thread.new do
+      in_background do
         @cache.purge_specs
         @cache.purge_gem(payload.name)
       end
@@ -269,6 +269,16 @@ private
 
   def parse_etags(value)
     value ? value.split(/, ?/).select{|s| s.sub!(/"(.*)"/, '\1') } : []
+  end
+
+  def in_background
+    Thread.new do
+      begin
+        yield
+      rescue => e
+        Appsignal.add_exception(e)
+      end
+    end
   end
 
 end
