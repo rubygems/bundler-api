@@ -30,6 +30,15 @@ module BundlerApi
       @cdn_client = cdn
     end
 
+    def verify_responses!(responses)
+      failures = responses.compact.select {|r| r.code >= 400 }
+      return if failures.empty?
+      failures.map! do |response|
+        "- #{response.uri} => #{response.code}, #{response.body}"
+      end
+      raise "The following cache purge requests failed:\n#{failures.join("\n")}"
+    end
+
     def purge_specs
       keys = %w(dependencies)
       paths = %w(
@@ -40,8 +49,9 @@ module BundlerApi
         /names
       )
       puts "Purging #{(keys + paths) * ', '}"
-      keys.each {|k| cdn_client.purge_key(k) }
-      paths.each {|k| cdn_client.purge_path(k) }
+      responses = keys.map {|k| cdn_client.purge_key(k) }
+      responses += paths.map {|k| cdn_client.purge_path(k) }
+      verify_responses!(responses)
     end
 
     def purge_gem(name)
@@ -52,10 +62,12 @@ module BundlerApi
         /info/#{name}
       )
       puts "Purging #{(keys + paths) * ', '}"
-      keys.each {|k| cdn_client.purge_key(k) }
-      paths.each {|k| cdn_client.purge_path(k) }
+      responses = keys.map {|k| cdn_client.purge_key(k) }
+      responses += paths.map {|k| cdn_client.purge_path(k) }
 
       purge_memory_cache(name)
+
+      verify_responses!(responses)
     end
 
     def purge_memory_cache(name)
