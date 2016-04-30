@@ -54,12 +54,15 @@ module BundlerApi
       verify_responses!(responses)
     end
 
-    def purge_gem(name)
+    def purge_gem(gem_helper)
+      name = gem_helper.name
+      full_name = gem_helper.full_name
+
       purge_memory_cache(name)
 
       paths = %W(
-        /quick/Marshal.4.8/#{name}.gemspec.rz
-        /gems/#{name}.gem
+        /quick/Marshal.4.8/#{full_name}.gemspec.rz
+        /gems/#{full_name}.gem
         /info/#{name}
       )
       puts "Purging #{paths.join(', ')}"
