@@ -31,10 +31,10 @@ module BundlerApi
     end
 
     def verify_responses!(responses)
-      failures = responses.compact.select {|r| r.code >= 400 }
+      failures = responses.compact.select {|r| r.code.to_i >= 400 }
       return if failures.empty?
       failures.map! do |response|
-        "- #{response.uri} => #{response.code}, #{response.body}"
+        "- #{response.uri} => #{response.code}, #{response.body if response.body_permitted?}"
       end
       raise "The following cache purge requests failed:\n#{failures.join("\n")}"
     end
