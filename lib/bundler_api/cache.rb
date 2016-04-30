@@ -48,24 +48,22 @@ module BundlerApi
         /versions
         /names
       )
-      puts "Purging #{(keys + paths) * ', '}"
+      puts "Purging #{(keys + paths).join(', ')}"
       responses = keys.map {|k| cdn_client.purge_key(k) }
       responses += paths.map {|k| cdn_client.purge_path(k) }
       verify_responses!(responses)
     end
 
     def purge_gem(name)
-      keys = %w()
+      purge_memory_cache(name)
+
       paths = %W(
         /quick/Marshal.4.8/#{name}.gemspec.rz
         /gems/#{name}.gem
         /info/#{name}
       )
-      puts "Purging #{(keys + paths) * ', '}"
-      responses = keys.map {|k| cdn_client.purge_key(k) }
-      responses += paths.map {|k| cdn_client.purge_path(k) }
-
-      purge_memory_cache(name)
+      puts "Purging #{paths.join(', ')}"
+      responses = paths.map {|k| cdn_client.purge_path(k) }
 
       verify_responses!(responses)
     end
