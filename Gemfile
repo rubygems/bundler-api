@@ -8,7 +8,7 @@ git_source(:github) do |repo|
   "https://github.com/#{repo}.git"
 end
 
-gem 'appsignal', '0.11.6.beta.0'
+gem 'appsignal'
 gem 'librato-metrics'
 gem 'metriks-librato_metrics', github: 'indirect/metriks-librato_metrics'
 gem 'metriks-middleware'
