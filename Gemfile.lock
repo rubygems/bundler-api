@@ -15,7 +15,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     aggregate (0.2.2)
-    appsignal (1.1.5)
+    appsignal (0.11.6.beta.0)
       rack
       thread_safe
     artifice (0.6)
@@ -108,7 +108,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  appsignal
+  appsignal (= 0.11.6.beta.0)
   artifice
   compact_index
   dalli
@@ -139,4 +139,4 @@ RUBY VERSION
    ruby 2.3.0p0
 
 BUNDLED WITH
-   1.12.0
+   1.12.0.rc

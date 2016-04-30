@@ -276,7 +276,7 @@ private
       begin
         yield
       rescue => e
-        Appsignal.send_exception(e)
+        Appsignal.add_exception(e)
       end
     end
   end
