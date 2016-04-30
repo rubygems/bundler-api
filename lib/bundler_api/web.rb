@@ -124,7 +124,7 @@ class BundlerApi::Web < Sinatra::Base
       job.run
 
       in_background do
-        @cache.purge_gem(payload.name)
+        @cache.purge_gem(payload)
         @cache.purge_specs
       end
 
@@ -143,7 +143,7 @@ class BundlerApi::Web < Sinatra::Base
       ).update(indexed: false)
 
       in_background do
-        @cache.purge_gem(payload.name)
+        @cache.purge_gem(payload)
         @cache.purge_specs
       end
 

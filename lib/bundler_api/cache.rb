@@ -34,7 +34,7 @@ module BundlerApi
       failures = responses.compact.select {|r| r.code.to_i >= 400 }
       return if failures.empty?
       failures.map! do |response|
-        "- #{response.uri} => #{response.code}, #{response.body if response.body_permitted?}"
+        "- #{response.uri} => #{response.code}, #{response.body}"
       end
       raise "The following cache purge requests failed:\n#{failures.join("\n")}"
     end
@@ -54,12 +54,15 @@ module BundlerApi
       verify_responses!(responses)
     end
 
-    def purge_gem(name)
+    def purge_gem(gem_helper)
+      name = gem_helper.name
+      full_name = gem_helper.full_name
+
       purge_memory_cache(name)
 
       paths = %W(
-        /quick/Marshal.4.8/#{name}.gemspec.rz
-        /gems/#{name}.gem
+        /quick/Marshal.4.8/#{full_name}.gemspec.rz
+        /gems/#{full_name}.gem
         /info/#{name}
       )
       puts "Purging #{paths.join(', ')}"
