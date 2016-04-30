@@ -226,7 +226,7 @@ end
 desc "Purge new index from Fastly cache"
 task :purge_cdn do
   cdn = BundlerApi::CacheInvalidator.new.cdn_client
-  cdn.purge_key("names")
-  cdn.purge_key("versions")
+  cdn.purge_path("/names")
+  cdn.purge_path("/versions")
   cdn.purge_key("info/*")
 end
