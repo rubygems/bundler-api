@@ -208,7 +208,7 @@ private
     sum.checksum = Digest::MD5.hexdigest(response_body)
 
     headers "ETag" => quote(sum.checksum)
-    headers "Surrogate-Control" => "max-age=2592000, stale-while-revalidate=60"
+    headers "Surrogate-Control" => "max-age=3600, stale-while-revalidate=60"
     content_type "text/plain"
     requested_range_for(response_body)
   end
