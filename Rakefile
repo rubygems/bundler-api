@@ -124,9 +124,15 @@ def update(db, thread_count)
   unless local_gems.empty?
     print "Yanking #{local_gems.size} gems\n"
     local_gems.keys.each {|name| print "Yanking: #{name}\n" }
-    versions = db[:versions].where(id: local_gems.values)
-    versions.update(indexed: false, yanked_at: Time.now)
-    versions.join(:rubygems, id: :rubygem_id).each do |version|
+
+    db[:versions]
+      .where(:id => local_gems.values)
+      .update(indexed: false, yanked_at: Time.now)
+
+    versions = db[:versions]
+      .join(:rubygems, id: :rubygem_id)
+      .where(versions__id: local_gems.values)
+    versions.each do |version|
       gem_helper = BundlerApi::GemHelper.new(version[:name], version[:number], version[:platform])
       cache.purge_gem(gem_helper)
     end
