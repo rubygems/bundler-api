@@ -157,7 +157,7 @@ describe BundlerApi::GemInfo do
 
     context "with yanked gems" do
       before do
-        builder.yank(@a200)
+        builder.yank(@a200, yanked_info_checksum: 'a200y')
         builder.create_version(a, 'a', '2.2.2', 'ruby', info_checksum: 'a222')
       end
 
@@ -165,7 +165,7 @@ describe BundlerApi::GemInfo do
         gems + [
           CompactIndex::Gem.new(
             'a',
-            [CompactIndex::GemVersion.new('-2.0.0', 'java', nil, 'a200')]
+            [CompactIndex::GemVersion.new('-2.0.0', 'java', nil, 'a200y')]
           ),
           CompactIndex::Gem.new(
             'a',
