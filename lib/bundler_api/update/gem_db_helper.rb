@@ -56,6 +56,10 @@ class BundlerApi::GemDBHelper
     @db[:versions].where(id: version_id).update(info_checksum: info_checksum)
   end
 
+  def update_yanked_info_checksum(query, info_checksum)
+    @db[:versions].where(query).update(yanked_info_checksum: info_checksum)
+  end
+
   def find_or_insert_version(spec, rubygem_id, platform = 'ruby', checksum = nil, indexed = nil)
     insert     = nil
     version_id = nil
@@ -133,6 +137,18 @@ class BundlerApi::GemDBHelper
     end
 
     deps_added
+  end
+
+  def yank!(gem_name, version, platform)
+    rubygem_id = @db[:rubygems].filter(name: gem_name).select(:id).first[:id]
+    query = {
+      rubygem_id: rubygem_id,
+      number:     version,
+      platform:   platform,
+    }
+    @db[:versions].where(query).update(indexed: false)
+    info_checksum = Digest::MD5.hexdigest(BundlerApi::GemInfo.new(@db).info(gem_name))
+    update_yanked_info_checksum(query, info_checksum)
   end
 
   private
