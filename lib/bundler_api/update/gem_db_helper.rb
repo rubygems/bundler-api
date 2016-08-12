@@ -79,8 +79,7 @@ class BundlerApi::GemDBHelper
 
       spec_rubygems = get_spec_rubygems(spec)
       spec_ruby = get_spec_ruby(spec)
-
-      version_id = @db[:versions].insert(
+      version_attrs = {
         number:      spec.version.version,
         rubygem_id:  rubygem_id,
         # rubygems.org actually uses the platform from the index and not from the spec
@@ -90,9 +89,10 @@ class BundlerApi::GemDBHelper
         full_name:   spec.full_name,
         rubygems_version: (spec.required_rubygems_version || '').to_s,
         required_ruby_version: (spec.required_ruby_version || '').to_s,
-        checksum:    checksum,
         created_at:  Time.now
-      )
+      }
+      version_attrs[:checksum] = checksum if checksum
+      version_id = @db[:versions].insert(version_attrs)
     end
 
     if insert
