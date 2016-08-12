@@ -20,7 +20,7 @@ describe BundlerApi::FixDepJob do
     let(:foo_spec)  { generate_gemspec(name, version, platform) }
     let(:bar_spec)  { generate_gemspec('bar', '1.0', 'ruby') }
     let(:payload)   { BundlerApi::GemHelper.new(name, Gem::Version.new(version), platform) }
-    let(:job)       { BundlerApi::FixDepJob.new(db, payload, counter, mutex) }
+    let(:job)       { BundlerApi::FixDepJob.new(db, payload, counter, mutex, silent: true) }
 
     before do
       Artifice.activate_with(GemspecGenerator)

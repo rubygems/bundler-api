@@ -60,7 +60,7 @@ SQL
 
     it "creates a rubygem if it doesn't exist" do
       payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), "ruby")
-      job     = BundlerApi::Job.new(db, payload, mutex, counter)
+      job     = BundlerApi::Job.new(db, payload, mutex, counter, silent: true)
 
       job.run
 
@@ -70,7 +70,7 @@ SQL
     it "creates different platform rubygems" do
       %w(ruby java).each do |platform|
         payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), platform)
-        job     = BundlerApi::Job.new(db, payload, mutex, counter)
+        job     = BundlerApi::Job.new(db, payload, mutex, counter, silent: true)
         job.run
       end
 
@@ -81,7 +81,7 @@ SQL
     it "doesn't dupe rubygems" do
       %w(ruby java ruby).each do |platform|
         payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), platform)
-        job     = BundlerApi::Job.new(db, payload, mutex, counter)
+        job     = BundlerApi::Job.new(db, payload, mutex, counter, silent: true)
         job.run
       end
 
@@ -93,7 +93,7 @@ SQL
       versions = %w(1.0 1.2 1.1)
       versions.each do |version|
         payload = BundlerApi::GemHelper.new("foo1", Gem::Version.new(version), 'ruby')
-        job = BundlerApi::Job.new(db, payload, mutex, counter)
+        job = BundlerApi::Job.new(db, payload, mutex, counter, silent: true)
         job.run
 
         get '/info/foo1'
@@ -112,8 +112,8 @@ SQL
     context "with gem dependencies" do
       let(:gem_payload) { BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), "ruby") }
       let(:dep_payload) { BundlerApi::GemHelper.new("bar", Gem::Version.new("1.0"), "ruby") }
-      let(:gem_job) { BundlerApi::Job.new(db, gem_payload, mutex, counter) }
-      let(:dep_job) { BundlerApi::Job.new(db, dep_payload, mutex, counter) }
+      let(:gem_job) { BundlerApi::Job.new(db, gem_payload, mutex, counter, silent: true) }
+      let(:dep_job) { BundlerApi::Job.new(db, dep_payload, mutex, counter, silent: true) }
 
       context "when gem is added before the dependency" do
         before do
@@ -142,7 +142,7 @@ SQL
       it "handles when platform in spec is different" do
         jobs = 2.times.map do
           payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), 'jruby')
-          BundlerApi::Job.new(db, payload, mutex, counter)
+          BundlerApi::Job.new(db, payload, mutex, counter, silent: true)
         end
 
         jobs.first.run
@@ -154,7 +154,7 @@ SQL
       it "sets the indexed attribute to true" do
         jobs = 2.times.map do
           payload = BundlerApi::GemHelper.new("foo", Gem::Version.new("1.0"), 'jruby')
-          BundlerApi::Job.new(db, payload, mutex, counter)
+          BundlerApi::Job.new(db, payload, mutex, counter, silent: true)
         end
         jobs.first.run
         version_id = db[<<-SQL, 'foo', '1.0', 'jruby'].first[:id]
