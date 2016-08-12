@@ -174,8 +174,12 @@ def fix_deps(db, thread_count)
   print "# of gem deps fixed: #{counter.count}\n"
 end
 
-def database_connection(connections = 1, &block)
-  Sequel.connect(ENV['DATABASE_URL'], max_connections: connections, &block)
+def database_connection(connections = 1)
+  print "Connecting to database... "
+  Sequel.connect(ENV['DATABASE_URL'], max_connections: connections) do |db|
+    print "connected!\n"
+    yield db
+  end
 end
 
 desc "update database"
