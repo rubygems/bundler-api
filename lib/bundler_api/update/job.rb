@@ -26,11 +26,11 @@ class BundlerApi::Job
   def run
     return if @db_helper.exists?(@payload) && !@fix_deps
     return if !@db_helper.exists?(@payload) && @fix_deps
-    log "Downloading: #{@payload.full_name}\n"
-    spec = @payload.download_spec
     log "Adding: #{@payload.full_name}\n"
+    spec = @payload.download_spec
+    checksum = @payload.download_checksum unless @fix_deps
     @mutex.synchronize do
-      deps_added = insert_spec(spec)
+      deps_added = insert_spec(spec, checksum)
       @gem_count.increment if @gem_count && (!deps_added.empty? || !@fix_deps)
     end
   rescue BundlerApi::HTTPError => e
@@ -48,7 +48,7 @@ class BundlerApi::Job
     puts message unless @silent
   end
 
-  def insert_spec(spec)
+  def insert_spec(spec, checksum)
     raise "Failed to load spec" unless spec
 
     @db.transaction do
@@ -57,7 +57,7 @@ class BundlerApi::Job
         spec,
         rubygem_id,
         @payload.platform,
-        @fix_deps ? nil : @payload.checksum,
+        checksum,
         true
       )
       info_checksum = Digest::MD5.hexdigest(@gem_info.info(spec.name))

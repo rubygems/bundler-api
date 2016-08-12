@@ -26,10 +26,6 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     full_name
   end
 
-  def checksum
-    @checksum ||= fetch_checksum
-  end
-
   def download_spec
     url = download_gem_url("quick/Marshal.4.8/#{full_name}.gemspec.rz")
     @mutex.synchronize do
@@ -37,9 +33,7 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     end
   end
 
-private
-
-  def fetch_checksum
+  def download_checksum
     url = File.join(RUBYGEMS_URL, "/api/v2/rubygems/#{name}/versions/#{version}.json")
     response = fetch(url)
     return warn("WARNING: Can't find gem #{name}-#{version} at #{url}") if response.empty?
@@ -48,6 +42,9 @@ private
 
     version_info['sha']
   end
+
+
+private
 
   def fetch(url, redirects = 0, tries = [])
     raise BundlerApi::HTTPError, "Too many redirects #{url}" if redirects >= REDIRECT_LIMIT
