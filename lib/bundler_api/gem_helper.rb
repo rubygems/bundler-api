@@ -7,7 +7,7 @@ class BundlerApi::HTTPError < RuntimeError
 end
 
 class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease)
-  RUBYGEMS_URL = ENV['RUBYGEMS_URL'] || "https://www.rubygems.org"
+  RUBYGEMS_URL = ENV['RUBYGEMS_URL'] || "https://rubygems.org"
 
   REDIRECT_LIMIT = 5
   TRY_LIMIT      = 4
@@ -26,11 +26,10 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
   end
 
   def checksum
-    @checksum
+    @checksum ||= fetch_checksum
   end
 
   def download_spec
-    set_checksum
     url = download_gem_url("quick/Marshal.4.8/#{full_name}.gemspec.rz")
     @mutex.synchronize do
       @gemspec ||= Marshal.load(Gem.inflate(fetch(url)))
@@ -39,25 +38,21 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
 
 private
 
-  def set_checksum
-    # TODO: Change this to the new rubygems call when accepted
-    url = "#{RUBYGEMS_URL}/api/v1/versions/#{name}.json"
-    resp = JSON.parse(fetch(url))
-    version_info = resp.find { |e| e['number'] == version.to_s }
+  def fetch_checksum
+    url = File.join(RUBYGEMS_URL, "/api/v2/rubygems/#{name}/versions/#{version}.json")
+    response = fetch(url)
+    return warn("WARNING: Can't find gem #{name}-#{version} at #{url}") if response.empty?
+    version_info = JSON.parse(response)
+    return warn("WARNING: Gem #{name}-#{version} has no checksum!") if version_info['sha'].nil?
 
-    if version_info
-      warn "WARNING: Gem #{name}-#{version} has no checksum!" unless version_info['sha']
-      @checksum = version_info['sha']
-    else
-      warn "WARNING: Can't find gem #{name}-#{version} in JSON from #{url}" unless version_info
-    end
+    version_info['sha']
   end
 
   def fetch(url, redirects = 0, tries = [])
     raise BundlerApi::HTTPError, "Too many redirects #{url}" if redirects >= REDIRECT_LIMIT
     raise BundlerApi::HTTPError, "Could not download #{url} (#{tries.join(", ")})" if tries.size >= TRY_LIMIT
 
-    uri      = URI.parse(url)
+    uri = URI.parse(url)
     response = begin
       Net::HTTP.get_response(uri)
     rescue => e
