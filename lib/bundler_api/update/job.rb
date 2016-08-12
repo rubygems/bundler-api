@@ -51,7 +51,7 @@ class BundlerApi::Job
         spec,
         rubygem_id,
         @payload.platform,
-        @payload.checksum,
+        @fix_deps ? nil : @payload.checksum,
         true
       )
       info_checksum = Digest::MD5.hexdigest(@gem_info.info(spec.name))
