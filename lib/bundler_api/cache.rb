@@ -24,10 +24,14 @@ module BundlerApi
   end
 
   class CacheInvalidator
-
-    def initialize(memcached: nil, cdn: nil)
+    def initialize(memcached: nil, cdn: nil, silent: false)
       @memcached_client = memcached
       @cdn_client = cdn
+      @silent = silent
+    end
+
+    def log(message)
+      puts(message) unless @silent
     end
 
     def verify_responses!(responses)
@@ -48,7 +52,7 @@ module BundlerApi
         /versions
         /names
       )
-      puts "Purging #{(keys + paths).join(', ')}"
+      log "Purging #{(keys + paths).join(', ')}"
       responses = keys.map {|k| cdn_client.purge_key(k) }
       responses += paths.map {|k| cdn_client.purge_path(k) }
       verify_responses!(responses)
@@ -65,7 +69,7 @@ module BundlerApi
         /gems/#{full_name}.gem
         /info/#{name}
       )
-      puts "Purging #{paths.join(', ')}"
+      log "Purging #{paths.join(', ')}"
       responses = paths.map {|k| cdn_client.purge_path(k) }
 
       verify_responses!(responses)

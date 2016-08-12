@@ -14,7 +14,7 @@ describe BundlerApi::Job do
   let(:mutex)   { Mutex.new }
 
   def app
-    BundlerApi::Web.new($db, $db)
+    BundlerApi::Web.new($db, $db, silent: true)
   end
 
   before do

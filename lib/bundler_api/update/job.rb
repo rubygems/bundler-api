@@ -12,7 +12,7 @@ class BundlerApi::Job
   attr_reader :payload
   @@gem_cache = {}
 
-  def initialize(db, payload, mutex = Mutex.new, gem_count = nil, fix_deps: false)
+  def initialize(db, payload, mutex = Mutex.new, gem_count = nil, fix_deps: false, silent: false)
     @db        = db
     @payload   = payload
     @mutex     = mutex || MockMutex.new
@@ -20,20 +20,21 @@ class BundlerApi::Job
     @db_helper = BundlerApi::GemDBHelper.new(@db, @@gem_cache, @mutex)
     @gem_info  = BundlerApi::GemInfo.new(@db)
     @fix_deps  = fix_deps
+    @silent    = silent
   end
 
   def run
     return if @db_helper.exists?(@payload) && !@fix_deps
     return if !@db_helper.exists?(@payload) && @fix_deps
-    print "Downloading: #{@payload.full_name}\n"
+    log "Downloading: #{@payload.full_name}\n"
     spec = @payload.download_spec
-    print "Adding: #{@payload.full_name}\n"
+    log "Adding: #{@payload.full_name}\n"
     @mutex.synchronize do
       deps_added = insert_spec(spec)
       @gem_count.increment if @gem_count && (!deps_added.empty? || !@fix_deps)
     end
   rescue BundlerApi::HTTPError => e
-    puts "BundlerApi::Job#run gem=#{@payload.full_name.inspect} " +
+    log "BundlerApi::Job#run gem=#{@payload.full_name.inspect} " +
          "message=#{e.message.inspect}"
   end
 
@@ -42,6 +43,11 @@ class BundlerApi::Job
   end
 
   private
+
+  def log(message)
+    puts message unless @silent
+  end
+
   def insert_spec(spec)
     raise "Failed to load spec" unless spec
 

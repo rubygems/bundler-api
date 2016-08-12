@@ -3,7 +3,7 @@ require 'bundler_api/cache'
 
 describe BundlerApi::CacheInvalidator do
   let(:client) { double(:client, purge_path: nil, purge_key: nil) }
-  let(:cache) { BundlerApi::CacheInvalidator.new(cdn: client) }
+  let(:cache) { BundlerApi::CacheInvalidator.new(cdn: client, silent: true) }
   let(:failing_response) { double('Net::HTTPServerError', :uri => 'URI', :code => 500, :body => 'fail!') }
   let(:response) { double('Net::HTTPOK', :code => 200, :body => '') }
 

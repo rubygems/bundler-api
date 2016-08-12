@@ -28,7 +28,7 @@ class BundlerApi::Web < Sinatra::Base
     use BundlerApi::AgentReporting
   end
 
-  def initialize(conn = nil, write_conn = nil, gem_strategy = nil)
+  def initialize(conn = nil, write_conn = nil, gem_strategy = nil, silent: false)
     @rubygems_token = ENV['RUBYGEMS_TOKEN']
 
     statement_timeout = proc {|c| c.execute("SET statement_timeout = #{PG_STATEMENT_TIMEOUT}") }
@@ -47,7 +47,8 @@ class BundlerApi::Web < Sinatra::Base
     file_path = BundlerApi::GemInfo::VERSIONS_FILE_PATH
     @versions_file = CompactIndex::VersionsFile.new(file_path)
 
-    @cache = BundlerApi::CacheInvalidator.new
+    @silent = silent
+    @cache = BundlerApi::CacheInvalidator.new(silent: silent)
     @dalli_client = @cache.memcached_client
     super()
     @gem_strategy = gem_strategy || BundlerApi::RedirectionStrategy.new(RUBYGEMS_URL)
@@ -68,7 +69,7 @@ class BundlerApi::Web < Sinatra::Base
 
   def get_payload
     params = JSON.parse(request.body.read)
-    puts "webhook request: #{params.inspect}"
+    log "webhook request: #{params.inspect}"
 
     if @rubygems_token && (params["rubygems_token"] != @rubygems_token)
       halt 403, "You're not Rubygems"
@@ -120,7 +121,7 @@ class BundlerApi::Web < Sinatra::Base
   post "/api/v1/add_spec.json" do
     Metriks.timer('webhook.add_spec').time do
       payload = get_payload
-      job = BundlerApi::Job.new(@write_conn, payload)
+      job = BundlerApi::Job.new(@write_conn, payload, silent: @silent)
       job.run
 
       in_background do
@@ -265,6 +266,10 @@ private
 
   def parse_etags(value)
     value ? value.split(/, ?/).select{|s| s.sub!(/"(.*)"/, '\1') } : []
+  end
+
+  def log(message)
+    puts message unless @silent
   end
 
   def in_background
