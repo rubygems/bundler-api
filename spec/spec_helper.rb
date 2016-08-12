@@ -24,6 +24,7 @@ RSpec.configure do |config|
   end
 
   config.before(:each) do
+    stub_const("BundlerApi::GemHelper::TRY_BACKOFF", 0)
   end
 
   config.before(:each) do
