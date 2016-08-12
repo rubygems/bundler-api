@@ -14,6 +14,10 @@ class GemspecGenerator < Sinatra::Base
     end
     Gem.deflate(Marshal.dump(generate_gemspec(name, version, platform)))
   end
+
+  get "/api/v2/rubygems/:name/versions/:version.json" do
+    JSON.dump(name: params[:name], version: params[:version], sha: "abc123")
+  end
 end
 
 class GemspecRedirect < Sinatra::Base
