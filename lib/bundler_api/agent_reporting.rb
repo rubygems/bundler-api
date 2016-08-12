@@ -59,7 +59,7 @@ private
     # Sometimes we get these, and there's no point throwing out a perfectly
     # good metric. We still, however, want to report it in Appsignal so that
     # we know what's up.
-    Appsignal.add_exception(ex)
+    Appsignal.add_exception(ex) if defined?(Appsignal)
 
     false
   end
