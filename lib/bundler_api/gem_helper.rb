@@ -11,6 +11,7 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
 
   REDIRECT_LIMIT = 5
   TRY_LIMIT      = 4
+  TRY_BACKOFF    = 3
 
   def initialize(*)
     super
@@ -68,7 +69,7 @@ private
       tries << response
       exp = tries.size
       exp *= 2 if response.is_a?(Net::HTTPTooManyRequests)
-      sleep(3 ** exp)
+      sleep(TRY_BACKOFF ** exp)
       fetch(url, redirects, tries)
     end
   end

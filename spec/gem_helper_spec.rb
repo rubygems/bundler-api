@@ -88,6 +88,7 @@ GEMSPEC
 
     context "when there's a http error" do
       before do
+        stub_const("BundlerApi::GemHelper::TRY_BACKOFF", 0)
         Artifice.activate_with(GemspecHTTPError)
       end
 
@@ -102,7 +103,7 @@ GEMSPEC
 
     context "when it's always throwing an error" do
       before do
-        stub_const("BundlerApi::GemHelper::TRY_LIMIT", 1)
+        stub_const("BundlerApi::GemHelper::TRY_BACKOFF", 0)
         Artifice.activate_with(ForeverHTTPError)
       end
 
