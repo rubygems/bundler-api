@@ -89,7 +89,7 @@ class BundlerApi::GemDBHelper
         full_name:   spec.full_name,
         rubygems_version: (spec.required_rubygems_version || '').to_s,
         required_ruby_version: (spec.required_ruby_version || '').to_s,
-        created_at:  Time.now
+        created_at:  Time.now,
       }
       version_attrs[:checksum] = checksum if checksum
       version_id = @db[:versions].insert(version_attrs)

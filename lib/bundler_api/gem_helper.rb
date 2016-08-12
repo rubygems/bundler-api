@@ -43,7 +43,6 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     version_info['sha']
   end
 
-
 private
 
   def fetch(url, redirects = 0, tries = [])
@@ -75,5 +74,4 @@ private
     @base_url ||= ENV.fetch("DOWNLOAD_BASE", "https://rubygems.global.ssl.fastly.net")
     File.join(@base_url, path || '')
   end
-
 end
