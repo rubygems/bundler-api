@@ -25,6 +25,7 @@ class BundlerApi::Job
   def run
     return if @db_helper.exists?(@payload) && !@fix_deps
     return if !@db_helper.exists?(@payload) && @fix_deps
+    print "Downloading: #{@payload.full_name}\n"
     spec = @payload.download_spec
     print "Adding: #{@payload.full_name}\n"
     @mutex.synchronize do
