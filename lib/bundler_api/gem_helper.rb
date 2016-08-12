@@ -74,7 +74,7 @@ private
       tries << response
       exp = tries.size
       exp *= 2 if response.is_a?(Net::HTTPTooManyRequests)
-      sleep(3 ** exp) if exp > 0
+      sleep(3 ** exp)
       fetch(url, redirects, tries)
     end
   end
