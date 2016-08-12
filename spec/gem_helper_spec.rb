@@ -117,7 +117,7 @@ GEMSPEC
 
     context "when using multiple threads" do
       let(:version) { "1" }
-      let(:port)    { 2000 }
+      let(:port)    { 20000 }
 
       Thread.abort_on_exception = true
 
@@ -136,6 +136,7 @@ GEMSPEC
         require 'timeout'
         Timeout.timeout(15) { sleep(0.1) until @rackup_thread.status == "sleep" }
         sleep(1)
+        ENV["DOWNLOAD_BASE"] = "http://localhost:#{port}"
       end
 
       after do
@@ -144,7 +145,7 @@ GEMSPEC
 
       it "is threadsafe" do
         5.times.map do
-          Thread.new { helper.download_spec("http://localhost:#{port}") }
+          Thread.new { helper.download_spec }
         end.each do |t|
           expect(t.value).to eq(gemspec)
         end

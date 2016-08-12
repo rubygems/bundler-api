@@ -29,7 +29,7 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     @checksum
   end
 
-  def download_spec(base = nil)
+  def download_spec
     set_checksum
     url = download_gem_url("quick/Marshal.4.8/#{full_name}.gemspec.rz")
     @mutex.synchronize do
