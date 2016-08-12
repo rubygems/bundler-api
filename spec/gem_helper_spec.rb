@@ -128,7 +128,8 @@ GEMSPEC
                                     :Host      => '0.0.0.0',
                                     :Port      => port,
                                     :server    => 'webrick',
-                                    :AccessLog => [])
+                                    :AccessLog => [],
+                                    :Logger    => Logger.new("/dev/null"))
           server.start
         }
         @rackup_thread.run
