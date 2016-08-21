@@ -27,7 +27,10 @@ class BundlerApi::Job
     return if @db_helper.exists?(@payload) && !@fix_deps
     return if !@db_helper.exists?(@payload) && @fix_deps
     log "Adding: #{@payload.full_name}\n"
+
     spec = @payload.download_spec
+    return unless spec
+
     checksum = @payload.download_checksum unless @fix_deps
     @mutex.synchronize do
       deps_added = insert_spec(spec, checksum)
