@@ -274,7 +274,7 @@ private
       begin
         yield
       rescue => e
-        STDOUT.puts "[Error][Web] #{e.class} raised during background task: #{e.message}")
+        STDOUT.puts "[Error][Web] #{e.class} raised during background task: #{e.message}"
         STDERR.puts e.backtrace.join("\n  ")
       end
     end

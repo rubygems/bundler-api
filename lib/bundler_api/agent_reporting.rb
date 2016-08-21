@@ -55,7 +55,7 @@ private
 
     BundlerApi.redis.setex(id, 120, true)
     false
-  rescue => ex
+  rescue => e
     STDERR.puts "[Error][AgentReporting] `known_id?` raised #{e.class}: #{e.message}"
     false
   end
