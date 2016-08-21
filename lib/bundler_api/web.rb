@@ -100,7 +100,7 @@ class BundlerApi::Web < Sinatra::Base
     content_type 'application/octet-stream'
 
     deps = with_metriks { get_cached_dependencies }
-    ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
+    Marshal.dump(deps)
   end
 
   get "/api/v1/dependencies.json" do
@@ -112,7 +112,7 @@ class BundlerApi::Web < Sinatra::Base
     content_type 'application/json;charset=UTF-8'
 
     deps = with_metriks { get_cached_dependencies }
-    ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
+    deps.to_json
   end
 
   post "/api/v1/add_spec.json" do
