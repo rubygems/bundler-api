@@ -35,7 +35,7 @@ module BundlerApi
 
     def error_handler
       -> (e) do
-        STDOUT.puts("[Metriks][Librato] #{e.class} raised during metric submission: #{e.message}")
+        STDOUT.puts("[Error][Librato] #{e.class} raised during metric submission: #{e.message}")
 
         if e.is_a?(::Metriks::LibratoMetricsReporter::RequestFailedError)
           STDOUT.puts("  Response body: #{e.res.body}")

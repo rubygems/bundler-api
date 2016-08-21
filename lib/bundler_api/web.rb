@@ -6,7 +6,6 @@ require 'compact_index'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/checksum'
 require 'bundler_api/gem_info'
-require 'bundler_api/appsignal'
 require 'bundler_api/cache'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
@@ -22,8 +21,6 @@ class BundlerApi::Web < Sinatra::Base
   NEW_INDEX_ENABLED    = ENV['NEW_INDEX_DISABLED'].nil?
 
   unless ENV['RACK_ENV'] == 'test'
-    use Appsignal::Rack::Listener, name: 'bundler-api'
-    use Appsignal::Rack::SinatraInstrumentation
     use Metriks::Middleware
     use BundlerApi::AgentReporting
   end
@@ -277,7 +274,8 @@ private
       begin
         yield
       rescue => e
-        Appsignal.send_exception(e)
+        STDOUT.puts "[Error][Web] #{e.class} raised during background task: #{e.message}")
+        STDERR.puts e.backtrace.join("\n  ")
       end
     end
   end
