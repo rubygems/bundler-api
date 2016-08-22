@@ -6,7 +6,6 @@ require 'compact_index'
 require 'bundler_api/agent_reporting'
 require 'bundler_api/checksum'
 require 'bundler_api/gem_info'
-require 'bundler_api/appsignal'
 require 'bundler_api/cache'
 require 'bundler_api/metriks'
 require 'bundler_api/runtime_instrumentation'
@@ -22,8 +21,6 @@ class BundlerApi::Web < Sinatra::Base
   NEW_INDEX_ENABLED    = ENV['NEW_INDEX_DISABLED'].nil?
 
   unless ENV['RACK_ENV'] == 'test'
-    use Appsignal::Rack::Listener, name: 'bundler-api'
-    use Appsignal::Rack::SinatraInstrumentation
     use Metriks::Middleware
     use BundlerApi::AgentReporting
   end
@@ -103,7 +100,7 @@ class BundlerApi::Web < Sinatra::Base
     content_type 'application/octet-stream'
 
     deps = with_metriks { get_cached_dependencies }
-    ActiveSupport::Notifications.instrument('marshal.deps') { Marshal.dump(deps) }
+    Marshal.dump(deps)
   end
 
   get "/api/v1/dependencies.json" do
@@ -115,7 +112,7 @@ class BundlerApi::Web < Sinatra::Base
     content_type 'application/json;charset=UTF-8'
 
     deps = with_metriks { get_cached_dependencies }
-    ActiveSupport::Notifications.instrument('json.deps') { deps.to_json }
+    deps.to_json
   end
 
   post "/api/v1/add_spec.json" do
@@ -277,7 +274,8 @@ private
       begin
         yield
       rescue => e
-        Appsignal.send_exception(e)
+        STDOUT.puts "[Error][Web] #{e.class} raised during background task: #{e.message}"
+        STDERR.puts e.backtrace.join("\n  ")
       end
     end
   end

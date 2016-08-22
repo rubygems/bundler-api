@@ -31,6 +31,10 @@ class BundlerApi::GemHelper < Struct.new(:name, :version, :platform, :prerelease
     @mutex.synchronize do
       @gemspec ||= Marshal.load(Gem.inflate(fetch(url)))
     end
+  rescue => e
+    raise(e) if e.is_a?(BundlerApi::HTTPError)
+    STDERR.puts "[Error] Downloading gemspec #{full_name} failed! #{e.class}: #{e.message}"
+    STDERR.puts e.backtrace.join("\n  ")
   end
 
   def download_checksum
