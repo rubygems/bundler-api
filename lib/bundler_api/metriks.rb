@@ -11,7 +11,11 @@ module BundlerApi
     def initialize(user, token, worker_index = nil)
       return unless user && token
 
-      opts = { on_error: error_handler, source: source_name(worker_index) }
+      opts = {
+        on_error: error_handler,
+        source: source_name(worker_index),
+        interval: 10
+      }
 
       prefix = ENV.fetch('LIBRATO_METRICS_PREFIX') do
         ENV['RACK_ENV'] unless ENV['RACK_ENV'] == 'production'
