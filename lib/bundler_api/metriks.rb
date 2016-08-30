@@ -14,7 +14,7 @@ module BundlerApi
       opts = {
         on_error: error_handler,
         source: source_name(worker_index),
-        interval: 10
+        interval: 10,
       }
 
       prefix = ENV.fetch('LIBRATO_METRICS_PREFIX') do
