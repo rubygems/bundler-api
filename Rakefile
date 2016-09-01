@@ -204,11 +204,10 @@ end
 desc "Add a specific single gem version to the database"
 task :add_spec, :name, :version, :platform, :prerelease do |t, args|
   cache = BundlerApi::CacheInvalidator.new
-  mutex = Mutex.new
   args.with_defaults(:platform => 'ruby', :prerelease => false)
   payload = BundlerApi::GemHelper.new(args[:name], Gem::Version.new(args[:version]), args[:platform], args[:prerelease])
   database_connection do |db|
-    BundlerApi::Job.new(db, payload, mutexm, 0, cache: cache).run
+    BundlerApi::Job.new(db, payload, cache: cache).run
   end
 end
 
