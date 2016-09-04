@@ -95,6 +95,7 @@ def update(db, thread_count)
   local_gems    = get_local_gems(db)
   prerelease    = false
   pool          = BundlerApi::ConsumerPool.new(thread_count)
+  cache         = BundlerApi::CacheInvalidator.new
 
   if (specs.size - 1) == local_gems.size
     puts "Gem counts match, seems like we're already up to date!"
@@ -111,7 +112,7 @@ def update(db, thread_count)
     name, version, platform = spec
     payload = BundlerApi::GemHelper.new(name, version, platform, prerelease)
     pool.enq(BundlerApi::YankJob.new(local_gems, payload, yank_mutex))
-    pool.enq(BundlerApi::Job.new(db, payload, mutex, add_gem_count))
+    pool.enq(BundlerApi::Job.new(db, payload, mutex, add_gem_count, cache: cache))
   end
 
   print "Finished Enqueuing Jobs!\n"
@@ -202,10 +203,11 @@ end
 
 desc "Add a specific single gem version to the database"
 task :add_spec, :name, :version, :platform, :prerelease do |t, args|
+  cache = BundlerApi::CacheInvalidator.new
   args.with_defaults(:platform => 'ruby', :prerelease => false)
   payload = BundlerApi::GemHelper.new(args[:name], Gem::Version.new(args[:version]), args[:platform], args[:prerelease])
   database_connection do |db|
-    BundlerApi::Job.new(db, payload).run
+    BundlerApi::Job.new(db, payload, cache: cache).run
   end
 end
 

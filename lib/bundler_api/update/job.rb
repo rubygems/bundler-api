@@ -12,7 +12,7 @@ class BundlerApi::Job
   attr_reader :payload
   @@gem_cache = {}
 
-  def initialize(db, payload, mutex = Mutex.new, gem_count = nil, fix_deps: false, silent: false)
+  def initialize(db, payload, mutex = Mutex.new, gem_count = nil, fix_deps: false, silent: false, cache: nil)
     @db        = db
     @payload   = payload
     @mutex     = mutex || MockMutex.new
@@ -21,6 +21,7 @@ class BundlerApi::Job
     @gem_info  = BundlerApi::GemInfo.new(@db)
     @fix_deps  = fix_deps
     @silent    = silent
+    @cache     = cache
   end
 
   def run
@@ -35,6 +36,7 @@ class BundlerApi::Job
     @mutex.synchronize do
       deps_added = insert_spec(spec, checksum)
       @gem_count.increment if @gem_count && (!deps_added.empty? || !@fix_deps)
+      @cache.purge_gem(@payload) if @cache
     end
   rescue BundlerApi::HTTPError => e
     log "BundlerApi::Job#run gem=#{@payload.full_name.inspect} " +
