@@ -5,6 +5,7 @@ require 'bundler_api/gem_helper'
 require 'bundler_api/update/atomic_counter'
 require 'bundler_api/update/job'
 require 'bundler_api/web'
+require 'bundler_api/cache'
 
 describe BundlerApi::Job do
   include Rack::Test::Methods
@@ -12,6 +13,8 @@ describe BundlerApi::Job do
   let(:builder) { GemBuilder.new(db) }
   let(:counter) { BundlerApi::AtomicCounter.new }
   let(:mutex)   { Mutex.new }
+  let(:client) { double(:client, purge_path: nil, purge_key: nil) }
+  let(:cache) { BundlerApi::CacheInvalidator.new(cdn: client) }
 
   def app
     BundlerApi::Web.new($db, $db, silent: true)
@@ -95,6 +98,8 @@ SQL
         payload = BundlerApi::GemHelper.new("foo1", Gem::Version.new(version), 'ruby')
         job = BundlerApi::Job.new(db, payload, mutex, counter, silent: true)
         job.run
+        cache.purge_specs
+        cache.purge_memory_cache('foo1')
 
         get '/info/foo1'
         last_response.body
