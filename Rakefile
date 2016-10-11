@@ -236,8 +236,8 @@ task :yank_spec, :name, :version, :platform do |t, args|
     ).first
     version.update(indexed: false, yanked_at: Time.now)
 
+    puts "Yanked #{version}!"
   end
-  puts "Yanked #{version}!"
 end
 
 desc "Purge new index from Fastly cache"
