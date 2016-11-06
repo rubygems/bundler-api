@@ -1,3 +1,7 @@
+# :warning: Deprecated
+
+This repository, and the web app it powered, are deprecated and no longer in use by either Bundler or RubyGems. https://github.com/rubygems/rubygems.org now powers all of the endpoints this app previously served.
+
 [![Code Climate](https://codeclimate.com/github/bundler/bundler-api/badges/gpa.svg)](https://codeclimate.com/github/bundler/bundler-api)
 [![Build Status](https://travis-ci.org/bundler/bundler-api.svg?branch=master)](https://travis-ci.org/bundler/bundler-api)
 
