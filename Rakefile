@@ -224,6 +224,28 @@ task :versions do |t, args|
   end
 end
 
+desc "Purge new index files from fastly"
+task :purge_new_index, :thread_count do |t, args|
+  thread_count = (args[:thread_count] || 1 ).to_i
+  job = Struct.new(:name, :client) do
+    def run
+      print '.'
+      client.purge_path("/info/#{name}")
+    end
+  end
+  database_connection(thread_count) do |db|
+    gem_info = BundlerApi::GemInfo.new(db)
+    pool = BundlerApi::ConsumerPool.new(thread_count)
+    client = BundlerApi::CacheInvalidator.new.cdn_client
+    client.purge_path("/names")
+    client.purge_path("/versions")
+    gem_info.names.each {|n| pool.enq(job.new(n, client)) }
+    pool.start
+    pool.poison
+    pool.join
+  end
+end
+
 desc "Yank a specific single gem from the database"
 task :yank_spec, :name, :version, :platform do |t, args|
   args.with_defaults(:platform => 'ruby')
